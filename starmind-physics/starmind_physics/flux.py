@@ -70,6 +70,7 @@ def orbit_averaged_flux(
     params: dict[str, Any],
     *,
     solar: str | None = None,
+    solar_phase: float | None = None,
     n_samples: int | None = None,
 ) -> dict[str, float]:
     """
@@ -82,33 +83,28 @@ def orbit_averaged_flux(
     lat, lon, tt = ground_track(altitude_km, inclination_deg, params, n_samples=n_samples)
     epoch = params["orbit_sampling"]["epoch_utc"]
 
-    p = integral_flux_along_track(
-        altitude_km,
-        lat,
-        lon,
-        tt,
-        particle="p",
-        energy_MeV=float(flux_p["proton_energy_MeV"]),
-        solar=solar,
-        epoch_utc=epoch,
-    )
-    e = integral_flux_along_track(
-        altitude_km,
-        lat,
-        lon,
-        tt,
-        particle="e",
-        energy_MeV=float(flux_p["electron_energy_MeV"]),
-        solar=solar,
-        epoch_utc=epoch,
-    )
+    def _track(particle: str, energy: float, sol: str) -> np.ndarray:
+        return integral_flux_along_track(
+            altitude_km, lat, lon, tt,
+            particle=particle, energy_MeV=energy, solar=sol, epoch_utc=epoch,
+        )
+
+    e_p = float(flux_p["proton_energy_MeV"])
+    e_e = float(flux_p["electron_energy_MeV"])
+    if solar_phase is None:
+        p = _track("p", e_p, solar)
+        e = _track("e", e_e, solar)
+    else:
+        phi = min(1.0, max(0.0, float(solar_phase)))
+        p = (1 - phi) * _track("p", e_p, "min") + phi * _track("p", e_p, "max")
+        e = (1 - phi) * _track("e", e_e, "min") + phi * _track("e", e_e, "max")
 
     return {
         "proton_flux_cm2_s": float(np.nanmean(p)),
         "electron_flux_cm2_s": float(np.nanmean(e)),
         "proton_nan_fraction": float(np.mean(~np.isfinite(p))),
         "electron_nan_fraction": float(np.mean(~np.isfinite(e))),
-        "solar": solar,
+        "solar": solar if solar_phase is None else f"blend(phase={min(1.0, max(0.0, float(solar_phase))):.2f})",
         "n_samples": int(lat.size),
     }
 
@@ -120,6 +116,7 @@ def latlon_flux_grid(
     particle: str = "p",
     energy_MeV: float | None = None,
     solar: str | None = None,
+    solar_phase: float | None = None,
     lat_step_deg: float = 5.0,
     lon_step_deg: float = 5.0,
 ) -> dict[str, Any]:
@@ -143,29 +140,30 @@ def latlon_flux_grid(
     flat_lon = lon_grid.ravel()
     times = np.zeros_like(flat_lat)
     epoch = params["orbit_sampling"]["epoch_utc"]
-    flux = integral_flux_along_track(
-        altitude_km,
-        flat_lat,
-        flat_lon,
-        times,
-        particle=particle,
-        energy_MeV=float(energy_MeV),
-        solar=solar,
-        epoch_utc=epoch,
-    ).reshape(lat_grid.shape)
+    def _grid(sol: str) -> np.ndarray:
+        return integral_flux_along_track(
+            altitude_km, flat_lat, flat_lon, times,
+            particle=particle, energy_MeV=float(energy_MeV), solar=sol, epoch_utc=epoch,
+        )
+
+    if solar_phase is None:
+        flux = _grid(solar).reshape(lat_grid.shape)
+    else:
+        phi = min(1.0, max(0.0, float(solar_phase)))
+        flux = ((1 - phi) * _grid("min") + phi * _grid("max")).reshape(lat_grid.shape)
 
     return {
         "altitude_km": float(altitude_km),
         "particle": particle,
         "energy_MeV": float(energy_MeV),
-        "solar": solar,
+        "solar": solar if solar_phase is None else f"blend(phase={min(1.0, max(0.0, float(solar_phase))):.2f})",
         "lat_deg": lats.tolist(),
         "lon_deg": lons.tolist(),
         "flux_cm2_s": np.where(np.isfinite(flux), flux, None).tolist(),
         "flux_cm2_s_nanmean": float(np.nanmean(flux)),
         "flux_cm2_s_max": float(np.nanmax(flux)) if np.any(np.isfinite(flux)) else None,
         "notes": (
-            "AE8/AP8 via aep8; static solar min/max model. "
+            "AE8/AP8 via aep8; static solar min/max model, blended by solar_phase when given. "
             "SAA appears as the South Atlantic high-flux region for protons."
         ),
     }

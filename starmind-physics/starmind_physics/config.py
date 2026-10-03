@@ -39,7 +39,7 @@ def resolve_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
       altitude_km, inclination ("sso"|float degrees), ltan_hours,
       shield_mm_Al, radiator_area_m2, chip_preset, chip_id,
       dose_limit_krad_Si, load_strategy, array_area_m2, shield_surface_m2,
-      peak_compute_kW, solar ("max"|"min"), n_samples
+      peak_compute_kW, solar ("max"|"min"), solar_phase (0..1), f107_sfu, n_samples
 
     chip_id selects a row from data/ai_chips.yaml. Legacy chip_preset
     (commercial|rad_hard|custom) still works and aliases into that DB.
@@ -92,5 +92,11 @@ def resolve_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
     if cfg.get("solar") is None:
         cfg["solar"] = p["flux"]["solar"]
 
+    # solar_phase: 0 = solar min, 1 = solar max; derived from F10.7 if given [A]
+    if cfg.get("solar_phase") is None and cfg.get("f107_sfu") is not None:
+        sw = p["space_weather"]
+        lo, hi = float(sw["f107_min_sfu"]), float(sw["f107_max_sfu"])
+        cfg["solar_phase"] = max(0.0, min(1.0, (float(cfg["f107_sfu"]) - lo) / (hi - lo)))
+        
     cfg["_params"] = p
     return cfg

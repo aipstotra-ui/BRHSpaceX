@@ -1,0 +1,11 @@
+### A7 → `docs/research/commands.md`
+- **Versions** SWE tested end-to-end [SWE §3]: Python 3.13, lightgbm 4.7.0, onnxmltools 1.16.0, onnx 1.23.1, onnxruntime 1.30.0, onnxruntime-web 1.30.0, Node 20.
+- `npm run verify` = `tsc --noEmit && next lint && vitest run && ml/.venv/bin/pytest ml/tests -q`. Use `eslint .` if `next lint` is unavailable. [SWE §5.1]
+- `npm run check:keys` = `next build && ! grep -rE "XAI_API_KEY|xai-[A-Za-z0-9]{20,}" .next/static && ! grep -rn "NEXT_PUBLIC_XAI" --include=*.ts --include=*.tsx --include=*.env* .` [SWE §5.6]
+- Prod check: `curl -s -o /dev/null -w "%{http_code}\n" <prod-url>` → `200`. The prod URL is in `docs/research/deploy.md`.
+- Deploy: `npx vercel deploy --prod`.
+- Test evaluation: only `ml/evaluate*.py --final`, once per model version (L9).
+- Performance gates [SWE §5.2, §5.4]:
+  - globe ≥ 45 fps median over 10 s at N = 2,000
+  - warm ORT `session.run` p50 < 50 ms over 20 runs
+  - cold start < 3 s

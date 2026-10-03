@@ -1,0 +1,14 @@
+---
+description: StarMind Nav global rules - scope, numbers, sources, workflow, secrets
+globs:
+alwaysApply: true
+---
+- Execute only the milestone prompt pasted in chat. docs/PLAN-v2.md and docs/archive/ are reference only. Never start another milestone; stop at loop step L8.
+- Follow docs/research/workflow.md (loop L1-L8, subagent triggers, max 3 verifier and 3 audit attempts, report format).
+- Never invent numbers. Every number in code, UI, or docs is either sourced from docs/research/ (with URL), labeled `estimate` (design choice), or labeled `UNVERIFIED`. If a needed value is missing, call /researcher (L2).
+- API shapes, URLs, constants, and chip data come only from docs/research/.
+- Calculate or predict, then compare with a reference; report residual, % error or skill, and uncertainty.
+- TypeScript strict, no `any`, zod at every external boundary, pure functions in lib/engine/.
+- XAI_API_KEY is server-only. Never create NEXT_PUBLIC_XAI* variables. Never print secrets.
+- Never commit ml/data/raw/ or any file over 90 MB. Never edit docs/archive/.
+- Never weaken a verify threshold to make a check pass.

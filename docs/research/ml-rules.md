@@ -1,0 +1,29 @@
+### A5 → `docs/research/ml-rules.md` [SWE §3.1–3.10, §5.9; Researchy B15–B16]
+- **L1 Splits.** Train ≤ 2019-12-31, val 2020-01-01..2022-12-31, test 2023-01-01 → last valid OMNI hour. Record the actual end in `model-card.json`.
+- **L2 Embargo.** Drop 48 h of rows at each split boundary.
+- **L3 Kp lag.** The Kp feature at t is the Kp of the last *completed* 3-h block. Kp forecasts are issued at 00/03/…/21 UT, and the target is the block containing t+h.
+- **L4 Daily indices.** F10.7 and other daily indices are lagged 1 day.
+- **L5 Windows.**
+  - Trailing windows only, ending at t: `rolling(..., center=False)`.
+  - No `center=True`, no `bfill`, no interpolation across t.
+  - `ffill(limit≤3)` hourly.
+- **L6 Fills and scaling.** A per-column fill map converts fills to NaN. No scaler.
+- **L7 Live features only.**
+  - Use only features also fetched live: RTSW Bz, By, V, n, Pdyn; Kp/Dst lags; lagged F10.7 (if a live source is CONFIRMED); GOES X-ray/protons.
+  - Document the OMNI-final vs RTSW-L1/quicklook gap.
+- **L8 Start year.** Choose 1963 vs 1995 on val only.
+- **L9 Tuning and test.**
+  - Tune on val only.
+  - Test runs only through `--final` scripts, once per model version, each appending one line to `data/validation/test-runs.log`.
+  - A script refuses to run if its model version is already logged.
+- **L10 Policy features.** These come from OOF forecasts (5 expanding folds on train) or from out-of-sample val/test forecasts, never in-sample.
+- **L11 SEP labels.**
+  - Labels come only from the NCEI SEP table, never from OMNI protons.
+  - Calibration is fit on val and shipped as a lookup JSON.
+  - Report results per event (hourly rows cluster inside events).
+- **L12 Export.**
+  - `convert_lightgbm(target_opset=15)`, `zipmap=False`.
+  - `model-card.json` has the ordered `features[]`, units and fills, plus a golden vector.
+  - Total ONNX ≤ 5 MB. LightGBM settings: `num_leaves≈15`, ≤150 trees, early stopping on val.
+  - Quantiles are sorted before display.
+- **L13 Climatology and scenario data (rev 3).** `ml/climatology.py` (M7) and `ml/scenario_ranges.py` (M9) may use all years, test included, because they're descriptive. Their outputs must never be reported or used as forecast or policy skill, and never feed a model that's evaluated on test.

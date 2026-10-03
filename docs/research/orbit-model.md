@@ -1,0 +1,27 @@
+### A11 → `docs/research/orbit-model.md` (seed; M5, M7 and M9 L2 add sourced rows)
+- **Aim.** Find the orbit ("location") for Starmind that minimizes impact on the chosen chip and maximizes lifetime. A location is a circular orbit: altitude, inclination, and for SSO the LTAN.
+- **AI1 facts** (from A1):
+  - The orbit is sun-synchronous (official).
+  - No AI1 altitude is published. Any default altitude is an assumption supplied by Aiden in M5.
+  - 500–2,000 km is the FCC constellation filing range and is labeled that way.
+- **SSO.** The inclination follows from the altitude through the J2 nodal-precession condition. μ, R_E, J2 and the required precession rate are sourced at M5 L2(a). LTAN presets: dawn-dusk = 06:00/18:00 and noon-midnight = 12:00/00:00 (definitions).
+- **Orbit-averaged environment (M5).**
+  - SAA and auroral/outer-belt exposure fractions
+  - eclipse fraction (sun position + shadow model, sourced at L2(d))
+  - density from a pymsis-precomputed table (L2(c))
+  - dose from a cited dose-vs-altitude/inclination table (L2(b)), else an `estimate` scaled from the 750 rad(Si)/5-yr anchor
+- **Lifetime.**
+  - time-to-TID = TID limit ÷ annual dose
+  - drag-decay time from da/dt = −ρ·(Cd·A/m)·√(μ·a) down to an end-of-life altitude
+  - lifetime = the min of the two, with the binding limit named
+  - AI1 mass, drag area, Cd and end-of-life altitude: `UNVERIFIED` until sourced; otherwise user inputs labeled `estimate`
+  - Candidate *derived* solar-array area: 210 kW ÷ 250 W/m² = 840 m², from the spacex.com sheet. The reading is confirmed at M5 L2(f).
+- **Long-range vs short-term (rule).** Long-range orbit choice (optimizer, multi-year lifetime) uses **climatology**: storm frequency by size across the OMNI history and solar-cycle phase (M7). It **never** uses the short-term forecaster. The short-term forecaster drives Best Move, the replays and scenarios.
+- **Transfer (M7).** Coplanar Hohmann between circular radii r1 → r2:
+  - Δv1 = √(μ/r1)·(√(2r2/(r1+r2)) − 1)
+  - Δv2 = √(μ/r2)·(1 − √(2r1/(r1+r2)))
+  - Plane change, LTAN change and drag are ignored. The animation is labeled ILLUSTRATIVE and isn't a maneuver plan.
+- **Scenario (M9) rules.**
+  - Outputs are labeled SCENARIO.
+  - Input bounds are the observed extremes in OMNI (1995+) and the DONKI CME history (`data/scenario/ranges.json`).
+  - CME → L1 translation per M9 L2(c), else the direct step profile labeled `estimate`.

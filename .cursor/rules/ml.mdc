@@ -1,0 +1,9 @@
+---
+description: ML leakage, split, and export rules for StarMind Nav
+globs: ml/**,public/models/**,lib/ml/**
+alwaysApply: false
+---
+- Obey docs/research/ml-rules.md L1-L13 exactly. Summary: strict time splits with 48 h embargo; Kp feature = last completed 3-h block; daily indices lagged 1 day; trailing windows only (no center=True, bfill, or interpolation; ffill limit 3 h); per-column fill map to NaN, no scaler; live-available features only; tune on val; test only via `--final`, once per model version, logged; policy features from OOF forecasts only; SEP labels only from the NCEI table.
+- ONNX: convert_lightgbm(target_opset=15), zipmap=False, write public/models/model-card.json with ordered features[] and a golden vector.
+- Sort quantiles P10<=P50<=P90 before display.
+- Literature benchmarks in docs/research/benchmarks.md are reference lines, never pass gates.

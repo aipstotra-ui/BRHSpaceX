@@ -1,0 +1,685 @@
+{
+  "model_version": "forecast-1963-v1",
+  "training_start_year": 1963,
+  "input_name": "features",
+  "feature_names": [
+    "kp_block_lag0",
+    "kp_block_lag1",
+    "kp_block_lag2",
+    "kp_block_lag4",
+    "kp_block_lag8",
+    "dst_lag0",
+    "dst_lag1",
+    "dst_lag3",
+    "dst_lag6",
+    "dst_lag12",
+    "dst_lag24",
+    "f107_lag24",
+    "bz_gsm",
+    "bz_gsm_mean3",
+    "bz_gsm_mean6",
+    "bz_gsm_mean12",
+    "bz_gsm_mean24",
+    "by_gsm",
+    "by_gsm_mean3",
+    "by_gsm_mean6",
+    "by_gsm_mean12",
+    "by_gsm_mean24",
+    "speed",
+    "speed_mean3",
+    "speed_mean6",
+    "speed_mean12",
+    "speed_mean24",
+    "density",
+    "density_mean3",
+    "density_mean6",
+    "density_mean12",
+    "density_mean24",
+    "pdyn",
+    "pdyn_mean3",
+    "pdyn_mean6",
+    "pdyn_mean12",
+    "pdyn_mean24",
+    "bz_gsm_min3",
+    "bz_gsm_min6",
+    "bz_gsm_missing",
+    "by_gsm_missing",
+    "speed_missing",
+    "density_missing",
+    "pdyn_missing",
+    "kp_block_missing",
+    "dst_missing",
+    "f107_lag24_missing",
+    "bz_gsm_missing_mean24"
+  ],
+  "features": [
+    {
+      "name": "kp_block_lag0",
+      "unit": "1",
+      "kind": "kp_block",
+      "fill": "no fill; missing stays NaN",
+      "lag_blocks": 0,
+      "lag_hours": 1
+    },
+    {
+      "name": "kp_block_lag1",
+      "unit": "1",
+      "kind": "kp_block",
+      "fill": "no fill; missing stays NaN",
+      "lag_blocks": 1,
+      "lag_hours": 4
+    },
+    {
+      "name": "kp_block_lag2",
+      "unit": "1",
+      "kind": "kp_block",
+      "fill": "no fill; missing stays NaN",
+      "lag_blocks": 2,
+      "lag_hours": 7
+    },
+    {
+      "name": "kp_block_lag4",
+      "unit": "1",
+      "kind": "kp_block",
+      "fill": "no fill; missing stays NaN",
+      "lag_blocks": 4,
+      "lag_hours": 13
+    },
+    {
+      "name": "kp_block_lag8",
+      "unit": "1",
+      "kind": "kp_block",
+      "fill": "no fill; missing stays NaN",
+      "lag_blocks": 8,
+      "lag_hours": 25
+    },
+    {
+      "name": "dst_lag0",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 0
+    },
+    {
+      "name": "dst_lag1",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 1
+    },
+    {
+      "name": "dst_lag3",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 3
+    },
+    {
+      "name": "dst_lag6",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 6
+    },
+    {
+      "name": "dst_lag12",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 12
+    },
+    {
+      "name": "dst_lag24",
+      "unit": "nT",
+      "kind": "dst_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 24
+    },
+    {
+      "name": "f107_lag24",
+      "unit": "sfu",
+      "kind": "f107_lag",
+      "fill": "no fill; missing stays NaN",
+      "lag_hours": 24
+    },
+    {
+      "name": "bz_gsm",
+      "unit": "nT",
+      "kind": "solar",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 1
+    },
+    {
+      "name": "bz_gsm_mean3",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 3
+    },
+    {
+      "name": "bz_gsm_mean6",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 6
+    },
+    {
+      "name": "bz_gsm_mean12",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 12
+    },
+    {
+      "name": "bz_gsm_mean24",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 24
+    },
+    {
+      "name": "by_gsm",
+      "unit": "nT",
+      "kind": "solar",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "by_gsm",
+      "window_hours": 1
+    },
+    {
+      "name": "by_gsm_mean3",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "by_gsm",
+      "window_hours": 3
+    },
+    {
+      "name": "by_gsm_mean6",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "by_gsm",
+      "window_hours": 6
+    },
+    {
+      "name": "by_gsm_mean12",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "by_gsm",
+      "window_hours": 12
+    },
+    {
+      "name": "by_gsm_mean24",
+      "unit": "nT",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "by_gsm",
+      "window_hours": 24
+    },
+    {
+      "name": "speed",
+      "unit": "km/s",
+      "kind": "solar",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "speed",
+      "window_hours": 1
+    },
+    {
+      "name": "speed_mean3",
+      "unit": "km/s",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "speed",
+      "window_hours": 3
+    },
+    {
+      "name": "speed_mean6",
+      "unit": "km/s",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "speed",
+      "window_hours": 6
+    },
+    {
+      "name": "speed_mean12",
+      "unit": "km/s",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "speed",
+      "window_hours": 12
+    },
+    {
+      "name": "speed_mean24",
+      "unit": "km/s",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "speed",
+      "window_hours": 24
+    },
+    {
+      "name": "density",
+      "unit": "1/cm^3",
+      "kind": "solar",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "density",
+      "window_hours": 1
+    },
+    {
+      "name": "density_mean3",
+      "unit": "1/cm^3",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "density",
+      "window_hours": 3
+    },
+    {
+      "name": "density_mean6",
+      "unit": "1/cm^3",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "density",
+      "window_hours": 6
+    },
+    {
+      "name": "density_mean12",
+      "unit": "1/cm^3",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "density",
+      "window_hours": 12
+    },
+    {
+      "name": "density_mean24",
+      "unit": "1/cm^3",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "density",
+      "window_hours": 24
+    },
+    {
+      "name": "pdyn",
+      "unit": "nPa",
+      "kind": "solar",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "pdyn",
+      "window_hours": 1
+    },
+    {
+      "name": "pdyn_mean3",
+      "unit": "nPa",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "pdyn",
+      "window_hours": 3
+    },
+    {
+      "name": "pdyn_mean6",
+      "unit": "nPa",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "pdyn",
+      "window_hours": 6
+    },
+    {
+      "name": "pdyn_mean12",
+      "unit": "nPa",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "pdyn",
+      "window_hours": 12
+    },
+    {
+      "name": "pdyn_mean24",
+      "unit": "nPa",
+      "kind": "solar_mean",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "pdyn",
+      "window_hours": 24
+    },
+    {
+      "name": "bz_gsm_min3",
+      "unit": "nT",
+      "kind": "solar_min",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 3
+    },
+    {
+      "name": "bz_gsm_min6",
+      "unit": "nT",
+      "kind": "solar_min",
+      "fill": "ffill(limit=3) then trailing window; remaining gaps stay NaN",
+      "column": "bz_gsm",
+      "window_hours": 6
+    },
+    {
+      "name": "bz_gsm_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "bz_gsm"
+    },
+    {
+      "name": "by_gsm_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "by_gsm"
+    },
+    {
+      "name": "speed_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "speed"
+    },
+    {
+      "name": "density_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "density"
+    },
+    {
+      "name": "pdyn_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "pdyn"
+    },
+    {
+      "name": "kp_block_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "kp"
+    },
+    {
+      "name": "dst_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "dst"
+    },
+    {
+      "name": "f107_lag24_missing",
+      "unit": "1",
+      "kind": "missing",
+      "fill": "no fill; missing stays NaN",
+      "column": "f107"
+    },
+    {
+      "name": "bz_gsm_missing_mean24",
+      "unit": "1",
+      "kind": "missing_mean",
+      "fill": "no fill; missing stays NaN",
+      "column": "bz_gsm",
+      "window_hours": 24
+    }
+  ],
+  "splits": {
+    "train_exclusive_end": "2019-12-30T00:00:00Z",
+    "val_start": "2020-01-01T00:00:00Z",
+    "val_exclusive_end": "2022-12-30T00:00:00Z",
+    "test_start": "2023-01-01T00:00:00Z",
+    "embargo_hours": 48
+  },
+  "test_end_by_target": {
+    "kp_h03": "2026-09-16T21:00:00+00:00",
+    "kp_h06": "2026-09-16T18:00:00+00:00",
+    "kp_h12": "2026-09-16T12:00:00+00:00",
+    "kp_h24": "2026-09-16T00:00:00+00:00",
+    "dst_h03": "2026-09-17T09:00:00+00:00",
+    "dst_h06": "2026-09-17T06:00:00+00:00",
+    "dst_h12": "2026-09-17T00:00:00+00:00",
+    "dst_h24": "2026-09-16T12:00:00+00:00"
+  },
+  "last_valid_omni_hour": {
+    "bz_gsm": "2026-09-03T00:00:00+00:00",
+    "by_gsm": "2026-09-03T00:00:00+00:00",
+    "speed": "2026-09-13T00:00:00+00:00",
+    "density": "2026-09-13T00:00:00+00:00",
+    "pdyn": "2026-09-13T00:00:00+00:00",
+    "kp": "2026-09-16T23:00:00+00:00",
+    "dst": "2026-09-17T12:00:00+00:00",
+    "f107": "2026-09-16T23:00:00+00:00"
+  },
+  "hyperparameters": {
+    "objective": "quantile",
+    "alphas": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "num_leaves": 15,
+    "n_estimators_max": 150,
+    "learning_rate": 0.05,
+    "min_child_samples": 20,
+    "early_stopping_rounds": 30,
+    "random_state": 0,
+    "early_stop_period": "2020-01-01 through 2021-12-31 issue times",
+    "conformal_period": "2020-01-01 through 2021-12-31 issue times",
+    "conformal_target_coverage": 0.8,
+    "notes": "learning_rate, min_child_samples, early_stopping_rounds, and the conformal delta grids are estimates. num_leaves and the 150-tree cap follow the milestone rule."
+  },
+  "calibration": {
+    "kp_h03": 0.05,
+    "kp_h06": 0.05,
+    "kp_h12": 0.05,
+    "kp_h24": 0.0,
+    "dst_h03": 0.0,
+    "dst_h06": 0.0,
+    "dst_h12": 0.0,
+    "dst_h24": -1.0
+  },
+  "kp_clip": [
+    0.0,
+    9.0
+  ],
+  "models": [
+    {
+      "file": "forecast_kp_h03_p10.onnx",
+      "target": "kp",
+      "horizon_h": 3,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h03_p50.onnx",
+      "target": "kp",
+      "horizon_h": 3,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h03_p90.onnx",
+      "target": "kp",
+      "horizon_h": 3,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h06_p10.onnx",
+      "target": "kp",
+      "horizon_h": 6,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 123
+    },
+    {
+      "file": "forecast_kp_h06_p50.onnx",
+      "target": "kp",
+      "horizon_h": 6,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h06_p90.onnx",
+      "target": "kp",
+      "horizon_h": 6,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 149
+    },
+    {
+      "file": "forecast_kp_h12_p10.onnx",
+      "target": "kp",
+      "horizon_h": 12,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 142
+    },
+    {
+      "file": "forecast_kp_h12_p50.onnx",
+      "target": "kp",
+      "horizon_h": 12,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h12_p90.onnx",
+      "target": "kp",
+      "horizon_h": 12,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_kp_h24_p10.onnx",
+      "target": "kp",
+      "horizon_h": 24,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 91
+    },
+    {
+      "file": "forecast_kp_h24_p50.onnx",
+      "target": "kp",
+      "horizon_h": 24,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 144
+    },
+    {
+      "file": "forecast_kp_h24_p90.onnx",
+      "target": "kp",
+      "horizon_h": 24,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h03_p10.onnx",
+      "target": "dst",
+      "horizon_h": 3,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 149
+    },
+    {
+      "file": "forecast_dst_h03_p50.onnx",
+      "target": "dst",
+      "horizon_h": 3,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h03_p90.onnx",
+      "target": "dst",
+      "horizon_h": 3,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h06_p10.onnx",
+      "target": "dst",
+      "horizon_h": 6,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h06_p50.onnx",
+      "target": "dst",
+      "horizon_h": 6,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h06_p90.onnx",
+      "target": "dst",
+      "horizon_h": 6,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h12_p10.onnx",
+      "target": "dst",
+      "horizon_h": 12,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 149
+    },
+    {
+      "file": "forecast_dst_h12_p50.onnx",
+      "target": "dst",
+      "horizon_h": 12,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 150
+    },
+    {
+      "file": "forecast_dst_h12_p90.onnx",
+      "target": "dst",
+      "horizon_h": 12,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 146
+    },
+    {
+      "file": "forecast_dst_h24_p10.onnx",
+      "target": "dst",
+      "horizon_h": 24,
+      "quantile": 0.1,
+      "output_name": "variable",
+      "best_iteration": 92
+    },
+    {
+      "file": "forecast_dst_h24_p50.onnx",
+      "target": "dst",
+      "horizon_h": 24,
+      "quantile": 0.5,
+      "output_name": "variable",
+      "best_iteration": 149
+    },
+    {
+      "file": "forecast_dst_h24_p90.onnx",
+      "target": "dst",
+      "horizon_h": 24,
+      "quantile": 0.9,
+      "output_name": "variable",
+      "best_iteration": 150
+    }
+  ],
+  "goes_xray": {
+    "used": false,
+    "reason": "GOES 0.1\u20130.8 nm history in this repo is only goes_xrays_200301, goes_xrays_202202, and goes_xrays_202405. That does not cover train and validation, so X-ray was not added."
+  },
+  "omni_vs_live": "Test rows end at the last OMNI hour that still has a target. OMNI final/quicklook lags real time. Live inference uses recent SWPC RTSW L1 solar wind, quicklook Kp, Kyoto Dst, and F10.7. Training dynamic pressure uses the OMNI Na/Np branch when alpha density is present. Live RTSW uses P=(2.0/10**6)*Np*V**2 because alpha density is not in that feed. A partial current hour can enter the live trailing windows.",
+  "fill_handling": "Solar-wind inputs use ffill(limit=3) before trailing windows. Kp, Dst, and F10.7 are not filled. Remaining gaps stay NaN so the trees can use their missing-value split."
+}

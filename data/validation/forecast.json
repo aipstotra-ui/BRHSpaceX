@@ -1,0 +1,199 @@
+{
+  "model_version": "forecast-1963-v1",
+  "evaluated_at": "2026-10-03",
+  "training_start_year": 1963,
+  "last_valid_omni_hour": {
+    "bz_gsm": "2026-09-03T00:00:00+00:00",
+    "by_gsm": "2026-09-03T00:00:00+00:00",
+    "speed": "2026-09-13T00:00:00+00:00",
+    "density": "2026-09-13T00:00:00+00:00",
+    "pdyn": "2026-09-13T00:00:00+00:00",
+    "kp": "2026-09-16T23:00:00+00:00",
+    "dst": "2026-09-17T12:00:00+00:00",
+    "f107": "2026-09-16T23:00:00+00:00"
+  },
+  "rows": [
+    {
+      "target": "kp",
+      "horizon_h": 3,
+      "delta": 0.05,
+      "test_end": "2026-09-16T21:00:00+00:00",
+      "n": 10840,
+      "mae_p50": 0.5052351730487107,
+      "mae_persist": 0.6698954489544895,
+      "skill": 0.24579996201312493,
+      "rmse_p50": 0.66382959032469,
+      "rmse_persist": 0.8908387541732001,
+      "cc_p50": 0.8740855001082183,
+      "cc_persist": 0.7863876009999723,
+      "coverage_p10_p90": 0.8364391143911439
+    },
+    {
+      "target": "kp",
+      "horizon_h": 6,
+      "delta": 0.05,
+      "test_end": "2026-09-16T18:00:00+00:00",
+      "n": 10839,
+      "mae_p50": 0.7091329646387609,
+      "mae_persist": 0.8684380477903866,
+      "skill": 0.1834386270350017,
+      "rmse_p50": 0.9269258329334898,
+      "rmse_persist": 1.146964368523542,
+      "cc_p50": 0.7352189439136768,
+      "cc_persist": 0.6459020186184659,
+      "coverage_p10_p90": 0.8265522649690931
+    },
+    {
+      "target": "kp",
+      "horizon_h": 12,
+      "delta": 0.05,
+      "test_end": "2026-09-16T12:00:00+00:00",
+      "n": 10837,
+      "mae_p50": 0.8540315607983469,
+      "mae_persist": 1.0455538125557504,
+      "skill": 0.18317780439176712,
+      "rmse_p50": 1.1253210322030378,
+      "rmse_persist": 1.3869003430282971,
+      "cc_p50": 0.5708546607667316,
+      "cc_persist": 0.4823149050523562,
+      "coverage_p10_p90": 0.8204300083048814
+    },
+    {
+      "target": "kp",
+      "horizon_h": 24,
+      "delta": 0.0,
+      "test_end": "2026-09-16T00:00:00+00:00",
+      "n": 10833,
+      "mae_p50": 0.9682180524925543,
+      "mae_persist": 1.2044678297793778,
+      "skill": 0.19614453075936222,
+      "rmse_p50": 1.2756739126140142,
+      "rmse_persist": 1.601543149498774,
+      "cc_p50": 0.37684008009938164,
+      "cc_persist": 0.30984787102139144,
+      "coverage_p10_p90": 0.8012554232437921
+    },
+    {
+      "target": "dst",
+      "horizon_h": 3,
+      "delta": 0.0,
+      "test_end": "2026-09-17T09:00:00+00:00",
+      "n": 10844,
+      "mae_p50": 5.6011568942836405,
+      "mae_persist": 6.450479527849502,
+      "skill": 0.13166813876378802,
+      "rmse_p50": 8.994469349559333,
+      "rmse_persist": 10.466476142088272,
+      "cc_p50": 0.930402567338579,
+      "cc_persist": 0.9079511482403824,
+      "coverage_p10_p90": 0.7983216525267429
+    },
+    {
+      "target": "dst",
+      "horizon_h": 6,
+      "delta": 0.0,
+      "test_end": "2026-09-17T06:00:00+00:00",
+      "n": 10843,
+      "mae_p50": 7.683924859420964,
+      "mae_persist": 9.138061422115651,
+      "skill": 0.15912965513401245,
+      "rmse_p50": 12.79400956303109,
+      "rmse_persist": 15.121616483323068,
+      "cc_p50": 0.8524687852684927,
+      "cc_persist": 0.8078748158158972,
+      "coverage_p10_p90": 0.7817947062621046
+    },
+    {
+      "target": "dst",
+      "horizon_h": 12,
+      "delta": 0.0,
+      "test_end": "2026-09-17T00:00:00+00:00",
+      "n": 10841,
+      "mae_p50": 9.807774436601452,
+      "mae_persist": 12.128954893460014,
+      "skill": 0.19137514132484346,
+      "rmse_p50": 17.336938490410166,
+      "rmse_persist": 20.80024781131426,
+      "cc_p50": 0.7044940337047192,
+      "cc_persist": 0.6365391175868733,
+      "coverage_p10_p90": 0.7598007563877871
+    },
+    {
+      "target": "dst",
+      "horizon_h": 24,
+      "delta": -1.0,
+      "test_end": "2026-09-16T12:00:00+00:00",
+      "n": 10837,
+      "mae_p50": 11.811287257637627,
+      "mae_persist": 15.281720033219525,
+      "skill": 0.22709700007838407,
+      "rmse_p50": 21.073525411617165,
+      "rmse_persist": 26.157401478697093,
+      "cc_p50": 0.510847230744243,
+      "cc_persist": 0.4254002148624698,
+      "coverage_p10_p90": 0.7244624896188983
+    }
+  ],
+  "literature_reference": [
+    {
+      "target": "kp",
+      "horizon_h": 3,
+      "label": "Zhelavskaya 2019 GB",
+      "rmse": 0.674,
+      "cc": 0.872,
+      "note": "different dataset and period; not a head-to-head score"
+    },
+    {
+      "target": "kp",
+      "horizon_h": 3,
+      "label": "Zhelavskaya 2019 persistence",
+      "rmse": 0.847,
+      "cc": 0.808,
+      "note": "different dataset and period; not a head-to-head score"
+    },
+    {
+      "target": "kp",
+      "horizon_h": 3,
+      "label": "Chakraborty & Morley 2020",
+      "rmse": 0.77,
+      "cc": 0.83,
+      "note": "different dataset and period; not a head-to-head score"
+    },
+    {
+      "target": "kp",
+      "horizon_h": 6,
+      "label": "Zhelavskaya 2019 GB",
+      "rmse": 0.879,
+      "cc": 0.77,
+      "note": "different dataset and period; not a head-to-head score"
+    },
+    {
+      "target": "kp",
+      "horizon_h": 6,
+      "label": "Zhelavskaya 2019 persistence",
+      "rmse": 1.077,
+      "cc": 0.69,
+      "note": "different dataset and period; not a head-to-head score"
+    },
+    {
+      "target": "dst",
+      "horizon_h": 6,
+      "label": "Gruet 2018",
+      "rmse": 9.86,
+      "cc": 0.873,
+      "unit": "nT",
+      "note": "different dataset and period; not a head-to-head score"
+    }
+  ],
+  "literature_note": "different datasets and periods; not a head-to-head score",
+  "gates": {
+    "skill_gt_0_horizons_h": [
+      6,
+      12,
+      24
+    ],
+    "coverage_min": 0.7,
+    "coverage_max": 0.9,
+    "plus_3h_reported_whatever_sign": true
+  }
+}

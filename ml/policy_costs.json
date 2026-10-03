@@ -1,0 +1,35 @@
+{
+  "label": "estimate",
+  "note": "Every action cost is an estimate proposed for review. None is a measured operations cost.",
+  "downtime_cost_per_hour": 1,
+  "actions": {
+    "continue": {
+      "downtime_hours": 0,
+      "uncorrectable_weight": 1,
+      "switch_cost": 0,
+      "power_scale": 1,
+      "label": "estimate"
+    },
+    "checkpoint": {
+      "downtime_hours": 0.25,
+      "uncorrectable_weight": 0.4,
+      "switch_cost": 1,
+      "power_scale": 1,
+      "label": "estimate"
+    },
+    "throttle": {
+      "downtime_hours": 0,
+      "uncorrectable_weight": 0.6,
+      "switch_cost": 0.5,
+      "power_scale": 0.5,
+      "label": "estimate"
+    },
+    "safe mode": {
+      "downtime_hours": 6,
+      "uncorrectable_weight": 0.05,
+      "switch_cost": 2,
+      "power_scale": 0.1,
+      "label": "estimate"
+    }
+  }
+}

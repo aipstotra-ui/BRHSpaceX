@@ -1,0 +1,13 @@
+---
+description: StarMind Nav UI rules
+globs: app/**,components/**
+alwaysApply: false
+---
+- Use 3rok-design-system/ tokens and components (PlacementMap and thermal scale for Payload Health).
+- Every displayed number renders a SourceBadge (source | estimate | UNVERIFIED).
+- Every panel has loading, error, and empty states; show the snapshot banner when data comes from data/snapshots/.
+- three, react-globe.gl, satellite.js workers, and onnxruntime-web are client-only (dynamic import, ssr:false). Never import them, ml/, or data/history/ from app/api/**.
+- Dark, minimal, data-dense; no console errors.
+- Scenario outputs always carry a SCENARIO badge; never call them forecasts or predictions.
+- Long-range orbit outputs (optimizer, multi-year lifetime) are labeled "climatology", never "forecast".
+- The orbit-transfer animation is labeled ILLUSTRATIVE (not a maneuver plan); the Starmind model is labeled "illustrative geometry, not to scale".

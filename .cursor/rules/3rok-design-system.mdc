@@ -1,0 +1,16 @@
+---
+description: 3rok UI design system (SpaceX-style). Apply to all UI work.
+globs:
+alwaysApply: true
+---
+Import `3rok-design-system/tokens.css` and `components/bundle.css` once at the app root. Never hard-code colors, fonts, spacing or radii; use the CSS variables from tokens.css (e.g. `var(--surface-100)`, `var(--ink)`, `var(--space-5)`).
+
+Look: true black ground (`--surface-100`), white text, thin 1px outlines, square corners (`--radius-none`; `--radius-sm` only for inputs/badges), no shadows (hairlines `--line` instead; `--shadow-overlay` only for popovers). Left-aligned, generous space, one primary action per screen.
+
+Type: Barlow for copy, IBM Plex Mono for every measured value, coordinate and timestamp. Use the classes in tokens.css: display-xl/lg/md, heading-lg/md/sm, body-lg/body/body-sm, eyebrow, button, data-xl/md/sm. Display, heading, eyebrow and button text is uppercase (components/bundle.css does this). Write the brand as "3rok" in prose, "3ROK" in display type.
+
+Color: `--accent` (ion blue) only for focus, selection, links and the primary data series, never as a button fill. State uses `--status-nominal` / `--status-caution` / `--status-critical`, always with a word and a shape (circle, triangle, square). Heat maps use `--thermal-1` (cool, long life) to `--thermal-5` (hot, short life). Dark theme for the app; `data-theme="light"` for exported reports.
+
+Buttons: one `solid` per view, others `ghost` (white outline fills on hover), `quiet` for text links with an arrow. Labels are verb + object, two or three words ("Run prediction"). Numbers carry capitalised units (12.4 YR, 94 KRAD, 86 °C). No emoji, no gradients, no rounded cards.
+
+Prebuilt components live in `components/bundle.js` (window.Rok: Button, NavBar, Hero, Panel, Stat, StatusBadge, Field, Tabs, DataTable, ProgressBar, PlacementMap; types in index.d.ts). In a React/Next project, re-implement them as local components that reuse the classes in components/bundle.css rather than loading the script.

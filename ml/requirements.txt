@@ -5,3 +5,4 @@ onnxruntime==1.30.0
 pytest==8.4.2
 pyarrow==21.0.0
 h5py==3.14.0
+pandas==2.2.3

@@ -1,5 +1,6 @@
 "use client";
 
+import { AIForecast } from "@/components/panels/AIForecast";
 import { VoiceTest } from "@/components/panels/VoiceTest";
 import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
 import { useShellStore, type PanelPhase } from "@/lib/store";
@@ -64,7 +65,7 @@ export default function HomePage() {
             <h2 id={sectionId(title)} className="heading-md rok-panel__title">
               {title}
             </h2>
-            <PanelBody phase={panelPhase} />
+            {title === "AI Forecast" ? <AIForecast /> : <PanelBody phase={panelPhase} />}
           </section>
         ))}
       </main>

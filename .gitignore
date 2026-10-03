@@ -8,6 +8,7 @@ out/
 # python / ml
 ml/.venv/
 ml/data/raw/
+ml/artifacts/
 **/__pycache__/
 .pytest_cache/
 **/.pytest_cache/

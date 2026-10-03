@@ -88,6 +88,7 @@ def evaluate(config: dict[str, Any] | None = None) -> dict[str, Any]:
         inc,
         p,
         solar=cfg.get("solar"),
+        solar_phase=cfg.get("solar_phase"),
         n_samples=cfg.get("n_samples"),
     )
 

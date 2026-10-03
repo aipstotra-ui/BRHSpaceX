@@ -1,5 +1,6 @@
 "use client";
 
+import { VoiceTest } from "@/components/panels/VoiceTest";
 import { useShellStore, type PanelPhase } from "@/lib/store";
 
 const SECTIONS = [
@@ -50,6 +51,7 @@ export default function HomePage() {
           padding: "var(--space-6)",
         }}
       >
+        <VoiceTest />
         {SECTIONS.map((title) => (
           <section
             key={title}

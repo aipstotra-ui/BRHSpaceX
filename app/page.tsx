@@ -1,6 +1,8 @@
 "use client";
 
 import { AIForecast } from "@/components/panels/AIForecast";
+import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
+import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { VoiceTest } from "@/components/panels/VoiceTest";
 import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
 import { useShellStore, type PanelPhase } from "@/lib/store";
@@ -65,7 +67,12 @@ export default function HomePage() {
             <h2 id={sectionId(title)} className="heading-md rok-panel__title">
               {title}
             </h2>
-            {title === "AI Forecast" ? <AIForecast /> : <PanelBody phase={panelPhase} />}
+            {title === "AI Forecast" ? <AIForecast /> : null}
+            {title === "Chip Spec Studio" ? <ChipSpecStudio /> : null}
+            {title === "Payload Health" ? <PayloadHealth /> : null}
+            {title !== "AI Forecast" && title !== "Chip Spec Studio" && title !== "Payload Health" ? (
+              <PanelBody phase={panelPhase} />
+            ) : null}
           </section>
         ))}
       </main>

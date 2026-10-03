@@ -5,3 +5,5 @@
 | 2026-10-03 | M2 | G-scale thirds below an integer use a numeric threshold, so 4.67 is G0. This default is an estimate. | Aiden decides how thirds map onto the NOAA G-scale. |
 | 2026-10-03 | M2 | GOES-R May 2024 SGPS files parse. They do not store a ≥10 MeV integral. Differential channels and the >500 MeV integral are in `data/history/goes_protons_202405.parquet`. | Keep that file until a stored ≥10 MeV integral source is confirmed. |
 | 2026-10-03 | M2 | `jq length data/snapshots/satcat_2022-010.json` is 21. reference-values.md recorded 17. | Report 21. Do not replace the earlier 17 without a new source pass. |
+| 2026-10-03 | M4 | The four action costs in `ml/policy_costs.json` are proposed estimates, not measured operations costs. | Aiden approves or replaces continue, checkpoint, throttle, and safe mode. |
+| 2026-10-03 | M4 | Drag is a flag only. No AI1 altitude is used. | Orbit-averaged drag waits for M5. |

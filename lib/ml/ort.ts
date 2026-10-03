@@ -2,6 +2,9 @@
 
 const sessions = new Map<string, Promise<OrtSession>>();
 
+/** onnxruntime-web allows one session.run at a time. Panels share this queue. */
+let runQueue: Promise<void> = Promise.resolve();
+
 type OrtSession = {
   run: (feeds: Record<string, unknown>) => Promise<Record<string, { data: ArrayLike<number> }>>;
 };
@@ -46,12 +49,19 @@ async function sessionFor(file: string): Promise<{ ort: OrtModule; session: OrtS
 }
 
 export async function runModel(file: string, features: Float32Array, outputName: string): Promise<number> {
-  const started = performance.now();
-  const { ort, session } = await sessionFor(file);
-  const tensor = new ort.Tensor("float32", features, [1, features.length]);
-  const result = await session.run({ features: tensor });
-  const value = Number(result[outputName]?.data[0]);
-  const elapsed = performance.now() - started;
-  console.info(`[forecast] session.run ${file} ${elapsed.toFixed(1)} ms`);
-  return value;
+  const job = runQueue.then(async () => {
+    const started = performance.now();
+    const { ort, session } = await sessionFor(file);
+    const tensor = new ort.Tensor("float32", features, [1, features.length]);
+    const result = await session.run({ features: tensor });
+    const value = Number(result[outputName]?.data[0]);
+    const elapsed = performance.now() - started;
+    console.info(`[forecast] session.run ${file} ${elapsed.toFixed(1)} ms`);
+    return value;
+  });
+  runQueue = job.then(
+    () => undefined,
+    () => undefined,
+  );
+  return job;
 }

@@ -31,6 +31,11 @@ flux:
   # [A] default solar activity for AP8/AE8 ('max' or 'min')
   solar: "max"
 
+space_weather:
+  # [A] F10.7 solar flux range (sfu) mapped linearly onto solar_phase 0..1
+  f107_min_sfu: 64.0
+  f107_max_sfu: 250.0
+
 dose:
   # Exponential dose-depth fallback [A] — NOT SHIELDOSE-2.
   # Form: dose_rate_krad_Si_per_yr =

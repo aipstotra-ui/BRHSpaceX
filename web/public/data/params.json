@@ -1,0 +1,91 @@
+{
+  "earth": {
+    "R_E_km": 6378.137,
+    "mu_km3_s2": 398600.4418,
+    "J2": 0.00108263,
+    "omega_earth_rad_s": 7.2921159e-05,
+    "sso_a_ref_km": 12352.0,
+    "year_days": 365.2422
+  },
+  "orbit_sampling": {
+    "n_samples": 400,
+    "sample_span_s": 86400.0,
+    "epoch_utc": "2026-10-03T12:00:00"
+  },
+  "flux": {
+    "proton_energy_MeV": 10.0,
+    "electron_energy_MeV": 1.0,
+    "solar": "max"
+  },
+  "space_weather": {
+    "f107_min_sfu": 64.0,
+    "f107_max_sfu": 250.0
+  },
+  "dose": {
+    "k_p_krad_yr_per_flux": 0.008,
+    "k_e_krad_yr_per_flux": 2e-06,
+    "lambda_p_mm": 3.5,
+    "lambda_e_mm": 1.5
+  },
+  "chip_presets": {
+    "commercial": {
+      "dose_limit_krad_Si": 2.0,
+      "label": "commercial AI accelerator (HBM-limited, Google Trillium anchor)"
+    },
+    "rad_hard": {
+      "dose_limit_krad_Si": 200.0,
+      "label": "rad-hard CPU-class (RAD750 anchor)"
+    },
+    "custom_default_krad_Si": 2.0
+  },
+  "seu": {
+    "R_ref_upsets_per_bit_day": 1e-10,
+    "Phi_ref_p_cm2_s": 100.0,
+    "bits": "8.0e10",
+    "t_recovery_s": 30.0,
+    "min_availability": 0.9,
+    "downtime_budget_years": 0.5
+  },
+  "thermal": {
+    "n_coffin_manson": 1.9,
+    "N_ref_cycles": 3000.0,
+    "dT_ref_K": 80.0,
+    "dT_eclipse_load_follow_K": 40.0,
+    "dT_eclipse_constant_load_K": 5.0,
+    "dT_no_eclipse_K": 0.0
+  },
+  "power": {
+    "solar_constant_W_m2": 1361.0,
+    "eta_BOL": 0.28,
+    "cos_theta": 0.95,
+    "default_array_area_m2": 200.0,
+    "k_deg_per_krad": 0.02,
+    "array_shield_mm_Al": 0.5,
+    "deg_max": 0.5,
+    "p_min_fraction_of_BOL": 0.7
+  },
+  "radiator": {
+    "sigma_W_m2_K4": 5.670374419e-08,
+    "epsilon": 0.85,
+    "T_rad_K": 300.0,
+    "T_sink_K": 3.0,
+    "heat_fraction": 1.0
+  },
+  "shielding": {
+    "rho_Al_kg_m3": 2700.0,
+    "default_surface_area_m2": 40.0
+  },
+  "defaults": {
+    "altitude_km": 800.0,
+    "inclination": "sso",
+    "ltan_hours": 6.0,
+    "shield_mm_Al": 5.0,
+    "radiator_area_m2": null,
+    "chip_preset": "commercial",
+    "dose_limit_krad_Si": null,
+    "load_strategy": "constant",
+    "array_area_m2": null,
+    "shield_surface_m2": null,
+    "peak_compute_kW": 175.0
+  }
+}

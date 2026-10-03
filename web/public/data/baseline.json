@@ -1,0 +1,97 @@
+{
+  "config": {
+    "altitude_km": 800.0,
+    "inclination": "sso",
+    "ltan_hours": 6.0,
+    "shield_mm_Al": 5.0,
+    "radiator_area_m2": null,
+    "chip_id": "google_trillium_tpu_v6e",
+    "solar_phase": 1.0,
+    "load_strategy": "constant"
+  },
+  "result": {
+    "lifetime_years": 9.014686237232537,
+    "mean_power_kW": 61.64858594703841,
+    "radiator_area_m2": 157.9092033827076,
+    "shield_mass_kg": 540.0,
+    "limiting_mode": "tid",
+    "orbit": {
+      "altitude_km": 800.0,
+      "inclination_deg": 98.60308383394924,
+      "ltan_hours": 6.0,
+      "period_min": 100.87355915820187,
+      "beta_deg": -81.39691616605079,
+      "eclipse_fraction": 0.0,
+      "sunlight_fraction": 1.0
+    },
+    "flux": {
+      "proton_flux_cm2_s": 115.52187916213664,
+      "electron_flux_cm2_s": 5335.613252484601,
+      "proton_nan_fraction": 0.0,
+      "electron_nan_fraction": 0.0,
+      "solar": "blend(phase=1.00)",
+      "n_samples": 400
+    },
+    "dose": {
+      "dose_rate_krad_Si_per_year": 0.22186018984660633,
+      "dose_rate_proton_term": 0.22147950458326104,
+      "dose_rate_electron_term": 0.0003806852633452947,
+      "model": "exponential_fallback_not_SHIELDOSE2",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "sourced",
+      "dose_limit_basis": "trillium_hbm_onset_proton_beam",
+      "chip_preset": "commercial",
+      "chip_id": "google_trillium_tpu_v6e",
+      "chip_vendor": "Google",
+      "chip_product": "Trillium (TPU v6e)"
+    },
+    "chip": {
+      "id": "google_trillium_tpu_v6e",
+      "vendor": "Google",
+      "product": "Trillium (TPU v6e)",
+      "category": "commercial_ai",
+      "starmind_status": "analogue_with_rad_test",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "sourced",
+      "seu_provenance": "assumed"
+    },
+    "seu": {
+      "seu_rate_per_bit_day": 1.1552187916213664e-10,
+      "seu_events_per_day": 9.24175033297093,
+      "availability": 0.9967910589121629,
+      "downtime_fraction": 0.003208941087837129,
+      "R_ref_upsets_per_bit_day": 1e-10,
+      "bits": 80000000000.0,
+      "seu_provenance": "assumed"
+    },
+    "thermal": {
+      "delta_T_K": 0.0,
+      "cycles_per_year": 0.0,
+      "N_f_cycles": null,
+      "lifetime_thermal_years": null
+    },
+    "power": {
+      "bol_sunlit_kW": 72.4052,
+      "mean_power_before_seu_kW": 61.84704948529326,
+      "degradation_at_eval": 0.14582033493045715,
+      "t_eval_years": 9.014686237232537,
+      "lifetime_power_years": 18.546150456035598,
+      "p_min_W": 50683.63999999999,
+      "array_dose_rate_krad_yr": 0.8087931797791736
+    },
+    "cooling": {
+      "heat_load_kW": 61.64858594703841,
+      "radiator_sized_from_stefan_boltzmann": true,
+      "radiator_params_assumed": true
+    },
+    "breakdown": {
+      "L_tid_years": 9.014686237232537,
+      "L_thermal_years": null,
+      "L_power_years": 18.546150456035598,
+      "L_seu_availability_years": 155.81463988078784
+    },
+    "assumptions_note": "Lifetime = min(L_TID, L_thermal, L_power, L_SEU-availability) [A]. Dose uses exponential Al fallback, not SHIELDOSE-2 [A]. Chip dose limits come from data/ai_chips.yaml \u2014 only rows marked dose_limit_provenance=sourced are public anchors (Trillium / RAD750); assumed/[?] values are ranking placeholders, not Starmind/Rubin facts. Physics coefficients: starmind_physics/params.yaml.",
+    "value_status": "derived"
+  },
+  "disclaimer": "Ranking under stated assumptions in starmind_physics/params.yaml. Not a Starmind, Rubin, or flown lifetime. Values are estimated."
+}

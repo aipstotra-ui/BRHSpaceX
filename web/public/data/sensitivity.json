@@ -1,0 +1,82 @@
+{
+  "baseline": {
+    "config": {
+      "altitude_km": 800.0,
+      "inclination": "sso",
+      "ltan_hours": 6.0,
+      "shield_mm_Al": 5.0,
+      "radiator_area_m2": null,
+      "chip_id": "google_trillium_tpu_v6e",
+      "solar_phase": 1.0,
+      "load_strategy": "constant"
+    },
+    "lifetime_years": 9.014686237232537,
+    "mean_power_kW": 61.64858594703841,
+    "limiting_mode": "tid",
+    "breakdown": {
+      "L_tid_years": 9.014686237232537,
+      "L_thermal_years": null,
+      "L_power_years": 18.546150456035598,
+      "L_seu_availability_years": 155.81463988078784
+    }
+  },
+  "bars": [
+    {
+      "label": "altitude \u2212200 km",
+      "lifetime_years": 32.14529662476486,
+      "delta_years": 23.13061038753232,
+      "relative_change": 2.5658808059229026,
+      "limiting_mode": "tid"
+    },
+    {
+      "label": "shield +3 mm Al",
+      "lifetime_years": 18.546150456035598,
+      "delta_years": 9.53146421880306,
+      "relative_change": 1.0573262305498912,
+      "limiting_mode": "power"
+    },
+    {
+      "label": "chip \u2192 rad-hard anchor",
+      "lifetime_years": 18.546150456035598,
+      "delta_years": 9.53146421880306,
+      "relative_change": 1.0573262305498912,
+      "limiting_mode": "power"
+    },
+    {
+      "label": "altitude +200 km",
+      "lifetime_years": 3.4377984181621217,
+      "delta_years": -5.576887819070415,
+      "relative_change": -0.6186446951460943,
+      "limiting_mode": "tid"
+    },
+    {
+      "label": "shield \u22123 mm Al",
+      "lifetime_years": 3.811619881176212,
+      "delta_years": -5.2030663560563255,
+      "relative_change": -0.5771766447695733,
+      "limiting_mode": "tid"
+    },
+    {
+      "label": "inclination \u2192 30\u00b0",
+      "lifetime_years": 4.032678893007554,
+      "delta_years": -4.982007344224983,
+      "relative_change": -0.5526545476034709,
+      "limiting_mode": "tid"
+    },
+    {
+      "label": "LTAN \u2192 12 h",
+      "lifetime_years": 9.014686237232537,
+      "delta_years": 0.0,
+      "relative_change": 0.0,
+      "limiting_mode": "tid"
+    },
+    {
+      "label": "load follow sun",
+      "lifetime_years": 9.014686237232537,
+      "delta_years": 0.0,
+      "relative_change": 0.0,
+      "limiting_mode": "tid"
+    }
+  ],
+  "disclaimer": "Ranking under stated assumptions in starmind_physics/params.yaml. Not a Starmind, Rubin, or flown lifetime. Values are estimated."
+}

@@ -1,0 +1,4156 @@
+{
+  "objectives": {
+    "lifetime_years": "maximize",
+    "mean_power_kW": "maximize",
+    "shielding_cost": "minimize (shield_mass_kg + radiator_area_m2) [A]"
+  },
+  "method": "brute",
+  "n_per_dim": 5,
+  "n_evaluated": 180,
+  "n_errors": 0,
+  "pareto_front": [
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.68363624040632,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82313382073568,
+      "shielding_cost": 237.82313382073568,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0,
+      "id": "P01"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 188.76537052672506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P02"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 188.76537052672506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P03"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.552370521388276,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 83.38097003015034,
+      "shielding_cost": 191.38097003015034,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077,
+      "id": "P04"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 188.76536943889081,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P05"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 188.76536943889081,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P06"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 69.01154687607976,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 176.76899192419606,
+      "shielding_cost": 284.76899192419603,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0,
+      "id": "P07"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 42.9333585627771,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.9712563564156,
+      "shielding_cost": 217.9712563564156,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P08"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 42.9333585627771,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.9712563564156,
+      "shielding_cost": 217.9712563564156,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P09"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 44.326273644798896,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 113.53912588015098,
+      "shielding_cost": 221.53912588015098,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.35773410563059077,
+      "id": "P10"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 42.93579057040261,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.97748579997646,
+      "shielding_cost": 217.97748579997648,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P11"
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 42.93579057040261,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.97748579997646,
+      "shielding_cost": 217.97748579997648,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147,
+      "id": "P12"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.683605744759895,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82305570794264,
+      "shielding_cost": 237.82305570794264,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0,
+      "id": "P13"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 193.41955856495542,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P14"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 193.41955856495542,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P15"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.73352151813287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.96785918684937,
+      "shielding_cost": 196.96785918684935,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701,
+      "id": "P16"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 193.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P17"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 193.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P18"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 50.68349796533237,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82277963731946,
+      "shielding_cost": 237.82277963731946,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0,
+      "id": "P19"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 196.90408352424913,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P20"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 196.90408352424913,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P21"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 68.68693895952794,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 175.93752796233883,
+      "shielding_cost": 283.93752796233883,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0,
+      "id": "P22"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 45.1938831134904,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.76145617278848,
+      "shielding_cost": 223.76145617278848,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P23"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 45.1938831134904,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.76145617278848,
+      "shielding_cost": 223.76145617278848,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P24"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 36.40757840221501,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 93.25585679331269,
+      "shielding_cost": 201.2558567933127,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021,
+      "id": "P25"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 196.90375090043403,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P26"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 196.90375090043403,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P27"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 46.817324141008434,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 119.91980425905943,
+      "shielding_cost": 227.91980425905945,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3146986186276701,
+      "id": "P28"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 44.950080746066654,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.13697084143351,
+      "shielding_cost": 223.1369708414335,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P29"
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 44.950080746066654,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.13697084143351,
+      "shielding_cost": 223.1369708414335,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202,
+      "id": "P30"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 50.68313579937461,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82185197065843,
+      "shielding_cost": 237.82185197065843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0,
+      "id": "P31"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 199.71173416393577,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P32"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 199.71173416393577,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P33"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 67.51432404312534,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 172.93394427133757,
+      "shielding_cost": 280.93394427133757,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0,
+      "id": "P34"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 46.234560071673165,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 118.42708859437485,
+      "shielding_cost": 226.42708859437485,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P35"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 46.234560071673165,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 118.42708859437485,
+      "shielding_cost": 226.42708859437485,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P36"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 37.79380348052762,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 96.806590268587,
+      "shielding_cost": 204.806590268587,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.25430265833694987,
+      "id": "P37"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 199.71057873127134,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P38"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 199.71057873127134,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P39"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 50.6824091464302,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.81999069215829,
+      "shielding_cost": 237.81999069215829,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0,
+      "id": "P40"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 202.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P41"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 202.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P42"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 47.013587817944924,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 120.42252204896342,
+      "shielding_cost": 228.4225220489634,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2816653135868021,
+      "id": "P43"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 44.81953674572829,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 114.8025901126114,
+      "shielding_cost": 222.8025901126114,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P44"
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 44.81953674572829,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 114.8025901126114,
+      "shielding_cost": 222.8025901126114,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413,
+      "id": "P45"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 38.990704701421066,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 99.87238189082217,
+      "shielding_cost": 207.87238189082217,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2306639425143843,
+      "id": "P46"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 202.06096289558843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P47"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 202.06096289558843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P48"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 63.56670367469342,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 162.8223483918804,
+      "shielding_cost": 270.8223483918804,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0,
+      "id": "P49"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 44.90625068581507,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.02470273678483,
+      "shielding_cost": 223.02470273678483,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P50"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 44.90625068581507,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.02470273678483,
+      "shielding_cost": 223.02470273678483,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P51"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 58.33830205954352,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 149.43010716963312,
+      "shielding_cost": 257.4301071696331,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.0,
+      "id": "P52"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 44.25369911215947,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 113.35323051111835,
+      "shielding_cost": 221.35323051111834,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.25430265833694987,
+      "id": "P53"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 216.27251082488496,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P54"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 216.27251082488496,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P55"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 215.38618458093953,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P56"
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 215.38618458093953,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665,
+      "id": "P57"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 32.308785975918084,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 82.75704263683461,
+      "shielding_cost": 190.75704263683463,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2306639425143843,
+      "id": "P58"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 185.94153868605457,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P59"
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 185.94153868605457,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788,
+      "id": "P60"
+    }
+  ],
+  "evaluated": [
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 42.9333585627771,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.9712563564156,
+      "shielding_cost": 217.9712563564156,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 188.76537052672506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.512517715717305,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.7174486264341,
+      "shielding_cost": 944.7174486264341,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 944.7653705267251,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.512517715717305,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.7174486264341,
+      "shielding_cost": 1700.7174486264341,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 1700.765370526725,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 69.01154687607976,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 176.76899192419606,
+      "shielding_cost": 284.76899192419603,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.68363624040632,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82313382073568,
+      "shielding_cost": 237.82313382073568,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.653563250627954,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.74610363770245,
+      "shielding_cost": 993.7461036377024,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.68363624040632,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.82313382073568,
+      "shielding_cost": 993.8231338207356,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.653563250627954,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.74610363770245,
+      "shielding_cost": 1749.7461036377024,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 50.68363624040632,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.82313382073568,
+      "shielding_cost": 1749.8231338207356,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 15.312342298572487,
+      "mean_power_kW": 42.9333585627771,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.9712563564156,
+      "shielding_cost": 217.9712563564156,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 188.76537052672506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.512517715717305,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.7174486264341,
+      "shielding_cost": 944.7174486264341,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 944.7653705267251,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.512517715717305,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.7174486264341,
+      "shielding_cost": 1700.7174486264341,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 99.206715192861,
+      "mean_power_kW": 31.531226678371453,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.76537052672508,
+      "shielding_cost": 1700.765370526725,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 42.93579057040261,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.97748579997646,
+      "shielding_cost": 217.97748579997648,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 188.76536943889081,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.50912014580774,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.70874595224272,
+      "shielding_cost": 944.7087459522427,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 944.7653694388908,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.50912014580774,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.70874595224272,
+      "shielding_cost": 1700.7087459522427,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 1700.7653694388907,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 44.326273644798896,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 113.53912588015098,
+      "shielding_cost": 221.53912588015098,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.552370521388276,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 83.38097003015034,
+      "shielding_cost": 191.38097003015034,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.52954850335769,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 83.32251278200044,
+      "shielding_cost": 947.3225127820004,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.552370521388276,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 83.38097003015034,
+      "shielding_cost": 947.3809700301504,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.52954850335769,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 83.32251278200044,
+      "shielding_cost": 1703.3225127820006,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 32.552370521388276,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 83.38097003015034,
+      "shielding_cost": 1703.3809700301504,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.35773410563059077
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 13.172755874042137,
+      "mean_power_kW": 42.93579057040261,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 109.97748579997646,
+      "shielding_cost": 217.97748579997648,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 188.76536943889081,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.50912014580774,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.70874595224272,
+      "shielding_cost": 944.7087459522427,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 944.7653694388908,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.50912014580774,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.70874595224272,
+      "shielding_cost": 1700.7087459522427,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 500.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 85.63471005954781,
+      "mean_power_kW": 31.531226253675218,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 80.76536943889081,
+      "shielding_cost": 1700.7653694388907,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.37788152119137147
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 45.1938831134904,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.76145617278848,
+      "shielding_cost": 223.76145617278848,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 193.41955856495542,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.16795766272293,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.95776005067574,
+      "shielding_cost": 948.9577600506757,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 949.4195585649554,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.16795766272293,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.95776005067574,
+      "shielding_cost": 1704.9577600506757,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 1705.4195585649554,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 68.68693895952794,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 175.93752796233883,
+      "shielding_cost": 283.93752796233883,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.683605744759895,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82305570794264,
+      "shielding_cost": 237.82305570794264,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.409598079250024,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.12120129365664,
+      "shielding_cost": 993.1212012936567,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.683605744759895,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.82305570794264,
+      "shielding_cost": 993.8230557079427,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.409598079250024,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.12120129365664,
+      "shielding_cost": 1749.1212012936567,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 50.683605744759895,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.82305570794264,
+      "shielding_cost": 1749.8230557079426,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.6996263607434434,
+      "mean_power_kW": 45.1938831134904,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.76145617278848,
+      "shielding_cost": 223.76145617278848,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 193.41955856495542,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.16795766272293,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.95776005067574,
+      "shielding_cost": 948.9577600506757,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 949.4195585649554,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.16795766272293,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.95776005067574,
+      "shielding_cost": 1704.9577600506757,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 11.037400313218138,
+      "mean_power_kW": 33.34824623861287,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 85.41955856495541,
+      "shielding_cost": 1705.4195585649554,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 44.950080746066654,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.13697084143351,
+      "shielding_cost": 223.1369708414335,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 193.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 32.98736605345828,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.49518533434599,
+      "shielding_cost": 948.4951853343459,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 949.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 32.98736605345828,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.49518533434599,
+      "shielding_cost": 1704.495185334346,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 1705.4195007431158,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 46.817324141008434,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 119.91980425905943,
+      "shielding_cost": 227.91980425905945,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.73352151813287,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.96785918684937,
+      "shielding_cost": 196.96785918684935,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.357673744957516,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.00514736558763,
+      "shielding_cost": 952.0051473655876,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.73352151813287,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.96785918684937,
+      "shielding_cost": 952.9678591868494,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.357673744957516,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.00514736558763,
+      "shielding_cost": 1708.0051473655876,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 34.73352151813287,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.96785918684937,
+      "shielding_cost": 1708.9678591868494,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3146986186276701
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.8533964414878086,
+      "mean_power_kW": 44.950080746066654,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.13697084143351,
+      "shielding_cost": 223.1369708414335,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 193.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 32.98736605345828,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.49518533434599,
+      "shielding_cost": 948.4951853343459,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 949.4195007431159,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 32.98736605345828,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.49518533434599,
+      "shielding_cost": 1704.495185334346,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 875.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 5.547748383668935,
+      "mean_power_kW": 33.348223664661724,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 85.41950074311589,
+      "shielding_cost": 1705.4195007431158,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.3420309043016202
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 46.234560071673165,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 118.42708859437485,
+      "shielding_cost": 226.42708859437485,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 196.90408352424913,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 33.93058506798389,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 86.91118500264523,
+      "shielding_cost": 950.9111850026452,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 952.9040835242491,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 33.93058506798389,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 86.91118500264523,
+      "shielding_cost": 1706.9111850026452,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 1708.904083524249,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 67.51432404312534,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 172.93394427133757,
+      "shielding_cost": 280.93394427133757,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 50.68349796533237,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82277963731946,
+      "shielding_cost": 237.82277963731946,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 49.54736265904722,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 126.91263630808588,
+      "shielding_cost": 990.9126363080859,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 50.68349796533237,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.82277963731946,
+      "shielding_cost": 993.8227796373194,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 49.54736265904722,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 126.91263630808588,
+      "shielding_cost": 1746.912636308086,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 50.68349796533237,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.82277963731946,
+      "shielding_cost": 1749.8227796373194,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.41125920103461694,
+      "mean_power_kW": 46.234560071673165,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 118.42708859437485,
+      "shielding_cost": 226.42708859437485,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 196.90408352424913,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 33.93058506798389,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 86.91118500264523,
+      "shielding_cost": 950.9111850026452,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 952.9040835242491,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 33.93058506798389,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 86.91118500264523,
+      "shielding_cost": 1706.9111850026452,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 2.6725601711086493,
+      "mean_power_kW": 34.70862316304705,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.90408352424912,
+      "shielding_cost": 1708.904083524249,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 44.81953674572829,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 114.8025901126114,
+      "shielding_cost": 222.8025901126114,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 196.90375090043403,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 32.891720332360556,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.25019448186349,
+      "shielding_cost": 948.2501944818634,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 952.903750900434,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 32.891720332360556,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.25019448186349,
+      "shielding_cost": 1704.2501944818634,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 1708.903750900434,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 47.013587817944924,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 120.42252204896342,
+      "shielding_cost": 228.4225220489634,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 36.40757840221501,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 93.25585679331269,
+      "shielding_cost": 201.2558567933127,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.50186893054175,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.37449479728362,
+      "shielding_cost": 952.3744947972837,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 36.40757840221501,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 93.25585679331269,
+      "shielding_cost": 957.2558567933127,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.50186893054175,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.37449479728362,
+      "shielding_cost": 1708.3744947972837,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 36.40757840221501,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 93.25585679331269,
+      "shielding_cost": 1713.2558567933127,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2816653135868021
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.17633886117572492,
+      "mean_power_kW": 44.81953674572829,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 114.8025901126114,
+      "shielding_cost": 222.8025901126114,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 196.90375090043403,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 32.891720332360556,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.25019448186349,
+      "shielding_cost": 948.2501944818634,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 952.903750900434,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 32.891720332360556,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.25019448186349,
+      "shielding_cost": 1704.2501944818634,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1250.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 1.146228865602063,
+      "mean_power_kW": 34.7084933049551,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 88.90375090043402,
+      "shielding_cost": 1708.903750900434,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.31518887692424413
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 44.90625068581507,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.02470273678483,
+      "shielding_cost": 223.02470273678483,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 199.71173416393577,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 32.95558908946708,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.41379052223981,
+      "shielding_cost": 948.4137905222398,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 955.7117341639358,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 32.95558908946708,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.41379052223981,
+      "shielding_cost": 1704.4137905222399,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 1711.7117341639357,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 63.56670367469342,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 162.8223483918804,
+      "shielding_cost": 270.8223483918804,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 50.68313579937461,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.82185197065843,
+      "shielding_cost": 237.82185197065843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 46.65003499695068,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 119.4913030198675,
+      "shielding_cost": 983.4913030198675,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 50.68313579937461,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.82185197065843,
+      "shielding_cost": 993.8218519706584,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 46.65003499695068,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 119.4913030198675,
+      "shielding_cost": 1739.4913030198675,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 50.68313579937461,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.82185197065843,
+      "shielding_cost": 1749.8218519706584,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.11591434969887257,
+      "mean_power_kW": 44.90625068581507,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 115.02470273678483,
+      "shielding_cost": 223.02470273678483,
+      "limiting_mode": "tid",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 199.71173416393577,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 32.95558908946708,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 84.41379052223981,
+      "shielding_cost": 948.4137905222398,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 955.7117341639358,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 32.95558908946708,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 84.41379052223981,
+      "shielding_cost": 1704.4137905222399,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.7533509405883332,
+      "mean_power_kW": 35.80474478270013,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 91.71173416393579,
+      "shielding_cost": 1711.7117341639357,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 215.38618458093953,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 199.71057873127134,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 971.3861845809395,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 955.7105787312713,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 1727.3861845809395,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 1711.7105787312714,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 44.25369911215947,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 113.35323051111835,
+      "shielding_cost": 221.35323051111834,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 37.79380348052762,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 96.806590268587,
+      "shielding_cost": 204.806590268587,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 44.25369911215947,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 113.35323051111835,
+      "shielding_cost": 977.3532305111183,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 37.79380348052762,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 96.806590268587,
+      "shielding_cost": 960.806590268587,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 44.25369911215947,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 113.35323051111835,
+      "shielding_cost": 1733.3532305111185,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 37.79380348052762,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 96.806590268587,
+      "shielding_cost": 1716.8065902685871,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.25430265833694987
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 215.38618458093953,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 199.71057873127134,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 971.3861845809395,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 955.7105787312713,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 41.92413290578065,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 107.38618458093953,
+      "shielding_cost": 1727.3861845809395,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 1625.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.33260636735574994,
+      "mean_power_kW": 35.804293695693204,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 91.71057873127134,
+      "shielding_cost": 1711.7105787312714,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2935570339524665
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 216.27251082488496,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 202.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 972.272510824885,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 958.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 1728.2725108248849,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 1714.0636168556507,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 58.33830205954352,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 149.43010716963312,
+      "shielding_cost": 257.4301071696331,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 50.6824091464302,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 129.81999069215829,
+      "shielding_cost": 237.81999069215829,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 58.33830205954352,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 149.43010716963312,
+      "shielding_cost": 1013.4301071696332,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 50.6824091464302,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 129.81999069215829,
+      "shielding_cost": 993.8199906921583,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 58.33830205954352,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 149.43010716963312,
+      "shielding_cost": 1769.4301071696332,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 50.6824091464302,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 129.81999069215829,
+      "shielding_cost": 1749.8199906921582,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.0
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 216.27251082488496,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 202.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 972.272510824885,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 958.0636168556506,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 42.270159346649706,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 108.27251082488496,
+      "shielding_cost": 1728.2725108248849,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": "sso",
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.30853451131213205,
+      "mean_power_kW": 36.72293219136012,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 94.0636168556506,
+      "shielding_cost": 1714.0636168556507,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 185.94153868605457,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 202.06096289558843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 941.9415386860545,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 958.0609628955884,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 1697.9415386860546,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 0.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 1714.0609628955885,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 32.308785975918084,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 82.75704263683461,
+      "shielding_cost": 190.75704263683463,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 38.990704701421066,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 99.87238189082217,
+      "shielding_cost": 207.87238189082217,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 32.308785975918084,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 82.75704263683461,
+      "shielding_cost": 946.7570426368346,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 38.990704701421066,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 99.87238189082217,
+      "shielding_cost": 963.8723818908222,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 32.308785975918084,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 82.75704263683461,
+      "shielding_cost": 1702.7570426368345,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 6.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 38.990704701421066,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 99.87238189082217,
+      "shielding_cost": 1719.8723818908222,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2306639425143843
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 185.94153868605457,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 1.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 108.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 202.06096289558843,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 941.9415386860545,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 8.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 864.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 958.0609628955884,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "commercial",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.0,
+      "mean_power_kW": 30.428787832500966,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 77.94153868605456,
+      "shielding_cost": 1697.9415386860546,
+      "limiting_mode": "seu_availability",
+      "eclipse_fraction": 0.2754304144212788
+    },
+    {
+      "config": {
+        "altitude_km": 2000.0,
+        "inclination": 30.0,
+        "ltan_hours": 12.0,
+        "shield_mm_Al": 15.0,
+        "chip_preset": "rad_hard",
+        "load_strategy": "constant"
+      },
+      "lifetime_years": 0.1427906958657594,
+      "mean_power_kW": 36.72189607135263,
+      "shield_mass_kg": 1620.0,
+      "radiator_area_m2": 94.06096289558843,
+      "shielding_cost": 1714.0609628955885,
+      "limiting_mode": "power",
+      "eclipse_fraction": 0.2754304144212788
+    }
+  ],
+  "disclaimer": "Ranking under stated assumptions in starmind_physics/params.yaml. Not a Starmind, Rubin, or flown lifetime. Values are estimated."
+}

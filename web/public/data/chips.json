@@ -1,0 +1,279 @@
+{
+  "chips": [
+    {
+      "id": "nvidia_vera_rubin_nvl72",
+      "vendor": "NVIDIA",
+      "product": "Vera Rubin NVL72 (optimized for Starmind)",
+      "category": "starmind_announced",
+      "starmind_status": "reported_first_gen",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "nvidia_rubin_gpu_die",
+      "vendor": "NVIDIA",
+      "product": "Rubin GPU (single die / board-level placeholder)",
+      "category": "starmind_announced",
+      "starmind_status": "implied_building_block",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "google_trillium_tpu_v6e",
+      "vendor": "Google",
+      "product": "Trillium (TPU v6e)",
+      "category": "commercial_ai",
+      "starmind_status": "analogue_with_rad_test",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "sourced",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "google_tpu_v5e",
+      "vendor": "Google",
+      "product": "TPU v5e",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "google_tpu_v5p",
+      "vendor": "Google",
+      "product": "TPU v5p",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "nvidia_h100",
+      "vendor": "NVIDIA",
+      "product": "H100 Tensor Core GPU",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "nvidia_b200",
+      "vendor": "NVIDIA",
+      "product": "Blackwell B200",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "nvidia_gb200_nvl72",
+      "vendor": "NVIDIA",
+      "product": "GB200 NVL72",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "amd_instinct_mi300x",
+      "vendor": "AMD",
+      "product": "Instinct MI300X",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "amd_instinct_mi350",
+      "vendor": "AMD",
+      "product": "Instinct MI350 (family placeholder)",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "intel_gaudi3",
+      "vendor": "Intel",
+      "product": "Gaudi 3",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "amazon_trainium2",
+      "vendor": "Amazon (Annapsurna)",
+      "product": "Trainium2",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "microsoft_maia_100",
+      "vendor": "Microsoft",
+      "product": "Maia 100",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "meta_mtia",
+      "vendor": "Meta",
+      "product": "MTIA (family placeholder)",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "cerebras_wafer_scale",
+      "vendor": "Cerebras",
+      "product": "Wafer-Scale Engine (WSE family)",
+      "category": "commercial_ai",
+      "starmind_status": "speculative",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "groq_lpu",
+      "vendor": "Groq",
+      "product": "LPU",
+      "category": "commercial_ai",
+      "starmind_status": "speculative",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "tenstorrent_wormhole",
+      "vendor": "Tenstorrent",
+      "product": "Wormhole",
+      "category": "commercial_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "sambanova_sn40",
+      "vendor": "SambaNova",
+      "product": "SN40 / RDU family placeholder",
+      "category": "commercial_ai",
+      "starmind_status": "speculative",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "nvidia_jetson_agx_orin",
+      "vendor": "NVIDIA",
+      "product": "Jetson AGX Orin",
+      "category": "edge_ai",
+      "starmind_status": "demo_scale_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "qualcomm_cloud_ai_100",
+      "vendor": "Qualcomm",
+      "product": "Cloud AI 100",
+      "category": "edge_ai",
+      "starmind_status": "future_candidate",
+      "dose_limit_krad_Si": 2.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-10,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "bae_rad750",
+      "vendor": "BAE Systems",
+      "product": "RAD750",
+      "category": "legacy_anchor",
+      "starmind_status": "rad_hard_anchor_not_ai",
+      "dose_limit_krad_Si": 200.0,
+      "dose_limit_provenance": "sourced",
+      "seu_R_ref_upsets_per_bit_day": 1e-11,
+      "seu_provenance": "sourced"
+    },
+    {
+      "id": "bae_rad5545",
+      "vendor": "BAE Systems",
+      "product": "RAD5545 (family placeholder)",
+      "category": "space_rad_tolerant",
+      "starmind_status": "rad_hard_host_not_ai",
+      "dose_limit_krad_Si": 1000.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-11,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "amd_versal_xqr",
+      "vendor": "AMD (Xilinx)",
+      "product": "XQR Versal (space-grade Adaptive SoC)",
+      "category": "space_rad_tolerant",
+      "starmind_status": "onboard_accel_candidate",
+      "dose_limit_krad_Si": 100.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 5e-11,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "microchip_rt_polarfire",
+      "vendor": "Microchip",
+      "product": "RT PolarFire FPGA",
+      "category": "space_rad_tolerant",
+      "starmind_status": "support_logic_candidate",
+      "dose_limit_krad_Si": 100.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 5e-11,
+      "seu_provenance": "assumed"
+    },
+    {
+      "id": "frontgrade_gr740",
+      "vendor": "Frontgrade / Cobham Gaisler",
+      "product": "GR740",
+      "category": "space_rad_tolerant",
+      "starmind_status": "rad_hard_host_not_ai",
+      "dose_limit_krad_Si": 100.0,
+      "dose_limit_provenance": "assumed",
+      "seu_R_ref_upsets_per_bit_day": 1e-11,
+      "seu_provenance": "assumed"
+    }
+  ]
+}

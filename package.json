@@ -1,0 +1,10 @@
+{
+  "name": "brhspacex",
+  "private": true,
+  "workspaces": ["cesium-plugin", "web"],
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "build": "npm run build -w @3rok/cesium-plugin && npm run build -w 3rok-web",
+    "typecheck": "npm run typecheck -w @3rok/cesium-plugin && npm run build -w @3rok/cesium-plugin && npm run typecheck -w 3rok-web"
+  }
+}

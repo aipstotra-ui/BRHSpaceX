@@ -114,6 +114,28 @@ starmind-saa-grid --altitude-km 550 --particle p -o saa_flux_grid.json
 | Thermal fatigue | Norris–Landzberg with solder `n` **[S]**; `N_ref`, `ΔT` **[A]** |
 | Radiator | Stefan–Boltzmann with assumed ε, T **[A]** |
 
+## HTTP API
+
+Optional extra, no UI code in this package:
+
+```bash
+pip install -e "./starmind-physics[dev,api]"
+uvicorn starmind_physics.api:app --host 127.0.0.1 --port 8000
+```
+
+| Route | Body |
+|---|---|
+| `POST /api/evaluate` | Same dict as `evaluate()`. `oem_path` is ignored so a client cannot point the process at an arbitrary file. |
+| `POST /api/evaluate-oem` | Multipart `file` (CCSDS OEM text) plus optional `config` JSON. Returns the score and the geodetic track. |
+| `GET /api/optimize` | Pareto front. Uses `web/public/data/pareto_front.json` when present (`STARMIND_WEB_DATA` overrides the directory). |
+| `GET /api/saa-grid` | Trapped-flux lat/lon grid. |
+| `GET /api/chips` | Chip catalogue summary. |
+| `GET /api/params` | `params.yaml`. |
+| `GET /api/track` | Synthetic ground track for a globe (`altitude_km`, `inclination`, `n_samples`). |
+| `GET /api/sensitivity` | Precomputed one-at-a-time bars from the demo data directory. |
+
+`GET /api/health` reports whether `aep8` imported. Regenerate the demo JSON with `python -m starmind_physics.scripts.export_demo_data --out web/public/data`.
+
 ## Layout
 
 ```

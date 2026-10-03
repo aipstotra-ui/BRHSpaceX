@@ -12,7 +12,7 @@ from starmind_physics.dose import (
     lifetime_tid_years,
     seu_rate_and_availability,
 )
-from starmind_physics.flux import orbit_averaged_flux
+from starmind_physics.flux import flux_along_oem, orbit_averaged_flux
 from starmind_physics.orbit import (
     beta_angle_deg,
     eclipse_fraction,
@@ -62,7 +62,12 @@ def evaluate(config: dict[str, Any] | None = None) -> dict[str, Any]:
     dose_limit_krad_Si : float | None
         Adjustable dose limit; overrides chip/preset when set.
     load_strategy : "constant" | "load_follow_sun"
-    array_area_m2, shield_surface_m2, peak_compute_kW, solar, n_samples : optional
+    array_area_m2, shield_surface_m2, peak_compute_kW, solar, solar_phase,
+    f107_sfu, n_samples : optional
+    oem_path : str | None
+        CCSDS OEM 3.0 file (GCRF, UTC, km and km/s). When set, trapped flux
+        is the nanmean along that track instead of the synthetic ground track.
+        Eclipse, beta, and period still use altitude / inclination / LTAN.
 
     Returns
     -------
@@ -83,14 +88,23 @@ def evaluate(config: dict[str, Any] | None = None) -> dict[str, Any]:
     beta = beta_angle_deg(inc, ltan)
     f_e = eclipse_fraction(alt, beta, p)
 
-    flux = orbit_averaged_flux(
-        alt,
-        inc,
-        p,
-        solar=cfg.get("solar"),
-        solar_phase=cfg.get("solar_phase"),
-        n_samples=cfg.get("n_samples"),
-    )
+    oem_path = cfg.get("oem_path")
+    if oem_path:
+        flux = flux_along_oem(
+            oem_path,
+            p,
+            solar=cfg.get("solar"),
+            solar_phase=cfg.get("solar_phase"),
+        )
+    else:
+        flux = orbit_averaged_flux(
+            alt,
+            inc,
+            p,
+            solar=cfg.get("solar"),
+            solar_phase=cfg.get("solar_phase"),
+            n_samples=cfg.get("n_samples"),
+        )
 
     dose = dose_rate_krad_per_year(
         flux["proton_flux_cm2_s"],
@@ -227,12 +241,22 @@ def evaluate(config: dict[str, Any] | None = None) -> dict[str, Any]:
         "config_resolved": {
             k: v for k, v in cfg.items() if k not in {"_params", "_chip"}
         },
-        "assumptions_note": (
-            "Lifetime = min(L_TID, L_thermal, L_power, L_SEU-availability) [A]. "
-            "Dose uses exponential Al fallback, not SHIELDOSE-2 [A]. "
-            "Chip dose limits come from data/ai_chips.yaml — only rows marked "
-            "dose_limit_provenance=sourced are public anchors (Trillium / RAD750); "
-            "assumed/[?] values are ranking placeholders, not Starmind/Rubin facts. "
-            "Physics coefficients: starmind_physics/params.yaml."
-        ),
+        "assumptions_note": _assumptions_note(bool(oem_path)),
     }
+
+
+def _assumptions_note(used_oem: bool) -> str:
+    note = (
+        "Lifetime = min(L_TID, L_thermal, L_power, L_SEU-availability) [A]. "
+        "Dose uses exponential Al fallback, not SHIELDOSE-2 [A]. "
+        "Chip dose limits come from data/ai_chips.yaml — only rows marked "
+        "dose_limit_provenance=sourced are public anchors (Trillium / RAD750); "
+        "assumed/[?] values are ranking placeholders, not Starmind/Rubin facts. "
+        "Physics coefficients: starmind_physics/params.yaml."
+    )
+    if used_oem:
+        note += (
+            " Flux is the nanmean along the OEM window, not a full-orbit average; "
+            "eclipse, beta, and period still use altitude/inclination/LTAN [A]."
+        )
+    return note

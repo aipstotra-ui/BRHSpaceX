@@ -25,7 +25,7 @@ def _require_aep8():
 
 
 def integral_flux_along_track(
-    altitude_km: float,
+    altitude_km: float | np.ndarray,
     lat_deg: np.ndarray,
     lon_deg: np.ndarray,
     times_s: np.ndarray,
@@ -35,12 +35,15 @@ def integral_flux_along_track(
     solar: str,
     epoch_utc: str,
 ) -> np.ndarray:
-    """Pointwise integral flux (cm^-2 s^-1). Invalid IRBEM values → NaN."""
+    """Pointwise integral flux (cm^-2 s^-1). Invalid IRBEM values → NaN.
+
+    ``altitude_km`` is a scalar or a per-sample array broadcast to ``lon_deg``.
+    """
     aep8, EarthLocation, Time, u = _require_aep8()
     loc = EarthLocation.from_geodetic(
         lon_deg * u.deg,
         lat_deg * u.deg,
-        float(altitude_km) * u.km * np.ones_like(lon_deg),
+        np.asarray(altitude_km, dtype=float) * u.km * np.ones_like(lon_deg),
     )
     t0 = Time(epoch_utc)
     tm = t0 + times_s * u.s
@@ -166,4 +169,68 @@ def latlon_flux_grid(
             "AE8/AP8 via aep8; static solar min/max model, blended by solar_phase when given. "
             "SAA appears as the South Atlantic high-flux region for protons."
         ),
+    }
+
+
+def flux_along_oem(
+    oem_path: str,
+    params: dict[str, Any],
+    *,
+    solar: str | None = None,
+    solar_phase: float | None = None,
+    step_s: float = 10.0,
+) -> dict[str, Any]:
+    """Mean >E proton/electron flux along the track in a CCSDS OEM file.
+
+    ``solar_phase`` blends the solar-min and solar-max AE8/AP8 models the
+    same way as :func:`orbit_averaged_flux` (0 = solar min, 1 = solar max).
+    When it is omitted, ``solar`` or ``params["flux"]["solar"]`` selects one model.
+
+    The means cover the OEM window only. A short file is not an orbit
+    average and not a lifetime dose. Eclipse and sun geometry are not
+    derived from the ephemeris.
+    """
+    from pathlib import Path
+
+    from starmind_physics.oem import oem_to_track, parse_oem
+
+    flux_p = params["flux"]
+    solar = solar or flux_p["solar"]
+    oem = parse_oem(Path(oem_path).read_text(encoding="utf-8"))
+    lat, lon, alt, tt, epoch = oem_to_track(oem, step_s=step_s)
+
+    e_p = float(flux_p["proton_energy_MeV"])
+    e_e = float(flux_p["electron_energy_MeV"])
+
+    def _track(particle: str, energy: float, sol: str) -> np.ndarray:
+        return integral_flux_along_track(
+            alt,
+            lat,
+            lon,
+            tt,
+            particle=particle,
+            energy_MeV=energy,
+            solar=sol,
+            epoch_utc=epoch,
+        )
+
+    if solar_phase is None:
+        p = _track("p", e_p, solar)
+        e = _track("e", e_e, solar)
+        solar_label: str = solar
+    else:
+        phi = min(1.0, max(0.0, float(solar_phase)))
+        p = (1 - phi) * _track("p", e_p, "min") + phi * _track("p", e_p, "max")
+        e = (1 - phi) * _track("e", e_e, "min") + phi * _track("e", e_e, "max")
+        solar_label = f"blend(phase={phi:.2f})"
+
+    return {
+        "proton_flux_cm2_s": float(np.nanmean(p)),
+        "electron_flux_cm2_s": float(np.nanmean(e)),
+        "proton_nan_fraction": float(np.mean(~np.isfinite(p))),
+        "electron_nan_fraction": float(np.mean(~np.isfinite(e))),
+        "solar": solar_label,
+        "n_samples": int(lat.size),
+        "mean_altitude_km": float(np.mean(alt)),
+        "duration_s": float(tt[-1] - tt[0]),
     }

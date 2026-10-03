@@ -39,7 +39,8 @@ def resolve_config(config: dict[str, Any] | None = None) -> dict[str, Any]:
       altitude_km, inclination ("sso"|float degrees), ltan_hours,
       shield_mm_Al, radiator_area_m2, chip_preset, chip_id,
       dose_limit_krad_Si, load_strategy, array_area_m2, shield_surface_m2,
-      peak_compute_kW, solar ("max"|"min"), solar_phase (0..1), f107_sfu, n_samples
+      peak_compute_kW, solar ("max"|"min"), solar_phase (0..1), f107_sfu, n_samples,
+      oem_path (CCSDS OEM 3.0; flux along that track instead of the synthetic one)
 
     chip_id selects a row from data/ai_chips.yaml. Legacy chip_preset
     (commercial|rad_hard|custom) still works and aliases into that DB.

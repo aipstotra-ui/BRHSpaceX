@@ -46,6 +46,30 @@ print(result["limiting_mode"], result["breakdown"])
 
 `lifetime_years = min(L_TID, L_thermal, L_power, L_SEU-availability)` (definition **[A]**).
 
+## OEM ephemeris track
+
+By default, trapped flux is an average along a crude one-day spherical ground track. Pass a CCSDS OEM 3.0 file to sample AE8/AP8 on the ephemeris instead:
+
+```python
+result = evaluate({
+    "altitude_km": 800,          # still used for period, beta, and eclipse
+    "inclination": "sso",
+    "ltan_hours": 6.0,
+    "shield_mm_Al": 5.0,
+    "chip_preset": "commercial",
+    "oem_path": "track.oem",     # REF_FRAME GCRF, TIME_SYSTEM UTC, km and km/s
+})
+```
+
+`flux_along_oem` parses the file, cubic-Hermite interpolates position with the OEM velocities, converts GCRF (treated as GCRS) → ITRS → WGS84 geodetic, and returns the `nanmean` proton and electron integral flux along that window. `solar` (`"min"` / `"max"`) and `solar_phase` (0–1 blend, also filled from `f107_sfu`) work the same way as the synthetic track.
+
+Caveats:
+
+- A short OEM window is not a full orbit. The mean along it is not an orbit-averaged flux and not a lifetime dose. Dose and SEU in `evaluate` still treat that mean as if it were the orbit average.
+- Eclipse fraction, beta angle, and orbital period still come from `altitude_km`, inclination, and LTAN. The ephemeris has no sun or eclipse geometry yet.
+- `tests/data/sample.oem` is a two-state placeholder. WGS84 heights are about 135 km, then about 635 km, fifteen minutes later. The first velocity does not reach the second state. Do not treat it as a real pass.
+- Only one metadata segment is accepted. A second `META_START` is a discontinuity and is rejected. `REF_FRAME` must be `GCRF` and `TIME_SYSTEM` must be `UTC`.
+
 ## AI chip database
 
 Candidate accelerators for Starmind-class payloads live in [`starmind_physics/data/ai_chips.yaml`](starmind_physics/data/ai_chips.yaml). Every dose/SEU number is labelled **sourced** or **assumed** — Rubin/Starmind radiation tolerance is **not** public; commercial rows without tests inherit the Trillium 2 krad(Si) HBM-onset analogue for ranking only.
@@ -82,7 +106,7 @@ starmind-saa-grid --altitude-km 550 --particle p -o saa_flux_grid.json
 | Piece | Status |
 |---|---|
 | SSO inclination, eclipse fraction, dawn-dusk ≈ 0 eclipse | Equations from plan sources; unit-tested |
-| Orbit-averaged `aep8` proton/electron flux (`nanmean`) | Real AE8/AP8; crude 1-day spherical track **[A]** (no J2 RAAN drift) |
+| Orbit-averaged `aep8` proton/electron flux (`nanmean`) | Real AE8/AP8; crude 1-day spherical track **[A]** (no J2 RAAN drift). Optional OEM track is the file window only, not a lifetime average |
 | TID behind shield | Exponential Al fallback **[A]** — not SHIELDOSE-2 |
 | Chip dose limits | Presets: commercial 2 krad(Si) (Google Trillium HBM anchor **[S]**), rad-hard 200 krad(Si) (RAD750 **[S]**). Not public Rubin data |
 | SEU | Flux-scaled availability cost **[A]** |
@@ -99,7 +123,8 @@ starmind_physics/
   chips.py         # load / query / export chip DB
   evaluate.py      # evaluate(config)
   orbit.py         # SSO, beta, eclipse
-  flux.py          # aep8 orbit average + lat/lon grid
+  flux.py          # aep8 orbit average, OEM track, lat/lon grid
+  oem.py           # CCSDS OEM 3.0 → geodetic track
   dose.py          # TID + SEU
   thermal.py       # Norris–Landzberg + radiator + shield mass
   power.py         # array power / degradation

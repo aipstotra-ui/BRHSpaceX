@@ -1,6 +1,6 @@
 # 3rok — product spec
 
-The product name is **3rok**. Write it `3rok` in prose and `3ROK` in display type. This file is the current product definition. [docs/mvp-phase-plan.md](mvp-phase-plan.md) is an earlier orbit navigator and is superseded. Do not build that screen, its four promises, or its rule that there is no optimal path.
+The product name is **3rok**. Write it `3rok` in prose and `3ROK` in display type. This file is the current product definition. [docs/mvp-phase-plan.md](mvp-phase-plan.md) is the build order for this spec. The four-promise orbit navigator that used to be in that file is retired. Do not rebuild it, and do not bring back its rule that there is no optimal path.
 
 The hackathon app is aimed at [https://3rok.vercel.app](https://3rok.vercel.app). [https://3rok1.vercel.app](https://3rok1.vercel.app) is a different project.
 
@@ -169,7 +169,7 @@ Cases, OEM, Globe, and Fit do not depend on each other once the contract and a f
 
 ## Out of scope
 
-- The superseded orbit navigator in [docs/mvp-phase-plan.md](mvp-phase-plan.md).
+- Rebuilding the retired four-promise orbit navigator.
 - Training, fine-tuning, or any UI that implies Grok's weights changed.
 - A flight-file format other than CCSDS OEM 3.0 KVN.
 - Moving `3rok-design-system/` or treating `starmind-physics/` as the saved algorithm.

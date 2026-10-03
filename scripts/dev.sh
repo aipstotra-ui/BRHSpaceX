@@ -9,7 +9,7 @@ if [[ ! -x .venv/bin/uvicorn ]]; then
   exit 1
 fi
 
-if [[ ! -f cesium-plugin/dist/index.js ]]; then
+if [[ ! -f lolplol/cesium-plugin/dist/index.js ]]; then
   npm run build -w @3rok/cesium-plugin
 fi
 

@@ -1,9 +1,9 @@
 .venv/
 node_modules/
 web/node_modules/
-cesium-plugin/node_modules/
+lolplol/cesium-plugin/node_modules/
 web/dist/
-cesium-plugin/dist/
+lolplol/cesium-plugin/dist/
 __pycache__/
 .pytest_cache/
 *.py[cod]

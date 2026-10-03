@@ -22,7 +22,7 @@ export default defineConfig(({ command }) => ({
     command === "serve"
       ? {
           alias: {
-            "@3rok/cesium-plugin": path.resolve(root, "../cesium-plugin/src/index.ts"),
+            "@3rok/cesium-plugin": path.resolve(root, "../lolplol/cesium-plugin/src/index.ts"),
           },
         }
       : undefined,

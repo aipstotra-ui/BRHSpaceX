@@ -9,7 +9,7 @@ This repository also ships a **testing globe** for the physics engine: a Cesium 
 | Path | Role |
 |---|---|
 | `starmind-physics/` | Python engine. `evaluate(config)`. Optional `api` extra is the only HTTP layer (`starmind_physics.api`). No frontend code. |
-| `cesium-plugin/` | Publishable package `@3rok/cesium-plugin`. `<Globe />`, viewer hook, orbit and overlay helpers. No import of the physics package or the design system. Data and colors are props. `PhysicsClient` is the JSON contract a host implements. |
+| `lolplol/cesium-plugin/` | Publishable package `@3rok/cesium-plugin`. `<Globe />`, viewer hook, orbit and overlay helpers. No import of the physics package or the design system. Data and colors are props. `PhysicsClient` is the JSON contract a host implements. |
 | `web/` | Integration app. Workspace dependency on the plugin, 3rok tokens and components, panels, tour, and the HTTP client. |
 | `3rok-design-system/` | Tokens and component CSS. Imported once from `web/src/main.tsx`. Not forked. |
 

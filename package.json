@@ -1,7 +1,7 @@
 {
   "name": "brhspacex",
   "private": true,
-  "workspaces": ["cesium-plugin", "web"],
+  "workspaces": ["lolplol/cesium-plugin", "web"],
   "scripts": {
     "dev": "bash scripts/dev.sh",
     "build": "npm run build -w @3rok/cesium-plugin && npm run build -w 3rok-web",

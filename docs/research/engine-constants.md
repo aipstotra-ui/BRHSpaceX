@@ -45,3 +45,21 @@ TARGET: docs/research/engine-constants.md
 
 BLOCKING: no
 
+### M5 L2 researcher
+
+TARGET: docs/research/engine-constants.md
+
+| Item | Value | Unit | Source URL | Accessed | Status | Note |
+|---|---|---|---|---|---|---|
+| Earth GM (μ), atmosphere included | 3.986004418 × 10^14 | m^3/s^2 | https://earth-info.nga.mil/index.php?action=wgs84&dir=wgs84 | 2026-10-03 | CONFIRMED | WGS 84 defining parameter, printed as GM. Same value in NGA.STND.0036_1.0.0_WGS84 Table 3.1. The page footnote prints a different GPS-user value, 3.9860050 × 10^14 m^3/s^2. |
+| Earth equatorial radius R_E | 6378137.0 | m | https://earth-info.nga.mil/index.php?action=wgs84&dir=wgs84 | 2026-10-03 | CONFIRMED | WGS 84 semi-major axis a. This is the equatorial radius. The GDC primer calls R_E “Earth Radius” and does not print this number. |
+| J2, geometric dynamical form factor J2geo | 1.082629821313 × 10^-3 | 1 | https://w3.uch.edu.tw/ccchang50/NGA.STND.0036_1.0.0_WGS84.pdf | 2026-10-03 | CONFIRMED | NGA.STND.0036_1.0.0_WGS84 (8 July 2014), Table 3.5. Derived from the ellipsoid. Not the EGM2008 dynamic coefficient. |
+| EGM2008 fully normalized C(2,0) | -0.484165143790815E-03 | 1 | https://w3.uch.edu.tw/ccchang50/NGA.STND.0036_1.0.0_WGS84.pdf | 2026-10-03 | CONFIRMED | Table 5.1, degree 2 order 0. Table 3.2 prints the same dynamic term as -4.84165143790815 × 10^-4. Section 6 says this second-degree zonal coefficient is tide-free. The standard says Table 5.1 is for orbit determination. |
+| EGM2008 unnormalized dynamic J2 | not printed | 1 | https://w3.uch.edu.tw/ccchang50/NGA.STND.0036_1.0.0_WGS84.pdf | 2026-10-03 | UNVERIFIED | Equation (3-1) says J2 and the normalized zonal coefficient are related, but the converted dynamic J2 is not printed. No converted number is supplied here. |
+| SSO required nodal precession rate | 0.9856 | deg/day | https://science.nasa.gov/wp-content/uploads/2023/05/GDC_OrbitPrimer.pdf | 2026-10-03 | CONFIRMED | NASA GSFC, Code 595, GDC Orbit Primer, 10 Oct 2018, p. 4. Printed as the apparent motion of the Sun: 0.9856 deg/day, and “360 deg in 365.2422 days”. The slide does not name tropical year or mean solar day. |
+| J2 formula that sets SSO inclination | dΩ/dt = −3 n J2 R_E^2 cos i / [2 a^2 (1−e^2)^2] | rad/s | https://science.nasa.gov/wp-content/uploads/2023/05/GDC_OrbitPrimer.pdf | 2026-10-03 | CONFIRMED | Same slide. n = sqrt(μ/a^3). R_E is Earth radius, J2 is the oblateness term. SSO inclination is the i that makes this rate equal the solar rate above. For a circular orbit, e = 0. This is the J2 term only. |
+| SSO test, 700 km circular | 98.2 | degree | https://science.nasa.gov/wp-content/uploads/2023/05/GDC_OrbitPrimer.pdf | 2026-10-03 | CONFIRMED | Primer p. 7: “For a 700 km, circular orbit, the Sun-synchronous inclination is 98.2 deg.” J2-only: it is the result of the p. 4 J2 nodal-rate slide. No higher-order model is stated. |
+| SSO test, 800 km | 98.603 | degree | https://ntrs.nasa.gov/api/citations/19930015517/downloads/19930015517.pdf | 2026-10-03 | CONFIRMED | Jordan, Blaes, Roszman, and Cooley, GSFC. Body: 800 km altitude and 98.603 deg inclination, taken from Figure 2 of equation (1). Equation (1) is the geopotential nodal drift set to 0.9856 deg/day, “without other perturbations”, with the J2 a^(−7/2) cos i form. The paper’s later GEM-9 21×21 runs are not this pair. |
+
+BLOCKING: no
+

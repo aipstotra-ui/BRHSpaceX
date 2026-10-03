@@ -2,6 +2,8 @@
 
 import { AIForecast } from "@/components/panels/AIForecast";
 import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
+import { OrbitImpact } from "@/components/panels/OrbitImpact";
+import { OrbitLocation } from "@/components/panels/OrbitLocation";
 import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { VoiceTest } from "@/components/panels/VoiceTest";
 import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
@@ -70,7 +72,13 @@ export default function HomePage() {
             {title === "AI Forecast" ? <AIForecast /> : null}
             {title === "Chip Spec Studio" ? <ChipSpecStudio /> : null}
             {title === "Payload Health" ? <PayloadHealth /> : null}
-            {title !== "AI Forecast" && title !== "Chip Spec Studio" && title !== "Payload Health" ? (
+            {title === "Orbit Location" ? <OrbitLocation /> : null}
+            {title === "Orbit Impact" ? <OrbitImpact /> : null}
+            {title !== "AI Forecast" &&
+            title !== "Chip Spec Studio" &&
+            title !== "Payload Health" &&
+            title !== "Orbit Location" &&
+            title !== "Orbit Impact" ? (
               <PanelBody phase={panelPhase} />
             ) : null}
           </section>

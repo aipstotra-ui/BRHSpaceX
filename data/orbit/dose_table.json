@@ -1,0 +1,15 @@
+{
+  "mode": "estimate",
+  "phrase": "no reference: estimate",
+  "anchorFiveYearRadSi": 750,
+  "anchorAnnualKradSi": 0.15,
+  "anchorSourceUrl": "https://research.google/blog/exploring-a-space-based-scalable-ai-infrastructure-system-design/",
+  "anchorOrbit": "UNVERIFIED",
+  "rows": [],
+  "notes": [
+    "No numeric SPENVIS dose grid was printed in the opened sources.",
+    "0.15 krad(Si)/yr is 750 rad(Si) divided by five years.",
+    "The orbit behind the 750 rad(Si) sentence is UNVERIFIED.",
+    "Annual dose elsewhere scales the anchor by SAA fraction. Shielding depth is not applied."
+  ]
+}

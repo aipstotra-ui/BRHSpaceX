@@ -1,3 +1,5 @@
+> **Superseded.** The current product definition is [docs/product-spec.md](product-spec.md). This phase plan is the earlier one-screen orbit navigator (four promises, no optimal pin). Keep it as history. Do not build it.
+
 # 3rok — MVP phase plan
 
 The product name is **3rok**. Write it `3rok` in prose and `3ROK` in display type. An earlier draft called the product Meridian. That name is retired. Do not put Meridian, Starmind, or the repository name BRHSpaceX on the screen or in the code.

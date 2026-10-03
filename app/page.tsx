@@ -1,6 +1,7 @@
 "use client";
 
 import { VoiceTest } from "@/components/panels/VoiceTest";
+import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
 import { useShellStore, type PanelPhase } from "@/lib/store";
 
 const SECTIONS = [
@@ -51,6 +52,7 @@ export default function HomePage() {
           padding: "var(--space-6)",
         }}
       >
+        <SnapshotFeedStatus />
         <VoiceTest />
         {SECTIONS.map((title) => (
           <section

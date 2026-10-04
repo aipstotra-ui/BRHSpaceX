@@ -3,37 +3,25 @@
 import { useMemo, useState } from "react";
 
 import { Globe } from "@/components/globe/Globe";
+import { cheapestAction } from "@/lib/engine/costCheck";
 import { RE_M } from "@/lib/engine/orbit/constants";
 import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
-import { orbitImpact, type OrbitImpactResult } from "@/lib/engine/orbitImpact";
+import { orbitImpact } from "@/lib/engine/orbitImpact";
+import { rankOrbits } from "@/lib/engine/orbit/optimizer";
 import { replayOnOrbit } from "@/lib/engine/replayOnOrbit";
 import { fccAltitudeSchema } from "@/lib/engine/orbit/schema";
-import { ssoInclinationDeg } from "@/lib/engine/orbit/sso";
 import { PRESETS } from "@/lib/presets";
 import { useShellStore } from "@/lib/store";
 import { useOrbitStore } from "@/lib/store/orbit";
 
-const HEIGHTS = [500, 800, 1100, 1400, 1700, 2000];
-
-type Period = "quiet" | "typical" | "active" | "may2024";
-
-const PERIODS: { id: Period; label: string }[] = [
-  { id: "quiet", label: "Quiet sun" },
-  { id: "typical", label: "Typical" },
-  { id: "active", label: "Active sun" },
-  { id: "may2024", label: "May 2024" },
-];
-
-function pick(impact: OrbitImpactResult, period: Exclude<Period, "may2024">) {
-  const tid = period === "quiet" ? impact.tidYears.high : period === "active" ? impact.tidYears.low : impact.tidYears.mid;
-  const drag = period === "quiet" ? impact.dragYears.high : period === "active" ? impact.dragYears.low : impact.dragYears.mid;
-  if (tid < drag) {
-    return { years: tid, binding: "radiation" };
+function why(binding: string): string {
+  if (binding === "drag") {
+    return "This orbit falls back toward Earth before radiation wears out the chip.";
   }
-  if (drag < tid) {
-    return { years: drag, binding: "falling down" };
+  if (binding === "TID") {
+    return "Radiation reaches the chip's limit before the orbit falls.";
   }
-  return { years: tid, binding: "both" };
+  return "Radiation wear and falling back down happen about together.";
 }
 
 export function Cockpit() {
@@ -43,63 +31,43 @@ export function Cockpit() {
   const setStudio = useShellStore((state) => state.setStudio);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
   const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
+  const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
   const vehicle = useOrbitStore((state) => state.vehicle);
   const setAltitudeKm = useOrbitStore((state) => state.setAltitudeKm);
   const setSunSynchronous = useOrbitStore((state) => state.setSunSynchronous);
   const setLtanHours = useOrbitStore((state) => state.setLtanHours);
-  const [period, setPeriod] = useState<Period>("typical");
+  const [replay, setReplay] = useState(false);
 
-  const rows = useMemo(
-    () =>
-      HEIGHTS.map((altitude) => {
-        const impact = orbitImpact({
-          altitudeKm: altitude,
-          inclinationDeg: ssoInclinationDeg(altitude),
-          sunSynchronous: true,
-          ltanHours: 6,
-          raanDeg: 0,
-          vehicle,
-          spec,
-          payload,
-        });
-        return { altitude, impact, stormCost: replayOnOrbit(altitude).chosen.cost };
-      }),
-    [payload, spec, vehicle],
+  const ranked = useMemo(
+    () => rankOrbits({ spec, payload, vehicle, fromAltitudeKm: altitudeKm }),
+    [altitudeKm, payload, spec, vehicle],
   );
-
+  const best = ranked[0];
   const here = useMemo(
     () =>
       orbitImpact({
         altitudeKm,
         inclinationDeg,
-        sunSynchronous: true,
-        ltanHours: 6,
+        sunSynchronous,
+        ltanHours: sunSynchronous ? 6 : null,
         raanDeg: 0,
         vehicle,
         spec,
         payload,
       }),
-    [altitudeKm, inclinationDeg, payload, spec, vehicle],
+    [altitudeKm, inclinationDeg, payload, spec, sunSynchronous, vehicle],
   );
-
-  const best = useMemo(() => {
-    if (period === "may2024") {
-      return rows.reduce((winner, row) => (row.stormCost < winner.stormCost ? row : winner));
-    }
-    return rows.reduce((winner, row) => {
-      const years = pick(row.impact, period).years;
-      const bestYears = pick(winner.impact, period).years;
-      return years > bestYears ? row : winner;
-    });
-  }, [period, rows]);
-
-  const shown = period === "may2024" ? null : pick(here, period);
+  const stormMove = cheapestAction(8, Math.min(0.4, Math.max(0.02, 0.35 - altitudeKm / 8000)), 1);
+  const replayResult = replay ? replayOnOrbit(altitudeKm) : null;
   const sliderMin = altitudeKm < 500 ? Math.floor(altitudeKm) : 500;
 
   function useSuggested() {
+    if (!best) {
+      return;
+    }
     setSunSynchronous(true);
-    setAltitudeKm(best.altitude);
-    setLtanHours(6);
+    setAltitudeKm(best.altitudeKm);
+    setLtanHours(best.ltanHours);
   }
 
   function onAltitude(raw: number) {
@@ -116,7 +84,7 @@ export function Cockpit() {
         <Globe />
       </section>
       <section className="body" aria-label="Result">
-        <h1 className="heading-md">Where the chip lasts</h1>
+        <h1 className="heading-md">Where should it fly?</h1>
         <label className="rok-field">
           Chip
           <select
@@ -146,51 +114,33 @@ export function Cockpit() {
             onChange={(event) => onAltitude(Number(event.target.value))}
           />
         </label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
-          {PERIODS.map((item) => (
-            <button key={item.id} type="button" aria-pressed={period === item.id} onClick={() => setPeriod(item.id)}>
-              {item.label}
-            </button>
-          ))}
-        </div>
         <p data-testid="starmind-radius" data-starmind-radius-km={RE_M / 1000 + altitudeKm}>
-          On screen: {altitudeKm.toFixed(0)} km, tilt {inclinationDeg.toFixed(0)}°.
-          {shown ? ` About ${shown.years.toFixed(1)} years, ended by ${shown.binding}.` : " May 2024 storm."}
+          On screen: {altitudeKm.toFixed(0)} km, tilt {inclinationDeg.toFixed(0)}°. About{" "}
+          {here.lifetimeYears.mid.toFixed(1)} years. {why(here.binding)}
         </p>
-        <p data-testid="best-altitude" data-best-altitude-km={best.altitude}>
-          {period === "may2024"
-            ? `For May 2024 the calmer height is ${best.altitude} km.`
-            : `For this period the longest life is at ${best.altitude} km.`}
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Height</th>
-              <th>{period === "may2024" ? "Storm cost" : "Years"}</th>
-              <th>{period === "may2024" ? "" : "Ends by"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const life = period === "may2024" ? null : pick(row.impact, period);
-              const current = Math.abs(row.altitude - altitudeKm) < 150;
-              const chosen = row.altitude === best.altitude;
-              return (
-                <tr key={row.altitude}>
-                  <td>
-                    {row.altitude} km{current ? " · on screen" : ""}
-                    {chosen ? " · best" : ""}
-                  </td>
-                  <td>{life ? life.years.toFixed(1) : row.stormCost.toFixed(0)}</td>
-                  <td>{life ? life.binding : ""}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <button type="button" onClick={useSuggested}>
-          Move to this orbit
-        </button>
+        {best ? (
+          <p data-testid="best-altitude" data-best-altitude-km={best.altitudeKm}>
+            Suggested: {best.altitudeKm.toFixed(0)} km, tilt {best.inclinationDeg.toFixed(0)}°. About{" "}
+            {best.lifetimeYears.toFixed(1)} years. {why(best.binding)}
+          </p>
+        ) : null}
+        <p>If a strong storm hits: {replayResult?.chosen.actions.find((action) => action !== "continue") ?? stormMove}.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
+          <button type="button" onClick={useSuggested}>
+            Move to this orbit
+          </button>
+          <button type="button" aria-pressed={replay} onClick={() => setReplay((on) => !on)}>
+            Replay May 2024
+          </button>
+        </div>
+        {replayResult ? (
+          <p>
+            In May 2024 the first change is {replayResult.firstNonContinue}. Compared with the starting height, the
+            storm cost is {replayResult.delta.cost < 0 ? "lower" : replayResult.delta.cost > 0 ? "higher" : "the same"}.
+          </p>
+        ) : (
+          <p>The move on screen is a sketch, not a flight plan.</p>
+        )}
       </section>
     </main>
   );

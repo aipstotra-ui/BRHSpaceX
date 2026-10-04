@@ -51,4 +51,20 @@ TARGET: docs/research/data-sources.md
 | OMNI2 sunspot R fill | Word 40 fill `999` | sunspot number (version 2) | https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text | 2026-10-03 | CORRECTED | Old value in data-sources.md was `n/a`. |
 | OMNI2 other fills and words with no fill | Words 1–3 (Year, Decimal Day, Hour) have no Fill Value cell. Fills for words 4–55: 4 `9999`; 5 `99`; 6 `99`; 7 `999`; 8 `999`; 9–22 `999.9`; 23 `9999999.`; 24 `999.9`; 25 `9999.`; 26 `999.9`; 27 `999.9`; 28 `9.999`; 29 `99.99`; 30 `9999999.`; 31 `999.9`; 32 `9999.`; 33 `999.9`; 34 `999.9`; 35 `9.999`; 36 `999.99`; 37 `999.99`; 38 `999.9`; 39 `99`; 40 `999`; 41 `99999`; 42 `9999`; 43 `999999.99`; 44–48 `99999.99`; 49 `0`; 50 `999`; 51 `999.9`; 52 `999.9`; 53 `99999`; 54 `99999`; 55 `99.9`. | — | https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text | 2026-10-03 | CONFIRMED | General note in the file: the character `9` fills missing data according to each field's format. Word 49 fill `0` is also a defined flag value in the comments. |
 
+## M6 globe sources
+
+| Item | Value | Unit | Source URL | Accessed | Status | Note |
+|---|---|---|---|---|---|---|
+| Starlink SupGP OMM | 11,152 records, DATA_SOURCE SpaceX-E, classification C, NORAD through 100880 | — | https://celestrak.org/NORAD/elements/supplemental/sup-gp.php?FILE=starlink&FORMAT=json | 2026-10-03 | CONFIRMED | Preferred snapshot. File `data/snapshots/celestrak_supgp.json`. Not re-fetched for M6. License for the SpaceX-derived product is UNCONFIRMED. |
+| Starlink GP OMM fallback | 11,125 records, 446 NORAD IDs ≥ 100000 | — | https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=json | 2026-10-03 | CONFIRMED | Fallback if SupGP is missing. TLE drops catalog numbers ≥ 100000 after 2026-07-11. |
+| CelesTrak usage | one download per group per 2 h; stop on 301, 403, or 404 | — | https://celestrak.org/usage-policy.php | 2026-10-03 | CONFIRMED | `scripts/preprocess/snapshot_celestrak.sh`. No runtime fetch. No CelesTrak license clause was found (UNCONFIRMED). |
+| Space-Track redistribution | basic SSA (TLE/OMM, SATCAT) may be redistributed with citation | — | https://www.space-track.org/documentation#/user_agree | 2026-10-03 | CONFIRMED | Footer cites 18 SDS/Space-Track via CelesTrak. |
+| satellite.js json2satrec | 7.1.0 | — | https://github.com/shashwatak/satellite.js | 2026-10-03 | CONFIRMED | MIT. OMM JSON, including 6-digit NORAD ids. |
+| IGRF-14 coefficients | igrf14coeffs.txt | — | https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt | 2026-10-03 | CONFIRMED | Copied to `data/orbit/igrf14coeffs.txt`. Coefficient license UNCONFIRMED. |
+| SAA threshold | 25,000 nT | nT | https://ntrs.nasa.gov/api/citations/20000013569/downloads/20000013569.pdf | 2026-10-03 | CONFIRMED | Heirtzler 2002. Static masks in `data/orbit/saa_igrf14.json`. |
+| OVATION Prime | coordinates [lon 0–359, lat, aurora] | — | https://services.swpc.noaa.gov/json/ovation_aurora_latest.json | 2026-10-03 | CONFIRMED | Snapshot `data/snapshots/aurora.json`. Public domain if unaltered and not presented as an endorsement. Ground proxy, not dose. |
+| Blue Marble | December 2004, 5400×2700 | — | https://visibleearth.nasa.gov/images/73909/december-blue-marble-next-generation | 2026-10-03 | CONFIRMED | NASA public domain. `public/earth/blue-marble.jpg`. |
+| Black Marble | 2012 night lights, downscaled | — | https://visibleearth.nasa.gov/images/79765/earth-at-night | 2026-10-03 | CONFIRMED | NASA public domain. `public/earth/night-lights.jpg`. |
+| Natural Earth land | 110m | — | https://www.naturalearthdata.com/about/terms-of-use/ | 2026-10-03 | CONFIRMED | Public domain. `public/earth/ne_110m_land.geojson`. |
+
 BLOCKING: no

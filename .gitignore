@@ -27,6 +27,11 @@ coverage/
 # typescript
 *.tsbuildinfo
 
+# snapshot script stamps
+*.partial
+data/snapshots/*.utc
+data/snapshots/*.downloaded_at
+
 # misc
 .DS_Store
 *.pem

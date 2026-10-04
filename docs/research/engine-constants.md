@@ -61,5 +61,20 @@ TARGET: docs/research/engine-constants.md
 | SSO test, 700 km circular | 98.2 | degree | https://science.nasa.gov/wp-content/uploads/2023/05/GDC_OrbitPrimer.pdf | 2026-10-03 | CONFIRMED | Primer p. 7: “For a 700 km, circular orbit, the Sun-synchronous inclination is 98.2 deg.” J2-only: it is the result of the p. 4 J2 nodal-rate slide. No higher-order model is stated. |
 | SSO test, 800 km | 98.603 | degree | https://ntrs.nasa.gov/api/citations/19930015517/downloads/19930015517.pdf | 2026-10-03 | CONFIRMED | Jordan, Blaes, Roszman, and Cooley, GSFC. Body: 800 km altitude and 98.603 deg inclination, taken from Figure 2 of equation (1). Equation (1) is the geopotential nodal drift set to 0.9856 deg/day, “without other perturbations”, with the J2 a^(−7/2) cos i form. The paper’s later GEM-9 21×21 runs are not this pair. |
 
+## M6 globe additions
+
+| Item | Value | Unit | Source URL | Accessed | Status | Note |
+|---|---|---|---|---|---|---|
+| Starmind deployed height | 30 | m | https://www.spacex.com/spacexai/starmind | 2026-10-03 | CONFIRMED | Fact-check of the spacex.com page bundle. |
+| Starmind wingspan | 75 | m | https://www.spacex.com/spacexai/starmind | 2026-10-03 | CONFIRMED | Same page. The globe draws this enlarged. The enlargement is an estimate. |
+| Starmind radiator area | 160 | m² | https://www.spacex.com/spacexai/starmind | 2026-10-03 | CONFIRMED | Splitting the area across two panels is an estimate. |
+| Second Starmind sheet | 20 × 70 | m | https://www.supercomputing.news/emerging/nvidia-nvl72-starmind-spacex-ai1-spec-sheets-diverge | 2026-10-03 | UNCONFIRMED | new.spacex.com did not resolve. Not used for the model. |
+| SAA total-field contour | 25000 | nT | https://ntrs.nasa.gov/api/citations/20000013569/downloads/20000013569.pdf | 2026-10-03 | CONFIRMED | Heirtzler (2002). Critical contour up to 1,000 km. Globe uses IGRF-14 at the nearest precomputed altitude. |
+| Raising or deorbiting flag | 440 | km | fact-check of the SupGP snapshot | 2026-10-03 | estimate | Not a published SpaceX threshold. |
+| OVATION proxy cutoff | 10 | 1 | https://services.swpc.noaa.gov/json/ovation_aurora_latest.json | 2026-10-03 | estimate | Ground aurora proxy, not dose. |
+| Trail length | 1 | orbit | — | 2026-10-03 | estimate | 180 samples. |
+| Orbit redraw debounce | 150 | ms | — | 2026-10-03 | estimate | Scene-state radius updates immediately. |
+| Illustrative wingspan | 1800 | km | — | 2026-10-03 | estimate | So the bus reads on the globe. |
+
 BLOCKING: no
 

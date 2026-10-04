@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 
-import { classFromCode, EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
+import { classFromCode, EXPOSURE_COLORS } from "@/lib/engine/globe/exposure";
 import type { StarmindSample } from "@/lib/engine/globe/trail";
 
 export function surfaceVector(latDeg: number, lonDeg: number, altKm: number, earthKm = 6378.137): THREE.Vector3 {
@@ -37,11 +37,6 @@ export function createTrailLine(samples: StarmindSample[]): THREE.LineSegments {
   );
 }
 
-export function OrbitTrail({ samples }: { samples: StarmindSample[] }) {
-  return (
-    <p className="rok-muted">
-      Trail samples {samples.length}. Colors:{" "}
-      {(Object.keys(EXPOSURE_COLORS) as ExposureClass[]).join(", ")}.
-    </p>
-  );
+export function OrbitTrail(_props: { samples: StarmindSample[] }) {
+  return null;
 }

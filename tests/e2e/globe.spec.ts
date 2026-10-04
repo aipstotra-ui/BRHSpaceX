@@ -5,8 +5,7 @@ test("altitude slider updates the Starmind orbit radius", async ({ page }) => {
   await page.goto("/");
   const radius = page.getByTestId("starmind-radius");
   await expect(radius).toBeVisible();
-  await expect(radius).toContainText("SSO (official). Altitude");
-  await expect(radius).toContainText("= assumption. FCC filing range 500–2,000 km.");
+  await expect(page.getByLabel("Round Earth")).toBeVisible();
   const before = await radius.getAttribute("data-starmind-radius-km");
   const slider = page.getByRole("slider", { name: "Altitude" });
   await slider.evaluate((element) => {

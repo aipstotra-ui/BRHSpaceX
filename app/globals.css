@@ -128,3 +128,17 @@
     @apply font-sans;
   }
 }
+
+.cockpit {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(260px, 380px);
+  gap: var(--space-5);
+  padding: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .cockpit {
+    grid-template-columns: 1fr;
+  }
+}

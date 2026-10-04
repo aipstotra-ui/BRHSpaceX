@@ -266,7 +266,7 @@ export default function GlobeClient() {
     }
     let frame = 0;
     const resize = () => {
-      const size = 640;
+      const size = 360;
       renderer.setPixelRatio(1);
       renderer.setSize(size, size, true);
       canvas.style.maxWidth = "none";

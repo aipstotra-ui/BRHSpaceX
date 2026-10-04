@@ -44,11 +44,19 @@ export function FieldCounts({ labels }: { labels: SourceLabel[] }) {
       <span>{labels.length} fields</span>
       {ORDER.map((label) => {
         const count = labels.filter((item) => item === label).length;
-        return count > 0 ? (
+        if (count === 0) {
+          return null;
+        }
+        // Source and estimate badges are hidden on screen, so their counts stay in the DOM but are not shown.
+        return label === "UNVERIFIED" ? (
           <span className="field-counts__item" key={label}>
             <SourceBadge label={label} /> {count}
           </span>
-        ) : null;
+        ) : (
+          <span className="field-counts__item" key={label} hidden>
+            <SourceBadge label={label} /> {count}
+          </span>
+        );
       })}
     </span>
   );

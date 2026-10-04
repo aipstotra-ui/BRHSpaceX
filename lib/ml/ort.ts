@@ -48,20 +48,26 @@ async function sessionFor(file: string): Promise<{ ort: OrtModule; session: OrtS
   return { ort, session: await pending };
 }
 
-export async function runModel(file: string, features: Float32Array, outputName: string): Promise<number> {
+/** Run any model through the shared queue and return the whole output tensor. */
+export async function runSession(file: string, features: Float32Array, outputName: string): Promise<number[]> {
   const job = runQueue.then(async () => {
     const started = performance.now();
     const { ort, session } = await sessionFor(file);
     const tensor = new ort.Tensor("float32", features, [1, features.length]);
     const result = await session.run({ features: tensor });
-    const value = Number(result[outputName]?.data[0]);
+    const values = Array.from(result[outputName]?.data ?? [], Number);
     const elapsed = performance.now() - started;
-    console.info(`[forecast] session.run ${file} ${elapsed.toFixed(1)} ms`);
-    return value;
+    console.info(`[onnx] session.run ${file} ${elapsed.toFixed(1)} ms`);
+    return values;
   });
   runQueue = job.then(
     () => undefined,
     () => undefined,
   );
   return job;
+}
+
+export async function runModel(file: string, features: Float32Array, outputName: string): Promise<number> {
+  const values = await runSession(file, features, outputName);
+  return Number(values[0]);
 }

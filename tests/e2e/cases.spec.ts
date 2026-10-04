@@ -87,7 +87,7 @@ test("the nav reaches cases and testing, and the mark has an accessible home lin
   await expect(page.getByRole("link", { name: "Testing" })).toHaveAttribute("aria-current", "page");
 });
 
-test("the chip form shows its key fields and keeps the rest closed, with the source counts in view", async ({ page }) => {
+test("the chip form shows its key fields and keeps the rest closed, with the UNVERIFIED count in view", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/cases");
   await page.getByRole("button", { name: "Create case" }).click();
@@ -101,10 +101,11 @@ test("the chip form shows its key fields and keeps the rest closed, with the sou
   await expect(page.getByLabel(/^Radiator area/)).toBeHidden();
   await expect(page.getByRole("table")).toBeHidden();
 
-  // A closed section still says how many of its fields are unverified or estimated.
+  // A closed section still says how many fields it holds and shows its UNVERIFIED count.
   const more = page.locator("summary", { hasText: "More chip fields" });
   await expect(more).toContainText("fields");
-  await expect(more.locator("[data-source-label]").first()).toBeVisible();
+  await expect(more.locator('[data-source-label="UNVERIFIED"]')).toBeVisible();
+  await expect(more.locator('[data-source-label="estimate"]:visible')).toHaveCount(0);
 
   // The peak-power warning is not behind a disclosure.
   await expect(page.getByTestId("peak-flag")).toBeVisible();

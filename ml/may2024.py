@@ -5,11 +5,21 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import sys
+
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "replays" / "may2024.json"
+MODEL_DIR = ROOT / "public" / "models"
+ML_DIR = Path(__file__).resolve().parent
+if str(ML_DIR) not in sys.path:
+    sys.path.insert(0, str(ML_DIR))
+
+# A G3 storm starts at Kp 7 (NOAA scale). The warning looks for the first AI issue whose P90 reaches it.
+WARN_KP = 7.0
 
 
 INTEGRAL_FLOOR_KEV = 10_000.0
@@ -43,6 +53,67 @@ def integral_above_10mev(protons: pd.DataFrame) -> pd.Series:
     return pd.concat(parts, axis=1).mean(axis=1)
 
 
+def ai_forecasts(start: pd.Timestamp, end: pd.Timestamp) -> list[dict]:
+    """Run the exported browser forecaster (public/models/*.onnx) on the replay window.
+
+    Same features (ml/features.py) and calibration (forecast_common.apply_interval) as training and the
+    browser. Issue times are hours divisible by 3. No test label is read and nothing is fitted.
+    """
+    import onnxruntime as ort
+
+    import features
+    import forecast_common as common
+
+    card = json.loads((MODEL_DIR / "model-card.json").read_text())
+    names = card["feature_names"]
+    omni = features.load_omni()
+    feats = features.compute_features(omni)
+    issue = feats.index[(feats.index >= start - pd.Timedelta(hours=24)) & (feats.index <= end) & (feats.index.hour % 3 == 0)]
+    x = feats.loc[issue, names].to_numpy(dtype=np.float32)
+    rows = []
+    for horizon in (3, 6, 12, 24):
+        quantiles = {}
+        for model in card["models"]:
+            if model["target"] != "kp" or model["horizon_h"] != horizon:
+                continue
+            session = ort.InferenceSession(str(MODEL_DIR / model["file"]), providers=["CPUExecutionProvider"])
+            out = session.run([model["output_name"]], {card["input_name"]: x})[0]
+            quantiles[model["quantile"]] = np.asarray(out, dtype=float).reshape(-1)
+        delta = float(card["calibration"][f"kp_h{horizon:02d}"])
+        low, mid, high = common.apply_interval("kp", quantiles[0.1], quantiles[0.5], quantiles[0.9], delta)
+        for i, stamp in enumerate(issue):
+            # Kp at horizon h is the 3-hour block that ends at t+h, stored on hour t+h-1 (features.py).
+            target = stamp + pd.Timedelta(hours=horizon - 1)
+            lo, hi = sorted((float(low[i]), float(high[i])))
+            rows.append(
+                {
+                    "issued": stamp.isoformat().replace("+00:00", "Z"),
+                    "horizonH": horizon,
+                    "target": target.isoformat().replace("+00:00", "Z"),
+                    "p10": round(lo, 3),
+                    "p50": round(float(mid[i]), 3),
+                    "p90": round(hi, 3),
+                }
+            )
+    return rows
+
+
+def first_warning(forecasts: list[dict], hours: list[dict]) -> dict | None:
+    """Earliest issue whose P90 reaches G3 (Kp 7), and the first observed Kp 7 block.
+
+    An issue at t uses OMNI rows through t+59 min, so it is usable from t+1 h. Lead time counts from then.
+    """
+    observed = next((h["time"] for h in hours if h["kp"] is not None and h["kp"] >= WARN_KP), None)
+    hits = sorted((f for f in forecasts if f["p90"] >= WARN_KP), key=lambda f: (f["issued"], f["horizonH"]))
+    if not hits or observed is None:
+        return None
+    first = hits[0]
+    usable = pd.Timestamp(first["issued"]) + pd.Timedelta(hours=1)
+    lead = (pd.Timestamp(observed) - usable).total_seconds() / 3600
+    return {"kp": WARN_KP, "issued": first["issued"], "usableAt": usable.isoformat().replace("+00:00", "Z"),
+            "horizonH": first["horizonH"], "p90": first["p90"], "firstObservedAt": observed, "leadHours": lead}
+
+
 def g_level(kp: float) -> str:
     for level, minimum in ((5, 9), (4, 8), (3, 7), (2, 6), (1, 5)):
         if kp >= minimum:
@@ -66,8 +137,8 @@ def main() -> None:
     protons["time"] = pd.to_datetime(protons["time"], utc=True)
     protons = protons.loc[(protons["time"] >= start) & (protons["time"] <= end)]
     integral = integral_above_10mev(protons)
-    # Stamp each hourly mean at the end of its hour so a replay hour never sees later minutes.
-    hourly_flux = integral.groupby(integral.index.ceil("h")).mean()
+    # SGPS avg1m stamps are the start of each minute. The mean of [T-1h, T) is stamped T, so hour T sees no later minute.
+    hourly_flux = integral.groupby(integral.index.floor("h") + pd.Timedelta(hours=1)).mean()
     hours = []
     for row in merged.itertuples(index=False):
         stamp = row.time.floor("h")
@@ -83,8 +154,14 @@ def main() -> None:
                 "goesProtonFlux": None if flux is None or flux != flux else float(flux),
             }
         )
+    forecasts = ai_forecasts(start, end)
     payload = {
         "label": "test period",
+        "aiForecast": {
+            "note": "Browser forecaster (public/models) run on test-period inputs. Display only: nothing was fitted or tuned on it.",
+            "rows": forecasts,
+            "firstWarning": first_warning(forecasts, hours),
+        },
         "window": ["2024-05-05T00:00:00Z", "2024-05-16T23:00:00Z"],
         "markers": {
             "sepOnset": ["2024-05-10T13:35:00Z", "2024-05-11T02:10:00Z"],

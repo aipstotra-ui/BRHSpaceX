@@ -18,7 +18,7 @@ OUT = ROOT / "data" / "orbit" / "density_table.json"
 
 ALTITUDES_KM = list(range(100, 2001, 25))
 F107 = [70, 100, 150, 200, 250]
-AP = [4, 15, 40, 80]
+AP = [4, 15, 40, 80, 154, 236, 400]
 DATE = datetime(2020, 6, 21)
 
 

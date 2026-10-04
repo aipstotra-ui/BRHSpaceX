@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { AiPolicyReplay } from "@/components/panels/AiPolicyReplay";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { CLIMATOLOGY_SENTENCE } from "@/lib/engine/orbit/climatology";
 import { DEFAULT_ORBIT_INC_DEG, DEFAULT_ORBIT_KM, SEP_ONSET, replayOnOrbit } from "@/lib/engine/replayOnOrbit";
@@ -107,6 +108,14 @@ export function TimeMachine() {
           </tbody>
         </table>
       </div>
+      <AiPolicyReplay
+        hours={replay.hours}
+        amounts={replay.chosen.amounts}
+        hindsight={replay.chosen.actions}
+        hindsightCost={replay.chosen.cost}
+        hindsightDowntime={replay.chosen.downtimeHours}
+        cursor={scrub}
+      />
       <ul className="note notes-list">
         {replay.notes.map((note) => (
           <li key={note}>{note}</li>

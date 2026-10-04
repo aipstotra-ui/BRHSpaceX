@@ -10,6 +10,8 @@ import { EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import { auroralBoundaryMlatDeg, sepActive, zoneFractions } from "@/lib/engine/orbit/stormZones";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
+import { agingAt, extraLifeUsedDays } from "@/lib/engine/stormLife";
+import { useTimelineStore } from "@/lib/store/timeline";
 import { doseGridDepthRange } from "@/lib/engine/orbit/doseGrid";
 import { useShellStore } from "@/lib/store";
 import { useOrbitStore } from "@/lib/store/orbit";
@@ -113,6 +115,19 @@ export function Verdict() {
     () => zoneFractions({ altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg }, kp),
     [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, kp],
   );
+  const points = useTimelineStore((state) => state.points);
+  const index = useTimelineStore((state) => state.index);
+  const request = useMemo(
+    () => ({ altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg }),
+    [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg],
+  );
+  const aging = result ? agingAt(result.binding, request, result.annualDose.mid, kp, pfu) : null;
+  const usedDays = useMemo(
+    () => (result ? extraLifeUsedDays(points, index, result.binding, request, result.annualDose.mid) : 0),
+    [result, points, index, request],
+  );
+  const lifeLeftYears = result ? Math.max(0, result.lifetimeYears.mid - usedDays / 365.25) : 0;
+  const agingStatus = aging === null ? "nominal" : aging.binding >= 5 ? "critical" : aging.binding >= 1.5 ? "caution" : "nominal";
   const upsetNow = result
     ? result.upsetRate.mid * estimatedStormMultiplier(kp).value +
       (protonsOn && pfu !== null ? result.upsetPerUnitFlux * pfu * 4 * Math.PI * zones.sepCap : 0)
@@ -137,13 +152,34 @@ export function Verdict() {
           <div className="rok-stat">
             <p className="rok-stat__label eyebrow">Estimated lifetime</p>
             <div className="rok-stat__row">
-              <span data-orbit-number className="rok-stat__value data-xl">
-                {formatNumber(result.lifetimeYears.mid, 1)}
+              <span data-orbit-number data-testid="life-left" className="rok-stat__value data-xl">
+                {formatNumber(lifeLeftYears, 2)}
                 <span className="rok-stat__unit data-md"> YR</span>{" "}
                 <SourceBadge label={result.lifetimeYears.label} />
               </span>
             </div>
             <p className="body-sm rok-muted">{bindingText(result.binding)}</p>
+            {aging ? (
+              <div className="aging" data-testid="aging">
+                <StatusBadge status={agingStatus}>
+                  {aging.binding >= 1.05 ? `Aging ${formatNumber(aging.binding, 1)}× faster` : "Normal aging"}
+                </StatusBadge>
+                <p className="body-sm">
+                  At this moment the {result.binding === "TID" ? "radiation dose" : "orbital decay"} that limits life
+                  runs at{" "}
+                  <Num value={aging.binding} digits={2} label="estimate" unit="× the normal rate" />.{" "}
+                  {usedDays > 0.005 ? (
+                    <>
+                      Storms on this timeline have used{" "}
+                      <Num value={usedDays} digits={2} label="estimate" unit="extra days" /> of life so far (
+                      {formatNumber(result.lifetimeYears.mid, 2)} yr in normal conditions).
+                    </>
+                  ) : (
+                    <>No extra life used on this timeline so far.</>
+                  )}
+                </p>
+              </div>
+            ) : null}
             {readDepth !== null ? (
               <p className="note">
                 Dose read behind {readDepth} mm Al

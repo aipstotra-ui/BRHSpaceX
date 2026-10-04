@@ -35,7 +35,23 @@ test("the May 2024 timeline moves the danger zones in the outlook", async ({ pag
   const bare = await outlook.locator("[data-orbit-number]:not(:has([data-source-label]))").count();
   expect(bare).toBe(0);
 
+  // Kp 9 on 11 May: the chip ages faster, the AI shows its earlier call, and life is used up.
+  await setTimeline(page, 0);
+  const lifeBefore = Number((await outlook.getByTestId("life-left").innerText()).split(/\s/)[0]);
+  await setTimeline(page, 146);
+  await expect(outlook.getByTestId("aging")).toContainText("faster");
+  const ai = page.getByRole("region", { name: "AI analysis" });
+  await expect(ai).toContainText("For this 3-hour block the AI predicted Kp");
+  await expect(ai).toContainText("How it did in May 2024");
+  await expect(ai.getByText(/% confident/)).toBeVisible({ timeout: 30_000 });
+  await setTimeline(page, 287);
+  await expect(outlook.getByTestId("aging")).toContainText("extra days");
+  const lifeAfter = Number((await outlook.getByTestId("life-left").innerText()).split(/\s/)[0]);
+  expect(lifeAfter).toBeLessThan(lifeBefore);
+  await setTimeline(page, 137);
+
   // The Time Machine follows the same hour.
   await page.getByRole("tab", { name: "May 2024 replay" }).click();
   await expect(page.getByRole("slider", { name: "Replay scrubber" })).toHaveValue("137");
+  await expect(page.getByText(/The AI policy (cut|raised) the storm cost/)).toBeVisible({ timeout: 60_000 });
 });

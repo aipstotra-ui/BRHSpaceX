@@ -6,7 +6,6 @@ const SECTIONS: Record<string, string[]> = {
   "Best orbit": ["Orbit Optimizer"],
   "Space weather": ["AI Forecast", "Best Move", "Storm Scenario"],
   "May 2024 replay": ["Time Machine"],
-  Validation: ["Validation Lab"],
 };
 
 for (const width of [1280, 1920]) {

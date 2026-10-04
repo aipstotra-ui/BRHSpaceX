@@ -49,6 +49,8 @@ export interface OrbitReplay {
   actions: ActionName[];
   /** Per-hour exposure relative to the default orbit's quiet trapped flux. */
   exposure: number[];
+  /** Per-hour uncorrectable amount fed to the cost model, so other action plans can be scored the same way. */
+  amounts: number[];
 }
 
 export interface ReplayDelta {
@@ -111,6 +113,7 @@ function score(hours: ReplayHour[], orbit: ReplayOrbit, referenceFlux: number, s
   let bad = 0;
   let dose = 0;
   const actions: ActionName[] = [];
+  const amounts: number[] = [];
   for (let index = 0; index < hours.length; index += 1) {
     const totals = new Map<ActionName, number>();
     for (const action of ["continue", "checkpoint", "throttle", "safe mode"] as const) {
@@ -130,6 +133,7 @@ function score(hours: ReplayHour[], orbit: ReplayOrbit, referenceFlux: number, s
     }
     actions.push(best);
     const amount = amountAt(index);
+    amounts.push(amount);
     cost += actionCost(amount, best);
     bad += amount;
     dose += doseRate;
@@ -148,7 +152,35 @@ function score(hours: ReplayHour[], orbit: ReplayOrbit, referenceFlux: number, s
     dose,
     actions,
     exposure,
+    amounts,
   };
+}
+
+/**
+ * The exposure weight the M8 cost model multiplies by max(0, Kp - 2): the default orbit's SAA fraction,
+ * scaled by this orbit's trapped flux plus any solar-proton flux, relative to the default orbit.
+ * The policy's "saa" input uses this so the classifier and the replay cost agree.
+ */
+export function exposureWeight(orbit: ReplayOrbit, kp: number, protonPfu: number | null): number {
+  const reference = trappedFlux({ altitudeKm: DEFAULT_ORBIT_KM, inclinationDeg: DEFAULT_ORBIT_INC_DEG });
+  if (!(reference > 0)) {
+    return demoReferenceSaa();
+  }
+  const pfu = protonPfu ?? 0;
+  const sep = pfu * 4 * Math.PI * sepCapFraction(orbit, kp, pfu);
+  return (demoReferenceSaa() * (trappedFlux(orbit) + sep)) / reference;
+}
+
+/** Cost, downtime and uncorrectable total of any action plan on the same hourly amounts. */
+export function scorePlan(amounts: number[], plan: ActionName[]): { cost: number; downtimeHours: number } {
+  let cost = 0;
+  let downtimeHours = 0;
+  amounts.forEach((amount, index) => {
+    const action = plan[index] ?? "continue";
+    cost += actionCost(amount, action);
+    downtimeHours += action === "safe mode" ? 6 : action === "checkpoint" ? 0.25 : 0;
+  });
+  return { cost, downtimeHours };
 }
 
 function asOrbit(value: number | ReplayOrbit, inclinationDeg: number): ReplayOrbit {

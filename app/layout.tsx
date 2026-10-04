@@ -5,7 +5,7 @@ import "../3rok-design-system/tokens.css";
 import "../3rok-design-system/components/bundle.css";
 
 export const metadata: Metadata = {
-  title: "StarMind Nav",
+  title: { default: "3rok", template: "%s · 3rok" },
   description: "Find the orbit that minimizes impact on a chosen chip and maximizes its lifetime.",
 };
 

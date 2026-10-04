@@ -12,7 +12,8 @@ async function setTimeline(page: Page, index: number) {
 
 test("the May 2024 timeline moves the danger zones in the outlook", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto("/");
+  await page.goto("/test");
+  await page.getByText("Adjust orbit for this test").click();
   await page.getByRole("button", { name: "SSO dawn-dusk 06:00" }).click();
   await page.getByRole("button", { name: "May 2024 superstorm" }).click();
   const outlook = page.getByRole("region", { name: "Chip outlook" });

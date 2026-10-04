@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Disclosure } from "@/components/ui/Disclosure";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import {
   AI1_ALTITUDE_ASSUMPTION,
@@ -214,8 +215,7 @@ export function OrbitLocation() {
               LTAN is taken from the Starlink snapshot.
             </p>
           )}
-          <details className="advanced">
-            <summary className="eyebrow">Vehicle and drag inputs</summary>
+          <Disclosure title="Vehicle and drag inputs">
           <p className="note">
             Largest shell count <Num value={DERIVED_SHELL.count} digits={0} label="estimate" unit="objects" />. Solar
             array{" "}
@@ -252,7 +252,7 @@ export function OrbitLocation() {
               <Num value={vehicle[key]} digits={2} label="estimate" unit="" />
             </label>
           ))}
-          </details>
+          </Disclosure>
         </>
       ) : null}
     </div>

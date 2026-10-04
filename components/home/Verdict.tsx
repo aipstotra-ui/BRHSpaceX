@@ -148,7 +148,7 @@ export function Verdict() {
               <p className="note">
                 Dose read behind {readDepth} mm Al
                 {readDepth !== shieldingMmAl ? ` (chip shielding ${shieldingMmAl} mm is below the grid, so this is a thin-shield upper bound)` : ""}.
-                Set shielding in the Chip tab.
+                Set shielding on the case page.
               </p>
             ) : null}
           </div>

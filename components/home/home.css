@@ -1,4 +1,4 @@
-/* StarMind Nav page layout. 3rok tokens only: no hard-coded colors, fonts, spacing or radii. */
+/* 3rok page layout. 3rok tokens only: no hard-coded colors, fonts, spacing or radii. */
 
 body {
   background: var(--surface-100);
@@ -414,21 +414,6 @@ body {
 
 .rok-panel a {
   color: var(--accent);
-}
-
-.advanced {
-  border-top: 1px solid var(--line);
-  padding-top: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.advanced summary {
-  cursor: pointer;
-  color: var(--ink-muted);
-}
-
-.advanced[open] summary {
-  margin-bottom: var(--space-3);
 }
 
 /* ---------- workspace ---------- */

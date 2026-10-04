@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { Disclosure, FieldCounts } from "@/components/ui/Disclosure";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { ACTION_ORDER, POLICY_COSTS } from "@/lib/engine/actions";
 import { simulateImpact } from "@/lib/engine/impact";
@@ -23,6 +24,9 @@ const NUMBER_FIELDS: { key: keyof ChipSpec; label: string }[] = [
   { key: "opTempMaxC", label: "Operating temp max (°C)" },
   { key: "shieldingMmAl", label: "Shielding (mm Al)" },
 ];
+
+const KEY_NUMBER_FIELDS = NUMBER_FIELDS.filter((field) => field.key === "shieldingMmAl");
+const MORE_NUMBER_FIELDS = NUMBER_FIELDS.filter((field) => field.key !== "shieldingMmAl");
 
 function Num({
   value,
@@ -46,14 +50,25 @@ function isEmptySpec(spec: ChipSpec): boolean {
   return spec.memoryCapacity === 0 && spec.avgPowerKw === 0 && spec.acceleratorCount === 0 && spec.cpuCount === 0;
 }
 
-export function ChipSpecStudio() {
+export interface ChipStudioInitial {
+  presetId: string;
+  spec: ChipSpec;
+  payload: PayloadConfig;
+}
+
+/**
+ * The studio is a source, not a view: it pushes its own state into the shell store. Pass `initial`
+ * (a saved case's chip) so it starts from those values instead of the first preset.
+ */
+export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}) {
   const setStudio = useShellStore((state) => state.setStudio);
-  const [presetId, setPresetId] = useState(PRESETS[0].id);
-  const [payload, setPayload] = useState<PayloadConfig>(PRESETS[0].payload);
+  const [presetId, setPresetId] = useState(initial?.presetId ?? PRESETS[0].id);
+  const [payload, setPayload] = useState<PayloadConfig>(initial?.payload ?? PRESETS[0].payload);
   const [booted, setBooted] = useState(false);
   const preset = getPreset(presetId);
-  const form = useForm<ChipSpec>({ defaultValues: preset.spec });
-  const watched = useWatch({ control: form.control, defaultValue: preset.spec });
+  const startSpec = initial?.spec ?? preset.spec;
+  const form = useForm<ChipSpec>({ defaultValues: startSpec });
+  const watched = useWatch({ control: form.control, defaultValue: startSpec });
   const watchedKey = JSON.stringify(watched);
   const payloadKey = JSON.stringify(payload);
   const parsed = chipSpecSchema.safeParse(watched);
@@ -90,6 +105,17 @@ export function ChipSpecStudio() {
   }
 
   const spec = parsed.success ? parsed.data : preset.spec;
+  const moreLabels: SourceLabel[] = [
+    badgeForField(preset, "memoryType", spec.memoryType),
+    badgeForField(preset, "eccScheme", spec.eccScheme),
+    ...MORE_NUMBER_FIELDS.map((field) => badgeForField(preset, field.key, spec[field.key])),
+  ];
+  const payloadLabels: SourceLabel[] = [
+    badgeForPayload(preset, "radiatorAreaM2", payload.radiatorAreaM2),
+    badgeForPayload(preset, "radiatorSides", payload.radiatorSides),
+    badgeForPayload(preset, "tSinkK", payload.tSinkK),
+    badgeForPayload(preset, "emissivity", payload.emissivity),
+  ];
   const ai1 = presetId === "ai1-spacex" || presetId === "ai1-alternate";
   const ratioLabel =
     spec.avgPowerKw === preset.spec.avgPowerKw &&
@@ -151,19 +177,7 @@ export function ChipSpecStudio() {
           </span>
           <input className="rok-field__input body" {...form.register("name")} />
         </label>
-        <label className="rok-field">
-          <span className="rok-field__label eyebrow">
-            Memory type <SourceBadge label={badgeForField(preset, "memoryType", spec.memoryType)} />
-          </span>
-          <input className="rok-field__input body" {...form.register("memoryType")} />
-        </label>
-        <label className="rok-field">
-          <span className="rok-field__label eyebrow">
-            ECC scheme <SourceBadge label={badgeForField(preset, "eccScheme", spec.eccScheme)} />
-          </span>
-          <input className="rok-field__input body" {...form.register("eccScheme")} />
-        </label>
-        {NUMBER_FIELDS.map((field) => (
+        {KEY_NUMBER_FIELDS.map((field) => (
           <label className="rok-field" key={field.key}>
             <span className="rok-field__label eyebrow">
               {field.label} <SourceBadge label={badgeForField(preset, field.key, spec[field.key])} />
@@ -219,71 +233,110 @@ export function ChipSpecStudio() {
             <span className="body-sm rok-muted"> Peak on this sheet is peak compute. Slider range is 150 to 250.</span>
           ) : null}
         </label>
-        <label className="rok-field">
-          <span className="rok-field__label eyebrow">
-            Radiator area (m²) <SourceBadge label={badgeForPayload(preset, "radiatorAreaM2", payload.radiatorAreaM2)} />
-          </span>
-          <input
-            className="rok-field__input body"
-            type="number"
-            step="any"
-            value={payload.radiatorAreaM2}
-            onChange={(event) => setPayload({ ...payload, radiatorAreaM2: Number(event.target.value) })}
-          />
-        </label>
-        <div>
-          <span className="eyebrow">
-            Radiator sides <SourceBadge label={badgeForPayload(preset, "radiatorSides", payload.radiatorSides)} />
-          </span>
-          <div style={{ display: "flex", gap: "var(--space-3)" }}>
-            <button
-              type="button"
-              className="rok-btn"
-              data-testid="sides-1"
-              aria-pressed={payload.radiatorSides === 1}
-              onClick={() => setPayload({ ...payload, radiatorSides: 1 })}
-            >
-              1 side
-            </button>
-            <button
-              type="button"
-              className="rok-btn"
-              data-testid="sides-2"
-              aria-pressed={payload.radiatorSides === 2}
-              onClick={() => setPayload({ ...payload, radiatorSides: 2 })}
-            >
-              2 sides
-            </button>
+        <Disclosure title="More chip fields" meta={<FieldCounts labels={moreLabels} />}>
+          <label className="rok-field">
+            <span className="rok-field__label eyebrow">
+              Memory type <SourceBadge label={badgeForField(preset, "memoryType", spec.memoryType)} />
+            </span>
+            <input className="rok-field__input body" {...form.register("memoryType")} />
+          </label>
+          <label className="rok-field">
+            <span className="rok-field__label eyebrow">
+              ECC scheme <SourceBadge label={badgeForField(preset, "eccScheme", spec.eccScheme)} />
+            </span>
+            <input className="rok-field__input body" {...form.register("eccScheme")} />
+          </label>
+          {MORE_NUMBER_FIELDS.map((field) => (
+            <label className="rok-field" key={field.key}>
+              <span className="rok-field__label eyebrow">
+                {field.label} <SourceBadge label={badgeForField(preset, field.key, spec[field.key])} />
+              </span>
+              <input
+                className="rok-field__input body"
+                type="number"
+                step="any"
+                {...form.register(field.key, { valueAsNumber: true })}
+              />
+            </label>
+          ))}
+        </Disclosure>
+        <Disclosure title="Payload and radiator" meta={<FieldCounts labels={payloadLabels} />}>
+          <label className="rok-field">
+            <span className="rok-field__label eyebrow">
+              Radiator area (m²) <SourceBadge label={badgeForPayload(preset, "radiatorAreaM2", payload.radiatorAreaM2)} />
+            </span>
+            <input
+              className="rok-field__input body"
+              type="number"
+              step="any"
+              value={payload.radiatorAreaM2}
+              onChange={(event) => setPayload({ ...payload, radiatorAreaM2: Number(event.target.value) })}
+            />
+          </label>
+          <div>
+            <span className="eyebrow">
+              Radiator sides <SourceBadge label={badgeForPayload(preset, "radiatorSides", payload.radiatorSides)} />
+            </span>
+            <div style={{ display: "flex", gap: "var(--space-3)" }}>
+              <button
+                type="button"
+                className="rok-btn"
+                data-testid="sides-1"
+                aria-pressed={payload.radiatorSides === 1}
+                onClick={() => setPayload({ ...payload, radiatorSides: 1 })}
+              >
+                1 side
+              </button>
+              <button
+                type="button"
+                className="rok-btn"
+                data-testid="sides-2"
+                aria-pressed={payload.radiatorSides === 2}
+                onClick={() => setPayload({ ...payload, radiatorSides: 2 })}
+              >
+                2 sides
+              </button>
+            </div>
           </div>
-        </div>
-        <label className="rok-field">
-          <span className="rok-field__label eyebrow">
-            Sink temperature (K) <SourceBadge label={badgeForPayload(preset, "tSinkK", payload.tSinkK)} />
-          </span>
-          <input
-            className="rok-field__input body"
-            data-testid="tsink"
-            type="number"
-            step="any"
-            value={payload.tSinkK}
-            onChange={(event) => setPayload({ ...payload, tSinkK: Number(event.target.value) })}
-          />
-        </label>
-        <label className="rok-field">
-          <span className="rok-field__label eyebrow">
-            Emissivity <SourceBadge label={badgeForPayload(preset, "emissivity", payload.emissivity)} />
-          </span>
-          <input
-            className="rok-field__input body"
-            type="number"
-            step="any"
-            value={payload.emissivity}
-            onChange={(event) => setPayload({ ...payload, emissivity: Number(event.target.value) })}
-          />
-        </label>
+          <label className="rok-field">
+            <span className="rok-field__label eyebrow">
+              Sink temperature (K) <SourceBadge label={badgeForPayload(preset, "tSinkK", payload.tSinkK)} />
+            </span>
+            <input
+              className="rok-field__input body"
+              data-testid="tsink"
+              type="number"
+              step="any"
+              value={payload.tSinkK}
+              onChange={(event) => setPayload({ ...payload, tSinkK: Number(event.target.value) })}
+            />
+          </label>
+          <label className="rok-field">
+            <span className="rok-field__label eyebrow">
+              Emissivity <SourceBadge label={badgeForPayload(preset, "emissivity", payload.emissivity)} />
+            </span>
+            <input
+              className="rok-field__input body"
+              type="number"
+              step="any"
+              value={payload.emissivity}
+              onChange={(event) => setPayload({ ...payload, emissivity: Number(event.target.value) })}
+            />
+          </label>
+        </Disclosure>
       </form>
       {phase === "ready" ? (
         <div className="body" style={{ marginTop: "var(--space-4)" }}>
+          {impact.thermal.peakFlag ? (
+            <p data-testid="peak-flag" data-peak-flag="true">
+              {PEAK_FLAG_TEXT}
+            </p>
+          ) : (
+            <p data-testid="peak-flag" data-peak-flag="false">
+              Peak power stays inside the installed radiator across 320 K to 340 K.
+            </p>
+          )}
+          <Disclosure title="Thermal readout" meta={<span className="body-sm">Radiator areas, sheet pair, assumptions</span>}>
           <p>
             Average at 320 K <Num value={impact.thermal.areaAvg320.value} digits={1} label="estimate" unit="m²" />
             . Average at 340 K <Num value={impact.thermal.areaAvg340.value} digits={1} label="estimate" unit="m²" />.
@@ -304,27 +357,20 @@ export function ChipSpecStudio() {
               </>
             ) : null}
           </p>
-          {impact.thermal.peakFlag ? (
-            <p data-testid="peak-flag" data-peak-flag="true">
-              {PEAK_FLAG_TEXT}
-            </p>
-          ) : (
-            <p data-testid="peak-flag" data-peak-flag="false">
-              Peak power stays inside the installed radiator across 320 K to 340 K.
-            </p>
-          )}
           <p className="rok-muted">{impact.thermal.assumptions[0]}</p>
           <ul>
             {preset.notes.map((note) => (
               <li key={note}>{note}</li>
             ))}
           </ul>
+          </Disclosure>
         </div>
       ) : null}
-      <h3 className="heading-md">Action costs</h3>
+      <Disclosure title="Action costs" meta={<span className="body-sm">Downtime and switch costs per action</span>}>
       <p className="body">
         Downtime cost per hour <Num value={POLICY_COSTS.downtime_cost_per_hour} digits={0} label="estimate" unit="1/h" />. {POLICY_COSTS.note}
       </p>
+      <div className="table-scroll">
       <table className="body">
         <thead>
           <tr>
@@ -358,6 +404,8 @@ export function ChipSpecStudio() {
           })}
         </tbody>
       </table>
+      </div>
+      </Disclosure>
     </div>
   );
 }

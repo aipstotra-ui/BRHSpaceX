@@ -1,0 +1,240 @@
+html.demo {
+  --surface-100: #f4f9ff;
+  --surface-200: #ffffff;
+  --surface-300: #e7f3ff;
+  --ink: #10233a;
+  --ink-muted: #3e5874;
+  --ink-subtle: #5c7390;
+  --line: #d5e6f7;
+  --line-strong: #7eb0dc;
+  --accent: #0b74d1;
+  --on-accent: #ffffff;
+  --status-nominal: #0c9a55;
+  --status-caution: #e39b00;
+  --status-critical: #e11d48;
+}
+
+html.demo body {
+  background:
+    radial-gradient(900px 420px at 0% 0%, #b9ecff 0%, transparent 60%),
+    radial-gradient(720px 420px at 100% 0%, #ffd0ea 0%, transparent 55%),
+    radial-gradient(800px 500px at 80% 100%, #ffe7b0 0%, transparent 50%),
+    linear-gradient(180deg, #f7fbff 0%, #fff8f1 100%);
+  color: #10233a;
+}
+
+html.demo .rok-btn {
+  border: 0;
+  border-radius: 999px;
+  background: #0b74d1;
+  color: #ffffff;
+}
+
+html.demo .rok-btn:hover {
+  background: #085eaa;
+  color: #ffffff;
+}
+
+html.demo .rok-btn--ghost {
+  background: #ffffff;
+  color: #0b74d1;
+  border: 2px solid #0b74d1;
+}
+
+html.demo .rok-btn--ghost:hover {
+  background: #e7f3ff;
+  color: #085eaa;
+}
+
+html.demo .rok-field__input {
+  background: #ffffff;
+  color: #10233a;
+  border-radius: 12px;
+}
+
+.demo-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.demo-mark {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #0b4f9c;
+}
+
+.demo-lead {
+  margin: 4px 0 0;
+  color: #3e5874;
+  max-width: 46ch;
+}
+
+.demo-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.8fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.demo-earth {
+  background:
+    radial-gradient(circle at 50% 42%, #8fd4ff 0%, #3d7ef0 46%, #1d4eab 100%);
+  border-radius: 28px;
+  padding: 16px 16px 20px;
+  box-shadow: 0 18px 40px rgba(29, 78, 171, 0.18);
+}
+
+.demo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 8px 8px 0;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.demo-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.demo-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 12px 32px rgba(16, 35, 58, 0.08);
+}
+
+.demo-kicker {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b74d1;
+}
+
+.demo-score {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 84px;
+  line-height: 0.9;
+  font-weight: 500;
+}
+
+.demo-word {
+  margin: 8px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.demo-period {
+  margin: 8px 0 0;
+  color: #3e5874;
+}
+
+.demo-pills,
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.demo-pill {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #e7f3ff;
+  color: #0b4f9c;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-pill[aria-pressed="true"] {
+  background: #0b74d1;
+  color: #ffffff;
+}
+
+.demo-find {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, #ff7a18, #ff3d81);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.demo-find:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.demo-slider {
+  width: 100%;
+  accent-color: #0b74d1;
+  margin-top: 8px;
+}
+
+.demo-reasons {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demo-reasons li {
+  margin-top: 8px;
+  padding-left: 14px;
+  border-left: 4px solid #ff7a18;
+}
+
+.demo-compare {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f3fff6;
+  color: #0c6b3c;
+  font-weight: 600;
+}
+
+.demo-voice {
+  margin-top: 20px;
+}
+
+.demo-note {
+  margin: 14px 0 0;
+  color: #3e5874;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .demo-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-score {
+    font-size: 64px;
+  }
+}

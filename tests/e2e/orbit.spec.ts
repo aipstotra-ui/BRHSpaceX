@@ -26,7 +26,9 @@ test("altitude slider changes orbit impact and every numeric cell has a source b
   await expect(page.getByRole("slider", { name: "LTAN" })).toHaveValue("6");
   await page.getByRole("button", { name: "SSO noon-midnight 12:00" }).click();
   await expect(page.getByRole("slider", { name: "LTAN" })).toHaveValue("12");
-  await expect(page.getByRole("heading", { name: "Payload Health" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "AI Forecast" })).toBeVisible();
+  await page.getByRole("tab", { name: "Chip" }).click();
   await expect(page.getByRole("heading", { name: "Chip Spec Studio" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Payload Health" })).toBeVisible();
+  await page.getByRole("tab", { name: "Space weather" }).click();
+  await expect(page.getByRole("heading", { name: "AI Forecast" })).toBeVisible();
 });

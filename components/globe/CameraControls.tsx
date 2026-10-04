@@ -10,17 +10,17 @@ export function CameraControls({
   onZoom: (direction: 1 | -1) => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", margin: "var(--space-3) 0" }}>
-      <button type="button" className="rok-btn" onClick={() => onZoom(1)}>
+    <div className="globe-toolbar" role="group" aria-label="Camera">
+      <button type="button" className="rok-btn rok-btn--sm button" onClick={() => onZoom(1)}>
         Zoom in
       </button>
-      <button type="button" className="rok-btn" onClick={() => onZoom(-1)}>
+      <button type="button" className="rok-btn rok-btn--sm button" onClick={() => onZoom(-1)}>
         Zoom out
       </button>
-      <button type="button" className="rok-btn" aria-pressed={follow} onClick={() => onFollow(!follow)}>
+      <button type="button" className="rok-btn rok-btn--sm button" aria-pressed={follow} onClick={() => onFollow(!follow)}>
         Follow Starmind
       </button>
-      <p className="rok-muted">{follow ? "Follow mode" : "Free orbit"}</p>
+      <p className="eyebrow rok-subtle">{follow ? "Follow mode" : "Free orbit"}</p>
     </div>
   );
 }

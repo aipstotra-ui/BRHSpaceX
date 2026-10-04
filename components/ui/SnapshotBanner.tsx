@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-type Phase = "loading" | "error" | "empty" | "live" | "snapshot";
+export type FeedPhase = "loading" | "error" | "empty" | "live" | "snapshot";
+type Phase = FeedPhase;
 
 export function SnapshotBanner({ phase }: { phase: Phase }) {
   if (phase === "loading") {
@@ -28,7 +29,8 @@ export function SnapshotBanner({ phase }: { phase: Phase }) {
   );
 }
 
-export function SnapshotFeedStatus() {
+/** Where the Kp feed came from: the live NOAA feed or the stored snapshot. */
+export function useFeedPhase(): FeedPhase {
   const [phase, setPhase] = useState<Phase>("loading");
 
   useEffect(() => {
@@ -62,11 +64,16 @@ export function SnapshotFeedStatus() {
     };
   }, []);
 
-  if (phase === "live") {
+  return phase;
+}
+
+/** Full-width banner, shown only when a feed falls back to stored data. */
+export function SnapshotFeedStatus({ phase }: { phase: FeedPhase }) {
+  if (phase !== "snapshot") {
     return null;
   }
   return (
-    <section className="rok-panel" aria-label="Space weather feed">
+    <section className="rok-panel snapshot-strip" aria-label="Space weather feed">
       <SnapshotBanner phase={phase} />
     </section>
   );

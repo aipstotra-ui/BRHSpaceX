@@ -36,7 +36,7 @@ export function TimeMachine() {
       </label>
       {hour ? (
         <p>
-          {hour.time} Kp {hour.kp} {hour.gLevel} action {replay.chosen.actions[scrub]}
+          {hour.time} Kp {hour.kp === null ? "n/a" : hour.kp.toFixed(2)} {hour.gLevel} action {replay.chosen.actions[scrub]}
         </p>
       ) : null}
       <table>

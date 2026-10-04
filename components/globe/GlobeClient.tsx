@@ -271,14 +271,14 @@ export default function GlobeClient() {
     }
     let frame = 0;
     const resize = () => {
-      const size = 640;
-      renderer.setPixelRatio(1);
+      // Square canvas that fits its column, capped at the old fixed 640 px.
+      const size = Math.max(240, Math.min(640, Math.floor(wrapRef.current?.clientWidth ?? 640)));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(size, size, true);
-      canvas.style.maxWidth = "none";
+      canvas.style.maxWidth = "100%";
       canvas.style.display = "block";
       canvas.style.margin = "0 auto";
-      canvas.style.background = "#000";
-      renderer.setViewport(0, 0, size, size);
+      canvas.style.background = "var(--surface-100)";
       camera.aspect = 1;
       camera.updateProjectionMatrix();
     };
@@ -343,7 +343,19 @@ export default function GlobeClient() {
   }, [aurora]);
 
   return (
-    <div ref={wrapRef} style={{ position: "relative" }}>
+    <div ref={wrapRef} className="globe">
+      <div className="globe__stage">
+        <canvas ref={canvasRef} aria-label="Round Earth" />
+        <p className="globe__overlay eyebrow">{ILLUSTRATIVE_LABEL}</p>
+        {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
+        {phase === "error" ? (
+          <p className="globe__status" style={{ color: "var(--status-critical)" }}>
+            {error ?? "Error"}
+          </p>
+        ) : null}
+        {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
+      </div>
+      <OrbitTrail samples={trail} />
       <CameraControls
         follow={follow}
         onFollow={setFollow}
@@ -351,8 +363,14 @@ export default function GlobeClient() {
           zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
         }}
       />
-      <label className="rok-field">
-        Time scrubber (s)
+      <label className="rok-field globe__scrub">
+        <span className="rok-field__label eyebrow">
+          Time offset{" "}
+          <span className="data-sm rok-muted">
+            {scrubS >= 0 ? "+" : "−"}
+            {(Math.abs(scrubS) / 3600).toFixed(1)} h
+          </span>
+        </span>
         <input
           aria-label="Time scrubber"
           type="range"
@@ -363,21 +381,12 @@ export default function GlobeClient() {
           onChange={(event) => setScrubS(Number(event.target.value))}
         />
       </label>
-      <p className="rok-muted">
-        {ILLUSTRATIVE_LABEL} Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an
-        estimate. Trail length is one orbit, an estimate.
+      <p className="note">
+        Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an estimate. Trail length
+        is one orbit, an estimate. SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt
+        are NASA SP-8116. Aurora points (violet) are OVATION.
+        {tickMs !== null ? ` Worker tick ${tickMs.toFixed(1)} ms.` : ""}
       </p>
-      <p className="rok-muted">
-        Legend: SAA {classFromCode(1)}, auroral {classFromCode(2)}, outer belt {classFromCode(3)}, nominal{" "}
-        {classFromCode(0)}. SAA polygon is the Fermi GBM ring. Auroral zone and outer belt are NASA SP-8116. Aurora
-        points are OVATION.
-      </p>
-      {tickMs !== null ? <p className="rok-muted">Worker tick {tickMs.toFixed(1)} ms</p> : null}
-      {phase === "loading" ? <p className="rok-muted">Loading</p> : null}
-      {phase === "error" ? <p style={{ color: "var(--status-critical)" }}>{error ?? "Error"}</p> : null}
-      {phase === "empty" ? <p className="rok-muted">Empty</p> : null}
-      <OrbitTrail samples={trail} />
-      <canvas ref={canvasRef} aria-label="Round Earth" />
     </div>
   );
 }

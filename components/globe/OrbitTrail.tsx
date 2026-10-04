@@ -39,9 +39,16 @@ export function createTrailLine(samples: StarmindSample[]): THREE.LineSegments {
 
 export function OrbitTrail({ samples }: { samples: StarmindSample[] }) {
   return (
-    <p className="rok-muted">
-      Trail samples {samples.length}. Colors:{" "}
-      {(Object.keys(EXPOSURE_COLORS) as ExposureClass[]).join(", ")}.
-    </p>
+    <div className="legend">
+      <ul className="legend__items" aria-label="Trail colors">
+        {(Object.keys(EXPOSURE_COLORS) as ExposureClass[]).map((kind) => (
+          <li key={kind} className="eyebrow">
+            <span className="swatch" style={{ background: EXPOSURE_COLORS[kind] }} aria-hidden="true" />
+            {kind}
+          </li>
+        ))}
+      </ul>
+      <p className="note">Trail samples {samples.length}, one orbit.</p>
+    </div>
   );
 }

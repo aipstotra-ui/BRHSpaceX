@@ -87,29 +87,22 @@ export function OrbitLocation() {
   }
 
   return (
-    <div className="body">
+    <div className="body orbit-controls">
       {phase === "loading" ? <p className="rok-muted">Loading</p> : null}
-      {phase === "error" ? <p style={{ color: "var(--status-critical)" }}>{error ?? "Error"}</p> : null}
       {phase === "empty" ? <p className="rok-muted">Empty</p> : null}
-      {phase === "ready" ? (
+      {error ? (
+        <p role="alert" style={{ color: "var(--status-critical)" }}>
+          {error}
+        </p>
+      ) : null}
+      {phase === "ready" || (booted && error && altitudeKm > 0) ? (
         <>
-          <p className="rok-muted">
-            FCC constellation filing range, not AI1:{" "}
-            <span data-orbit-number>
-              {FCC_ALT_MIN_KM} km <SourceBadge label="source" />
-            </span>{" "}
-            to{" "}
-            <span data-orbit-number>
-              {FCC_ALT_MAX_KM} km <SourceBadge label="source" />
-            </span>{" "}
-            ({FCC_FILING_URL}).
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", margin: "var(--space-3) 0" }}>
+          <div className="preset-grid" role="group" aria-label="Orbit presets">
             {PRESETS.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className="rok-btn"
+                className="rok-btn rok-btn--sm"
                 aria-pressed={preset === item.id}
                 onClick={() => {
                   setError(null);
@@ -120,9 +113,9 @@ export function OrbitLocation() {
               </button>
             ))}
           </div>
-          {derived ? <p>{AI1_ALTITUDE_ASSUMPTION}</p> : null}
+          {derived ? <p className="note">{AI1_ALTITUDE_ASSUMPTION}</p> : null}
           <label className="rok-field">
-            Altitude (km)
+            <span className="rok-field__label eyebrow">Altitude</span>
             <input
               aria-label="Altitude"
               type="range"
@@ -133,19 +126,33 @@ export function OrbitLocation() {
               onChange={(event) => commitAltitude(Number(event.target.value))}
             />
           </label>
-          <p>
-            Altitude <Num value={altitudeKm} digits={3} label="estimate" unit="km" />
+          <p className="control-readout">
+            <Num value={altitudeKm} digits={1} label="estimate" unit="km" />
           </p>
-          <label className="rok-field">
+          <p className="note">
+            FCC constellation filing range, not AI1:{" "}
+            <span data-orbit-number>
+              {FCC_ALT_MIN_KM} km <SourceBadge label="source" />
+            </span>{" "}
+            to{" "}
+            <span data-orbit-number>
+              {FCC_ALT_MAX_KM} km <SourceBadge label="source" />
+            </span>{" "}
+            (<a href={FCC_FILING_URL} target="_blank" rel="noreferrer">
+              FCC filing
+            </a>
+            ).
+          </p>
+          <label className="checkbox-row">
             <input
               type="checkbox"
               checked={sunSynchronous}
               onChange={(event) => setSunSynchronous(event.target.checked)}
-            />{" "}
-            Sun-synchronous
+            />
+            <span>Sun-synchronous</span>
           </label>
           <label className="rok-field">
-            Inclination (deg)
+            <span className="rok-field__label eyebrow">Inclination</span>
             <input
               aria-label="Inclination"
               type="range"
@@ -165,8 +172,7 @@ export function OrbitLocation() {
               }}
             />
           </label>
-          <p>
-            Inclination{" "}
+          <p className="control-readout">
             <Num
               value={sunSynchronous ? ssoInclinationDeg(altitudeKm) : inclinationDeg}
               digits={4}
@@ -178,7 +184,7 @@ export function OrbitLocation() {
           {sunSynchronous ? (
             <>
               <label className="rok-field">
-                LTAN (h)
+                <span className="rok-field__label eyebrow">LTAN</span>
                 <input
                   aria-label="LTAN"
                   type="range"
@@ -197,18 +203,20 @@ export function OrbitLocation() {
                   }}
                 />
               </label>
-              <p>
-                LTAN <Num value={ltanHours ?? 6} digits={2} label="estimate" unit="h" />. Dawn-dusk is 06:00/18:00.
-                Noon-midnight is 12:00/00:00.
+              <p className="control-readout">
+                <Num value={ltanHours ?? 6} digits={2} label="estimate" unit="h" />
               </p>
+              <p className="note">Dawn-dusk is 06:00/18:00. Noon-midnight is 12:00/00:00.</p>
             </>
           ) : (
-            <p>
+            <p className="note">
               RAAN <Num value={raanDeg} digits={1} label="estimate" unit="deg" />. Non-SSO RAAN 0 is an estimate. No
               LTAN is taken from the Starlink snapshot.
             </p>
           )}
-          <p>
+          <details className="advanced">
+            <summary className="eyebrow">Vehicle and drag inputs</summary>
+          <p className="note">
             Largest shell count <Num value={DERIVED_SHELL.count} digits={0} label="estimate" unit="objects" />. Solar
             array{" "}
             <span data-orbit-number>
@@ -226,7 +234,7 @@ export function OrbitLocation() {
             ] as const
           ).map(([key, label]) => (
             <label key={key} className="rok-field">
-              {label}
+              <span className="rok-field__label eyebrow">{label}</span>
               <input
                 aria-label={label}
                 type="number"
@@ -244,6 +252,7 @@ export function OrbitLocation() {
               <Num value={vehicle[key]} digits={2} label="estimate" unit="" />
             </label>
           ))}
+          </details>
         </>
       ) : null}
     </div>

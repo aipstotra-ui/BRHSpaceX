@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { SourceBadge } from "@/components/ui/SourceBadge";
-import { orbitImpact, type OrbitImpactResult } from "@/lib/engine/orbitImpact";
-import { getPreset } from "@/lib/presets";
-import { useShellStore } from "@/lib/store";
-import { useOrbitStore } from "@/lib/store/orbit";
+import { useImpactStore } from "@/components/home/impactStore";
+import type { OrbitImpactResult } from "@/lib/engine/orbitImpact";
+import type { RangeValue } from "@/lib/engine/orbit/range";
 import type { SourceLabel } from "@/lib/types";
 
-type Phase = "loading" | "error" | "empty" | "ready";
+export function formatNumber(value: number, digits: number): string {
+  return Math.abs(value) >= 1e6 || (value !== 0 && Math.abs(value) < 1e-3) ? value.toExponential(2) : value.toFixed(digits);
+}
 
-function Num({
+export function Num({
   value,
   digits,
   label,
@@ -24,122 +23,64 @@ function Num({
   unit: string;
   testId?: string;
 }) {
-  const text = Math.abs(value) >= 1e6 || (value !== 0 && Math.abs(value) < 1e-3) ? value.toExponential(3) : value.toFixed(digits);
   return (
-    <span data-orbit-number data-testid={testId}>
-      {text} {unit} <SourceBadge label={label} />
+    <span data-orbit-number data-testid={testId} className="num">
+      {formatNumber(value, digits)}
+      {unit ? <span className="num__unit"> {unit}</span> : null} <SourceBadge label={label} />
     </span>
   );
 }
 
-function Band({
-  title,
-  value,
-  digits,
-  testId,
-}: {
+const ROWS: {
   title: string;
-  value: OrbitImpactResult["eclipseFraction"];
+  key: keyof Pick<
+    OrbitImpactResult,
+    | "upsetRate"
+    | "annualDose"
+    | "tidYears"
+    | "dragYears"
+    | "saaFraction"
+    | "auroralFraction"
+    | "outerBeltFraction"
+    | "eclipseFraction"
+  >;
   digits: number;
   testId?: string;
-}) {
+}[] = [
+  { title: "Upset rate", key: "upsetRate", digits: 3, testId: "upset-mid" },
+  { title: "Annual dose", key: "annualDose", digits: 4, testId: "dose-mid" },
+  { title: "Time to TID", key: "tidYears", digits: 2 },
+  { title: "Drag decay", key: "dragYears", digits: 2, testId: "drag-mid" },
+  { title: "SAA fraction", key: "saaFraction", digits: 4 },
+  { title: "Auroral fraction", key: "auroralFraction", digits: 4 },
+  { title: "Outer-belt fraction", key: "outerBeltFraction", digits: 4 },
+  { title: "Eclipse fraction", key: "eclipseFraction", digits: 4, testId: "eclipse-mid" },
+];
+
+function BandRow({ title, value, digits, testId }: { title: string; value: RangeValue; digits: number; testId?: string }) {
   return (
-    <p>
-      {title} low <Num value={value.low} digits={digits} label={value.label} unit={value.unit} /> mid{" "}
-      <Num value={value.mid} digits={digits} label={value.label} unit={value.unit} testId={testId} /> high{" "}
-      <Num value={value.high} digits={digits} label={value.label} unit={value.unit} />
-    </p>
+    <tr>
+      <th scope="row">{title}</th>
+      <td className="rok-num">
+        <Num value={value.low} digits={digits} label={value.label} unit={value.unit} />
+      </td>
+      <td className="rok-num">
+        <Num value={value.mid} digits={digits} label={value.label} unit={value.unit} testId={testId} />
+      </td>
+      <td className="rok-num">
+        <Num value={value.high} digits={digits} label={value.label} unit={value.unit} />
+      </td>
+    </tr>
   );
 }
 
 export function OrbitImpact() {
-  const altitudeKm = useOrbitStore((state) => state.altitudeKm);
-  const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
-  const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
-  const ltanHours = useOrbitStore((state) => state.ltanHours);
-  const raanDeg = useOrbitStore((state) => state.raanDeg);
-  const vehicle = useOrbitStore((state) => state.vehicle);
-  const presetId = useShellStore((state) => state.presetId);
-  const spec = useShellStore((state) => state.spec);
-  const payload = useShellStore((state) => state.payload);
-  const [phase, setPhase] = useState<Phase>("loading");
-  const [result, setResult] = useState<OrbitImpactResult | null>(null);
-  const [workerMs, setWorkerMs] = useState<number | null>(null);
+  const phase = useImpactStore((state) => state.phase);
+  const result = useImpactStore((state) => state.result);
+  const workerMs = useImpactStore((state) => state.workerMs);
 
-  const vehicleKey = JSON.stringify(vehicle);
-  const specKey = JSON.stringify(spec);
-  const payloadKey = JSON.stringify(payload);
-
-  useEffect(() => {
-    if (!(altitudeKm > 0)) {
-      return;
-    }
-    let cancelled = false;
-    let worker: Worker | null = null;
-    const job = window.setTimeout(() => {
-      setPhase("loading");
-      const chip = getPreset(presetId);
-      const input = {
-        altitudeKm,
-        inclinationDeg,
-        sunSynchronous,
-        ltanHours,
-        raanDeg,
-        vehicle: JSON.parse(vehicleKey) as typeof vehicle,
-        spec: JSON.parse(specKey) as typeof spec,
-        payload: JSON.parse(payloadKey) as typeof payload,
-        memoryUnit: chip.memoryUnit,
-        nodeKnown: chip.nodeKnown,
-        deviceSeu: chip.deviceSeu,
-      };
-      const apply = (next: OrbitImpactResult, ms: number) => {
-        if (cancelled) {
-          return;
-        }
-        setResult(next);
-        setWorkerMs(ms);
-        setPhase("ready");
-      };
-      const fail = () => {
-        if (!cancelled) {
-          setPhase("error");
-        }
-      };
-      try {
-        worker = new Worker(new URL("../../lib/engine/orbit.worker.ts", import.meta.url));
-        worker.onmessage = (event: MessageEvent<{ id: number; ok: boolean; result?: OrbitImpactResult; ms?: number }>) => {
-          if (event.data.id !== 1 || cancelled) {
-            return;
-          }
-          if (!event.data.ok || !event.data.result || event.data.ms === undefined) {
-            fail();
-            return;
-          }
-          apply(event.data.result, event.data.ms);
-        };
-        worker.onerror = () => fail();
-        worker.postMessage({ id: 1, input });
-      } catch {
-        try {
-          const next = orbitImpact(input);
-          apply(next, next.environmentMs);
-        } catch {
-          fail();
-        }
-      }
-    }, 0);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(job);
-      worker?.terminate();
-    };
-  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, vehicleKey, specKey, payloadKey, presetId, vehicle, spec, payload]);
-
-  if (!(altitudeKm > 0)) {
+  if (phase === "empty") {
     return <p className="body rok-muted">Empty</p>;
-  }
-  if (phase === "loading" || !result) {
-    return <p className="body rok-muted">Loading</p>;
   }
   if (phase === "error") {
     return (
@@ -148,22 +89,41 @@ export function OrbitImpact() {
       </p>
     );
   }
+  if (!result) {
+    return <p className="body rok-muted">Loading</p>;
+  }
 
   return (
-    <div className="body">
-      <p>orbit-averaged; multi-year values use climatology (M7), not the short-term forecaster</p>
+    <div className="body stack">
+      <p className="note">orbit-averaged; multi-year values use climatology (M7), not the short-term forecaster</p>
       <p data-testid="binding">
         Binding limit: {result.binding}. Lifetime{" "}
         <Num value={result.lifetimeYears.mid} digits={2} label={result.lifetimeYears.label} unit="yr" testId="lifetime-mid" />
       </p>
-      <Band title="Upset rate" value={result.upsetRate} digits={3} testId="upset-mid" />
-      <Band title="Annual dose" value={result.annualDose} digits={4} testId="dose-mid" />
-      <Band title="Time to TID" value={result.tidYears} digits={2} />
-      <Band title="Drag decay" value={result.dragYears} digits={2} testId="drag-mid" />
-      <Band title="SAA fraction" value={result.saaFraction} digits={4} />
-      <Band title="Auroral fraction" value={result.auroralFraction} digits={4} />
-      <Band title="Outer-belt fraction" value={result.outerBeltFraction} digits={4} />
-      <Band title="Eclipse fraction" value={result.eclipseFraction} digits={4} testId="eclipse-mid" />
+      <div className="table-scroll">
+        <table className="rok-table">
+          <caption className="sr-only">Orbit impact ranges</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quantity</th>
+              <th scope="col" className="rok-num">
+                Low
+              </th>
+              <th scope="col" className="rok-num">
+                Mid
+              </th>
+              <th scope="col" className="rok-num">
+                High
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.map((row) => (
+              <BandRow key={row.key} title={row.title} value={result[row.key]} digits={row.digits} testId={row.testId} />
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p>
         Thermal margin <Num value={result.thermalMarginC.mid} digits={2} label={result.thermalMarginC.label} unit="°C" />.
         Eclipse fraction is shown beside it and does not change the M4 temperature.
@@ -172,17 +132,46 @@ export function OrbitImpact() {
         Shielding <Num value={result.shieldingMmAl.mid} digits={2} label={result.shieldingMmAl.label} unit="mm Al" /> is
         not applied.
       </p>
-      <p>
+      <h3 className="heading-sm">Storm sensitivity</h3>
+      <div className="table-scroll">
+        <table className="rok-table">
+          <caption className="sr-only">Change in upsets and drag lifetime by storm level</caption>
+          <thead>
+            <tr>
+              <th scope="col">Storm</th>
+              <th scope="col" className="rok-num">
+                Kp
+              </th>
+              <th scope="col" className="rok-num">
+                Extra upsets
+              </th>
+              <th scope="col" className="rok-num">
+                Drag life lost
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.storms.map((storm) => (
+              <tr key={storm.level}>
+                <th scope="row">{storm.level}</th>
+                <td className="rok-num">
+                  <Num value={storm.kp} digits={0} label="source" unit="" />
+                </td>
+                <td className="rok-num">
+                  <Num value={storm.deltaUpsetPerS.mid} digits={3} label="estimate" unit="1/s" />
+                </td>
+                <td className="rok-num">
+                  <Num value={storm.deltaDragYears.mid} digits={2} label="estimate" unit="yr" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="note">
         Worker time{" "}
         {workerMs === null ? null : <Num value={workerMs} digits={1} label="estimate" unit="ms" testId="worker-ms" />}
       </p>
-      {result.storms.map((storm) => (
-        <p key={storm.level}>
-          {storm.level} Kp <Num value={storm.kp} digits={0} label="source" unit="" /> Δupset{" "}
-          <Num value={storm.deltaUpsetPerS.mid} digits={3} label="estimate" unit="1/s" /> Δdrag{" "}
-          <Num value={storm.deltaDragYears.mid} digits={2} label="estimate" unit="yr" />
-        </p>
-      ))}
     </div>
   );
 }

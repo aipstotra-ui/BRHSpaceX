@@ -86,11 +86,45 @@ function writeAll(storage: StorageLike, rows: unknown[]): void {
   }
 }
 
+const listeners = new Set<() => void>();
+
+function notify(): void {
+  listeners.forEach((listener) => listener());
+}
+
+/** Tell a hook when saved cases change: in this tab after a write, and in other tabs through "storage". */
+export function subscribeCases(listener: () => void): () => void {
+  listeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+const UNAVAILABLE_SNAPSHOT = "\u0000unavailable";
+
+/** The saved text as one string, so useSyncExternalStore can tell by value whether it changed. */
+export function casesSnapshot(): string {
+  try {
+    return window.localStorage.getItem(CASES_STORAGE_KEY) ?? "";
+  } catch {
+    return UNAVAILABLE_SNAPSHOT;
+  }
+}
+
+export function listingFromSnapshot(snapshot: string): CaseListing {
+  if (snapshot === UNAVAILABLE_SNAPSHOT) {
+    return createUnavailableCaseStore().list();
+  }
+  return createCaseStore({ getItem: () => (snapshot === "" ? null : snapshot), setItem: () => undefined }).list();
+}
+
 /**
  * A case store over any Storage-like object. Cases that fail the schema are left in place on disk
  * (so a newer version of the app can still read them) and reported by list().
  */
-export function createCaseStore(storage: StorageLike): CaseStore {
+export function createCaseStore(storage: StorageLike, onChange?: () => void): CaseStore {
   return {
     list: () => readAll(storage),
     get: (id) => readAll(storage).cases.find((item) => item.id === id) ?? null,
@@ -98,6 +132,7 @@ export function createCaseStore(storage: StorageLike): CaseStore {
       const raw = readRaw(storage);
       const rows = raw.rows.filter((row) => !(typeof row === "object" && row !== null && (row as { id?: unknown }).id === doc.id));
       writeAll(storage, [doc, ...rows]);
+      onChange?.();
     },
     remove(id) {
       const raw = readRaw(storage);
@@ -105,6 +140,7 @@ export function createCaseStore(storage: StorageLike): CaseStore {
         storage,
         raw.rows.filter((row) => !(typeof row === "object" && row !== null && (row as { id?: unknown }).id === id)),
       );
+      onChange?.();
     },
   };
 }
@@ -126,7 +162,7 @@ export function createUnavailableCaseStore(): CaseStore {
 /** The store for this browser. Client only: call it from an effect or an event handler. */
 export function getCaseStore(): CaseStore {
   try {
-    return createCaseStore(window.localStorage);
+    return createCaseStore(window.localStorage, notify);
   } catch {
     return createUnavailableCaseStore();
   }

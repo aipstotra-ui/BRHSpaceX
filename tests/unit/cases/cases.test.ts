@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_CASE_NAME, logExport, newCase, renameCase, saveInputs } from "@/lib/cases/ops";
+import { defaultInputs } from "@/lib/cases/defaults";
+import { newCaseId, orbitKind, orbitLine, utcMinute } from "@/lib/cases/format";
+import { DEFAULT_CASE_NAME, logExport, newCase, renameCase, sameInputs, saveInputs } from "@/lib/cases/ops";
 import { caseDocSchema, CASE_VERSION, type CaseInputs } from "@/lib/cases/schema";
 import { applyInputs, captureInputs } from "@/lib/cases/snapshot";
 import {
@@ -8,6 +10,7 @@ import {
   CaseStoreError,
   createCaseStore,
   createUnavailableCaseStore,
+  listingFromSnapshot,
   type StorageLike,
 } from "@/lib/cases/store";
 import { DEFAULT_PRESET_ID, PRESETS, getPreset } from "@/lib/presets";
@@ -189,5 +192,73 @@ describe("applying a case to the input stores", () => {
     expect(inputs()).toEqual(saved);
     expect(useOrbitStore.getState().preset).toBe("sso-dawn");
     expect(useShellStore.getState().spec.shieldingMmAl).toBe(7);
+  });
+});
+
+describe("the defaults", () => {
+  it("are what the two input stores start with, so a new case and the demo agree with the panels", () => {
+    expect(defaultInputs()).toEqual(captureInputs());
+  });
+
+  it("are a copy: changing one does not change the preset or the next default", () => {
+    const one = defaultInputs();
+    one.chip.spec.shieldingMmAl = 999;
+    expect(defaultInputs().chip.spec.shieldingMmAl).not.toBe(999);
+    expect(getPreset(DEFAULT_PRESET_ID).spec.shieldingMmAl).not.toBe(999);
+  });
+});
+
+describe("comparing inputs", () => {
+  it("ignores key order and keys that are undefined", () => {
+    const a = inputs();
+    const b = JSON.parse(JSON.stringify(a)) as CaseInputs;
+    b.chip.spec = Object.fromEntries(Object.entries(b.chip.spec).reverse()) as CaseInputs["chip"]["spec"];
+    expect(sameInputs(a, b)).toBe(true);
+    const withUndefined = { ...a, chip: { ...a.chip, spec: { ...a.chip.spec, latchupLet: undefined } } };
+    expect(sameInputs(a, withUndefined)).toBe(true);
+  });
+
+  it("sees a real change", () => {
+    const a = inputs();
+    expect(sameInputs(a, { ...a, orbit: { ...a.orbit, altitudeKm: a.orbit.altitudeKm + 1 } })).toBe(false);
+  });
+});
+
+describe("reading the saved text as a value", () => {
+  it("lists from a snapshot string, the empty string, and the unavailable marker", () => {
+    const doc = newCase({ id: "a", inputs: inputs(), now: T0 });
+    expect(listingFromSnapshot(JSON.stringify({ version: 1, cases: [doc] })).cases).toEqual([doc]);
+    expect(listingFromSnapshot("")).toEqual({ cases: [], problems: [] });
+    expect(listingFromSnapshot("\u0000unavailable").problems).toEqual(["Saved cases are not available in this browser."]);
+  });
+
+  it("tells the store's listeners after a write", () => {
+    let calls = 0;
+    const store = createCaseStore(memoryStorage(), () => void (calls += 1));
+    store.save(newCase({ id: "a", inputs: inputs(), now: T0 }));
+    store.remove("a");
+    expect(calls).toBe(2);
+  });
+});
+
+describe("the words and ids", () => {
+  it("names an orbit the way the top bar does", () => {
+    expect(orbitKind({ sunSynchronous: false, ltanHours: null })).toBe("Inclined orbit");
+    expect(orbitKind({ sunSynchronous: true, ltanHours: 6 })).toBe("SSO 06:00 LTAN");
+    expect(orbitLine({ ...inputs().orbit, altitudeKm: 462.57, inclinationDeg: 53.16, sunSynchronous: false, ltanHours: null })).toBe(
+      "Inclined orbit · 463 KM · 53.2°",
+    );
+  });
+
+  it("writes a UTC minute without the locale", () => {
+    expect(utcMinute("2026-10-04T12:05:09.000Z")).toBe("2026-10-04 12:05 UTC");
+  });
+
+  it("makes 32-hex ids that differ", () => {
+    const ids = new Set(Array.from({ length: 50 }, newCaseId));
+    expect(ids.size).toBe(50);
+    for (const id of ids) {
+      expect(id).toMatch(/^[0-9a-f]{32}$/);
+    }
   });
 });

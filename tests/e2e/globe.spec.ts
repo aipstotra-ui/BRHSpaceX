@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("altitude slider updates the Starmind orbit radius", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("/test");
+  await page.getByText("Adjust orbit for this test").click();
   const radius = page.getByTestId("starmind-radius");
   await expect(radius).toBeVisible();
   await expect(radius).toContainText("SSO (official). Altitude");

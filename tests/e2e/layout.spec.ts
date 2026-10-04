@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const SECTIONS: Record<string, string[]> = {
   "Orbit risk": ["Orbit Impact"],
-  Chip: ["Chip Spec Studio", "Payload Health"],
+  Chip: ["Payload Health"],
   "Best orbit": ["Orbit Optimizer"],
   "Space weather": ["AI Forecast", "Best Move", "Storm Scenario"],
   "May 2024 replay": ["Time Machine"],
@@ -22,6 +22,8 @@ for (const width of [1280, 1920]) {
     await page.goto("/test");
     await expect(page.getByRole("heading", { name: "Space Environment" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Chip outlook" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Case", exact: true })).toBeVisible();
+    await page.getByText("Adjust orbit for this test").click();
     await expect(page.getByRole("heading", { name: "Orbit Location" })).toBeVisible();
     for (const [tab, headings] of Object.entries(SECTIONS)) {
       await page.getByRole("tab", { name: tab }).click();

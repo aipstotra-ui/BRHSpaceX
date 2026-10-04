@@ -2,10 +2,11 @@ import type { CaseInputs } from "@/lib/cases/schema";
 import { useShellStore } from "@/lib/store";
 import { useOrbitStore } from "@/lib/store/orbit";
 
-/** Read the inputs a case keeps out of the two input stores. */
-export function captureInputs(): CaseInputs {
-  const shell = useShellStore.getState();
-  const orbit = useOrbitStore.getState();
+type ShellSnapshot = ReturnType<typeof useShellStore.getState>;
+type OrbitSnapshot = ReturnType<typeof useOrbitStore.getState>;
+
+/** The inputs a case keeps, out of the two input stores' state. */
+export function inputsFromStores(shell: ShellSnapshot, orbit: OrbitSnapshot): CaseInputs {
   return {
     chip: { presetId: shell.presetId, spec: shell.spec, payload: shell.payload },
     orbit: {
@@ -18,6 +19,11 @@ export function captureInputs(): CaseInputs {
       vehicle: orbit.vehicle,
     },
   };
+}
+
+/** Read the inputs a case keeps out of the two input stores, as they stand now. */
+export function captureInputs(): CaseInputs {
+  return inputsFromStores(useShellStore.getState(), useOrbitStore.getState());
 }
 
 /**

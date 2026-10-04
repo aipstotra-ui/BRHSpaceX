@@ -4,6 +4,26 @@ import { CASE_VERSION } from "@/lib/cases/schema";
 /** What a new case is called until the person renames it. */
 export const DEFAULT_CASE_NAME = "New case";
 
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(canonical);
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, item]) => item !== undefined)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([key, item]) => [key, canonical(item)]),
+    );
+  }
+  return value;
+}
+
+/** True when two sets of inputs hold the same values, whatever order the keys came in. */
+export function sameInputs(a: CaseInputs, b: CaseInputs): boolean {
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+}
+
 function entry(kind: CaseLogEntry["kind"], text: string, now: Date): CaseLogEntry {
   return { at: now.toISOString(), kind, text };
 }
@@ -33,7 +53,7 @@ export function renameCase(doc: CaseDoc, name: string, now: Date): CaseDoc {
 
 /** Replace the inputs and log the save. Returns the same document when nothing changed. */
 export function saveInputs(doc: CaseDoc, inputs: CaseInputs, now: Date): CaseDoc {
-  if (JSON.stringify(doc.inputs) === JSON.stringify(inputs)) {
+  if (sameInputs(doc.inputs, inputs)) {
     return doc;
   }
   return {

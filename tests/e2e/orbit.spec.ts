@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("altitude slider changes orbit impact and every numeric cell has a source badge", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("/test");
+  await page.getByText("Adjust orbit for this test").click();
   await expect(page.getByTestId("eclipse-mid")).toBeVisible({ timeout: 60_000 });
   const before = await page.getByTestId("drag-mid").innerText();
   const slider = page.getByRole("slider", { name: "Altitude" });
@@ -27,7 +28,6 @@ test("altitude slider changes orbit impact and every numeric cell has a source b
   await page.getByRole("button", { name: "SSO noon-midnight 12:00" }).click();
   await expect(page.getByRole("slider", { name: "LTAN" })).toHaveValue("12");
   await page.getByRole("tab", { name: "Chip" }).click();
-  await expect(page.getByRole("heading", { name: "Chip Spec Studio" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Payload Health" })).toBeVisible();
   await page.getByRole("tab", { name: "Space weather" }).click();
   await expect(page.getByRole("heading", { name: "AI Forecast" })).toBeVisible();

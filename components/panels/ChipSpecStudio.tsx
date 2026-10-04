@@ -46,14 +46,25 @@ function isEmptySpec(spec: ChipSpec): boolean {
   return spec.memoryCapacity === 0 && spec.avgPowerKw === 0 && spec.acceleratorCount === 0 && spec.cpuCount === 0;
 }
 
-export function ChipSpecStudio() {
+export interface ChipStudioInitial {
+  presetId: string;
+  spec: ChipSpec;
+  payload: PayloadConfig;
+}
+
+/**
+ * The studio is a source, not a view: it pushes its own state into the shell store. Pass `initial`
+ * (a saved case's chip) so it starts from those values instead of the first preset.
+ */
+export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}) {
   const setStudio = useShellStore((state) => state.setStudio);
-  const [presetId, setPresetId] = useState(PRESETS[0].id);
-  const [payload, setPayload] = useState<PayloadConfig>(PRESETS[0].payload);
+  const [presetId, setPresetId] = useState(initial?.presetId ?? PRESETS[0].id);
+  const [payload, setPayload] = useState<PayloadConfig>(initial?.payload ?? PRESETS[0].payload);
   const [booted, setBooted] = useState(false);
   const preset = getPreset(presetId);
-  const form = useForm<ChipSpec>({ defaultValues: preset.spec });
-  const watched = useWatch({ control: form.control, defaultValue: preset.spec });
+  const startSpec = initial?.spec ?? preset.spec;
+  const form = useForm<ChipSpec>({ defaultValues: startSpec });
+  const watched = useWatch({ control: form.control, defaultValue: startSpec });
   const watchedKey = JSON.stringify(watched);
   const payloadKey = JSON.stringify(payload);
   const parsed = chipSpecSchema.safeParse(watched);
@@ -325,6 +336,7 @@ export function ChipSpecStudio() {
       <p className="body">
         Downtime cost per hour <Num value={POLICY_COSTS.downtime_cost_per_hour} digits={0} label="estimate" unit="1/h" />. {POLICY_COSTS.note}
       </p>
+      <div className="table-scroll">
       <table className="body">
         <thead>
           <tr>
@@ -358,6 +370,7 @@ export function ChipSpecStudio() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

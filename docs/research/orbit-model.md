@@ -17,10 +17,12 @@
   - AI1 mass, drag area, Cd and end-of-life altitude: `UNVERIFIED` until sourced; otherwise user inputs labeled `estimate`
   - Candidate *derived* solar-array area: 210 kW ÷ 250 W/m² = 840 m², from the spacex.com sheet. The reading is confirmed at M5 L2(f).
 - **Long-range vs short-term (rule).** Long-range orbit choice (optimizer, multi-year lifetime) uses **climatology**: storm frequency by size across the OMNI history and solar-cycle phase (M7). It **never** uses the short-term forecaster. The short-term forecaster drives Best Move, the replays and scenarios.
-- **Transfer (M7).** Coplanar Hohmann between circular radii r1 → r2:
+- **Transfer (M7).** Coplanar Hohmann between circular radii r1 → r2, using WGS 84 μ and R_E from `lib/engine/orbit/constants.ts`:
   - Δv1 = √(μ/r1)·(√(2r2/(r1+r2)) − 1)
   - Δv2 = √(μ/r2)·(1 − √(2r1/(r1+r2)))
   - Plane change, LTAN change and drag are ignored. The animation is labeled ILLUSTRATIVE and isn't a maneuver plan.
+  - Worked check: 300 km to 35,786 km with those constants is 3.893 km/s, which rounds to 3.89 km/s. This is the plan formula, not a second printed table.
+- **Climatology phase (M7).** Sunspot R was not parsed. Phase is an estimate from F10.7: under 80 sfu low, 80–150 mid, 150 and above high. It is not forecast skill.
 - **Scenario (M9) rules.**
   - Outputs are labeled SCENARIO.
   - Input bounds are the observed extremes in OMNI (1995+) and the DONKI CME history (`data/scenario/ranges.json`).

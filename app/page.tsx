@@ -4,6 +4,7 @@ import { AIForecast } from "@/components/panels/AIForecast";
 import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
 import { OrbitImpact } from "@/components/panels/OrbitImpact";
 import { OrbitLocation } from "@/components/panels/OrbitLocation";
+import { OrbitOptimizer } from "@/components/panels/OrbitOptimizer";
 import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { SpaceEnvironment } from "@/components/panels/SpaceEnvironment";
 import { VoiceTest } from "@/components/panels/VoiceTest";
@@ -75,12 +76,14 @@ export default function HomePage() {
             {title === "Payload Health" ? <PayloadHealth /> : null}
             {title === "Orbit Location" ? <OrbitLocation /> : null}
             {title === "Orbit Impact" ? <OrbitImpact /> : null}
+            {title === "Orbit Optimizer" ? <OrbitOptimizer /> : null}
             {title === "Space Environment" ? <SpaceEnvironment /> : null}
             {title !== "AI Forecast" &&
             title !== "Chip Spec Studio" &&
             title !== "Payload Health" &&
             title !== "Orbit Location" &&
             title !== "Orbit Impact" &&
+            title !== "Orbit Optimizer" &&
             title !== "Space Environment" ? (
               <PanelBody phase={panelPhase} />
             ) : null}

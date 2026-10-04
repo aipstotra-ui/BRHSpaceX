@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import "@/components/cases/cases.css";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { useCaseListing } from "@/lib/cases/hooks";
 import { getPreset } from "@/lib/presets";
 
@@ -17,8 +18,7 @@ export function ImportCase({ currentId }: { currentId: string | null }) {
   const value = chosen !== "" ? chosen : (currentId ?? cases[0]?.id ?? "");
 
   return (
-    <details className="advanced">
-      <summary className="eyebrow">Import case</summary>
+    <Disclosure title="Import case">
       {listing === null ? (
         <p role="status" className="body-sm rok-muted">
           Loading cases
@@ -56,6 +56,6 @@ export function ImportCase({ currentId }: { currentId: string | null }) {
           {listing.problems.length === 1 ? listing.problems[0] : `${listing.problems.length} saved cases could not be read.`}
         </p>
       ) : null}
-    </details>
+    </Disclosure>
   );
 }

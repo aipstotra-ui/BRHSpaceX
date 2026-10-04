@@ -9,6 +9,7 @@ import "@/components/home/home.css";
 import { Section } from "@/components/home/Workspace";
 import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
 import { OrbitLocation } from "@/components/panels/OrbitLocation";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { utcMinute } from "@/lib/cases/format";
 import { useCase, useCurrentInputs } from "@/lib/cases/hooks";
@@ -175,7 +176,15 @@ function EditorBody({ doc }: { doc: CaseDoc }) {
           <Section title="Orbit Location" eyebrow="Controls">
             <OrbitLocation />
           </Section>
-          <Section title="Activity" eyebrow="Log">
+          <Disclosure
+            title="Activity"
+            meta={
+              <span className="body-sm">
+                {doc.log.length} {doc.log.length === 1 ? "entry" : "entries"}, last{" "}
+                <span className="data-sm">{utcMinute(doc.log[doc.log.length - 1]?.at ?? doc.updatedAt)}</span>
+              </span>
+            }
+          >
             <ol className="case-log body-sm">
               {doc.log.map((item) => (
                 <li key={`${item.at}-${item.kind}`}>
@@ -186,7 +195,7 @@ function EditorBody({ doc }: { doc: CaseDoc }) {
                 </li>
               ))}
             </ol>
-          </Section>
+          </Disclosure>
         </div>
       </div>
     </>

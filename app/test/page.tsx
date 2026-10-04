@@ -23,6 +23,7 @@ import { SpaceEnvironment } from "@/components/panels/SpaceEnvironment";
 import { StormScenario } from "@/components/panels/StormScenario";
 import { TimeMachine } from "@/components/panels/TimeMachine";
 import { SnapshotFeedStatus, useFeedPhase } from "@/components/ui/SnapshotBanner";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { defaultInputs } from "@/lib/cases/defaults";
 import { useCase, useCurrentInputs, type CaseLookup } from "@/lib/cases/hooks";
@@ -195,13 +196,12 @@ function TestScreen() {
         <div className="cockpit__bench">
           <div className="cockpit__controls">
             <CaseSummary caseId={flownId} caseName={lookup.status === "ready" ? lookup.doc.name : null} />
-            <details className="advanced test-adjust">
-              <summary className="eyebrow">Adjust orbit for this test</summary>
+            <Disclosure title="Adjust orbit for this test" className="test-adjust">
               <p className="body-sm rok-muted">Changes here apply to this page only. The saved case is not changed.</p>
               <Section title="Orbit Location" eyebrow="Controls">
                 <OrbitLocation />
               </Section>
-            </details>
+            </Disclosure>
           </div>
           <Workspace tabs={TABS} active={tab} onChange={setTab} />
         </div>

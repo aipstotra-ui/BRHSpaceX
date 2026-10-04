@@ -51,7 +51,8 @@ test("a case is created, edited, saved, exported to testing, and survives a relo
   await page.goto("/cases");
   await expect(page.getByRole("link", { name: "Dawn test" })).toBeVisible();
   await page.goto(caseUrl);
-  await page.getByText("Activity", { exact: true }).first().waitFor();
+  await expect(page.getByText("Exported to testing.")).toBeHidden();
+  await page.locator("summary", { hasText: "Activity" }).click();
   await expect(page.getByText("Exported to testing.")).toBeVisible();
 });
 
@@ -84,4 +85,34 @@ test("the nav reaches cases and testing, and the mark has an accessible home lin
   await page.getByRole("link", { name: "Testing" }).click();
   await expect(page).toHaveURL(/\/test$/);
   await expect(page.getByRole("link", { name: "Testing" })).toHaveAttribute("aria-current", "page");
+});
+
+test("the chip form shows its key fields and keeps the rest closed, with the source counts in view", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto("/cases");
+  await page.getByRole("button", { name: "Create case" }).click();
+  await expect(page.getByRole("heading", { name: "Chip Spec Studio" })).toBeVisible();
+
+  // Key fields are open; the rest is closed.
+  await expect(page.getByLabel(/^Vendor/)).toBeVisible();
+  await expect(page.getByLabel(/^Shielding/)).toBeVisible();
+  await expect(page.getByLabel(/^Average power/)).toBeVisible();
+  await expect(page.getByLabel(/^ECC scheme/)).toBeHidden();
+  await expect(page.getByLabel(/^Radiator area/)).toBeHidden();
+  await expect(page.getByRole("table")).toBeHidden();
+
+  // A closed section still says how many of its fields are unverified or estimated.
+  const more = page.locator("summary", { hasText: "More chip fields" });
+  await expect(more).toContainText("fields");
+  await expect(more.locator("[data-source-label]").first()).toBeVisible();
+
+  // The peak-power warning is not behind a disclosure.
+  await expect(page.getByTestId("peak-flag")).toBeVisible();
+
+  // Open one and the fields are there, with their own badges.
+  await more.click();
+  await expect(page.getByLabel(/^ECC scheme/)).toBeVisible();
+  await expect(page.getByLabel(/^ECC scheme/).locator("..").locator("[data-source-label]")).toBeVisible();
+  await page.locator("summary", { hasText: "Action costs" }).click();
+  await expect(page.getByRole("table")).toBeVisible();
 });

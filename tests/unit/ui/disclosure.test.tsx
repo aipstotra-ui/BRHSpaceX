@@ -38,7 +38,11 @@ describe("FieldCounts", () => {
     expect(html).toContain('data-source-label="source"');
     expect(html).toContain('data-source-label="estimate"');
     expect(html).toContain('data-source-label="UNVERIFIED"');
-    expect(html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")).toMatch(/source 2.*estimate 3.*UNVERIFIED 1/i);
+    // Only the UNVERIFIED count is visible; source and estimate counts are hidden with their badges.
+    const visible = html.replace(/<span[^>]*hidden=""[^>]*>.*?<\/span> \d+<\/span>/g, "").replace(/<[^>]+>/g, " ");
+    expect(visible.replace(/\s+/g, " ").trim()).toBe("6 fields UNVERIFIED 1");
+    expect(html).toContain('field-counts__item" hidden=""><span data-source-label="source" hidden=""></span> 2');
+    expect(html).toContain('field-counts__item" hidden=""><span data-source-label="estimate" hidden=""></span> 3');
   });
 
   it("does not mention a label nothing has", () => {

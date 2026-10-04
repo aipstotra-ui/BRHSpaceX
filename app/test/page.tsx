@@ -8,6 +8,7 @@ import "@/components/cases/cases.css";
 import "@/components/home/home.css";
 import { CaseSummary } from "@/components/cases/CaseSummary";
 import { useOrbitImpactRunner } from "@/components/home/impactStore";
+import { AiAnalysis } from "@/components/home/AiAnalysis";
 import { Timeline } from "@/components/home/Timeline";
 import { TopBar } from "@/components/home/TopBar";
 import { Verdict } from "@/components/home/Verdict";
@@ -86,16 +87,6 @@ const TABS: WorkspaceTab[] = [
     content: (
       <Section title="Time Machine" eyebrow="Test period">
         <TimeMachine />
-      </Section>
-    ),
-  },
-  {
-    id: "validation",
-    label: "Validation",
-    hint: "Every core number next to its published reference.",
-    content: (
-      <Section title="Validation Lab" eyebrow="Evidence">
-        <p className="body rok-muted">Empty. The Validation Lab (M10) is not built yet.</p>
       </Section>
     ),
   },
@@ -193,6 +184,7 @@ function TestScreen() {
           <Verdict />
         </div>
         <Timeline />
+        <AiAnalysis />
         <div className="cockpit__bench">
           <div className="cockpit__controls">
             <CaseSummary caseId={flownId} caseName={lookup.status === "ready" ? lookup.doc.name : null} />

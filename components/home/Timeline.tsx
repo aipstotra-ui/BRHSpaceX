@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import may2024 from "@/data/replays/may2024.json";
+import { AI_REPLAY } from "@/components/home/useAiAnalysis";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
 import { gscale } from "@/lib/engine/gscale";
@@ -176,7 +177,18 @@ export function Timeline() {
     const protonPath = flux
       .map((pfu, i) => (pfu === null ? null : `${x(points[i].timeMs).toFixed(1)},${logY(pfu).toFixed(1)}`))
       .filter((value): value is string => value !== null);
-    return { x, y, barWidth, protonPath, logY };
+    // AI +3 h forecast for each 3-hour block, issued at the block start (target hour = issue + 2 h).
+    const ai = AI_REPLAY.rows
+      .filter((row) => row.horizonH === 3)
+      .map((row) => ({ t: Date.parse(row.target), p10: row.p10, p50: row.p50, p90: row.p90 }))
+      .filter((row) => row.t >= start && row.t <= end)
+      .sort((left, right) => left.t - right.t);
+    const aiLine = ai.map((row) => `${x(row.t).toFixed(1)},${y(row.p50).toFixed(1)}`).join(" ");
+    const aiBand = [
+      ...ai.map((row) => `${x(row.t).toFixed(1)},${y(row.p90).toFixed(1)}`),
+      ...ai.slice().reverse().map((row) => `${x(row.t).toFixed(1)},${y(row.p10).toFixed(1)}`),
+    ].join(" ");
+    return { x, y, barWidth, protonPath, logY, aiLine, aiBand };
   }, [points]);
 
   const point = points[index] ?? null;
@@ -257,6 +269,12 @@ export function Timeline() {
                 />
               ) : null,
             )}
+            {mode === "may2024" && chart.aiLine ? (
+              <>
+                <polygon points={chart.aiBand} className="timeline__ai-band" />
+                <polyline points={chart.aiLine} className="timeline__ai" />
+              </>
+            ) : null}
             <line x1="0" x2="1000" y1={chart.logY(10)} y2={chart.logY(10)} className="timeline__s1" />
             {chart.protonPath.length > 1 ? (
               <polyline points={chart.protonPath.join(" ")} className="timeline__protons" />
@@ -354,7 +372,7 @@ export function Timeline() {
             Bars: Kp (filled observed, dashed AI forecast with P10–P90 whisker). Line: GOES protons above 10 MeV, log
             scale; dotted line is the S1 threshold.
             {mode === "may2024"
-              ? " Vertical ticks: SEP onsets. Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end."
+              ? " Blue line and band: the AI +3 h forecast for each 3-hour block, issued at the block start (P50, P10–P90). Vertical ticks: SEP onsets. Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end."
               : " Forecast proton flux repeats the latest observation."}
           </p>
         </>

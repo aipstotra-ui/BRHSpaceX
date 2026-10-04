@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { CameraControls } from "@/components/globe/CameraControls";
-import { GroundTrack2D, type TrackPoint } from "@/components/globe/GroundTrack2D";
 import { createTrailLine, OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
 import { classFromCode } from "@/lib/engine/globe/exposure";
@@ -21,13 +20,7 @@ type Phase = "loading" | "error" | "empty" | "ready";
 
 const AURORA_CUTOFF = 5;
 
-function floatsToPoints(data: Float32Array): TrackPoint[] {
-  const points: TrackPoint[] = [];
-  for (let index = 0; index < data.length; index += 3) {
-    points.push({ latDeg: data[index], lonDeg: data[index + 1] });
-  }
-  return points;
-}
+type TrackPoint = { latDeg: number; lonDeg: number };
 
 function saaOverlayTexture(): THREE.CanvasTexture {
   const width = 512;
@@ -94,12 +87,9 @@ export default function GlobeClient() {
   const raanDeg = useOrbitStore((state) => state.raanDeg);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [fallback, setFallback] = useState(false);
   const [follow, setFollow] = useState(false);
   const [scrubS, setScrubS] = useState(0);
-  const [starlink, setStarlink] = useState<TrackPoint[]>([]);
   const [trail, setTrail] = useState<StarmindSample[]>([]);
-  const [starmind, setStarmind] = useState<TrackPoint | null>(null);
   const [aurora, setAurora] = useState<TrackPoint[]>([]);
   const [count, setCount] = useState(0);
   const [tickMs, setTickMs] = useState<number | null>(null);
@@ -162,15 +152,10 @@ export default function GlobeClient() {
         starlinkCountRef.current = nextCount;
         setCount(nextCount);
         setTickMs(event.data.ms ?? null);
-        setStarlink(floatsToPoints(event.data.positions));
         setPhase(nextCount === 0 ? "empty" : "ready");
       }
       if (event.data.kind === "starmind" && event.data.trail) {
         setTrail(event.data.trail);
-        const last = event.data.trail[event.data.trail.length - 1];
-        if (last) {
-          setStarmind({ latDeg: last.latDeg, lonDeg: last.lonDeg, code: last.code });
-        }
         if (sceneRef.current && trailRef.current) {
           sceneRef.current.remove(trailRef.current);
           trailRef.current.geometry.dispose();
@@ -202,7 +187,7 @@ export default function GlobeClient() {
   }, [altitudeKm, inclinationDeg, raanDeg, scrubS]);
 
   useEffect(() => {
-    if (fallback || !canvasRef.current || !wrapRef.current) {
+    if (!canvasRef.current || !wrapRef.current) {
       return;
     }
     const canvas = canvasRef.current;
@@ -211,12 +196,12 @@ export default function GlobeClient() {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
       renderer.setClearColor(0x000000, 1);
     } catch {
-      window.setTimeout(() => setFallback(true), 0);
+      window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
     }
     if (!renderer.getContext()) {
       renderer.dispose();
-      window.setTimeout(() => setFallback(true), 0);
+      window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
     }
     renderer.setPixelRatio(1);
@@ -284,9 +269,6 @@ export default function GlobeClient() {
         stats = panel;
       });
     }
-    const samples: number[] = [];
-    let last = performance.now();
-    let decided = false;
     let frame = 0;
     const resize = () => {
       const size = 640;
@@ -306,19 +288,6 @@ export default function GlobeClient() {
       observer.observe(wrapRef.current);
     }
     const animate = (now: number) => {
-      const dt = now - last;
-      last = now;
-      if (dt > 0 && dt < 80) {
-        samples.push(1000 / dt);
-      }
-      if (!decided && samples.length >= 240) {
-        const body = samples.slice(30).sort((a, b) => a - b);
-        const median = body[Math.floor(body.length / 2)] ?? 60;
-        decided = true;
-        if (median < 45) {
-          setFallback(true);
-        }
-      }
       stats?.begin();
       const attribute = points.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
       const from = starlinkFromRef.current;
@@ -358,11 +327,11 @@ export default function GlobeClient() {
       stats?.dom.remove();
       sceneRef.current = null;
     };
-  }, [fallback]);
+  }, []);
 
   useEffect(() => {
     const scene = sceneRef.current;
-    if (!scene || fallback || aurora.length === 0) {
+    if (!scene || aurora.length === 0) {
       return;
     }
     const points = auroraPoints(aurora);
@@ -371,9 +340,7 @@ export default function GlobeClient() {
       scene.remove(points);
       points.geometry.dispose();
     };
-  }, [aurora, fallback]);
-
-  const shownTrail = trail.map((sample) => ({ latDeg: sample.latDeg, lonDeg: sample.lonDeg, code: sample.code }));
+  }, [aurora]);
 
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
@@ -410,11 +377,7 @@ export default function GlobeClient() {
       {phase === "error" ? <p style={{ color: "var(--status-critical)" }}>{error ?? "Error"}</p> : null}
       {phase === "empty" ? <p className="rok-muted">Empty</p> : null}
       <OrbitTrail samples={trail} />
-      {fallback ? (
-        <GroundTrack2D starlink={starlink} trail={shownTrail} starmind={starmind} aurora={aurora} />
-      ) : (
-        <canvas ref={canvasRef} aria-label="Round Earth" />
-      )}
+      <canvas ref={canvasRef} aria-label="Round Earth" />
     </div>
   );
 }

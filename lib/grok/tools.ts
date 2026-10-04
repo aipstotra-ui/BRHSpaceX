@@ -439,7 +439,7 @@ function recommendBestMove(state: CopilotState, args: unknown): ToolExecution {
 }
 
 function runBacktest(state: CopilotState): ToolExecution {
-  const replay = replayOnOrbit(state.altitudeKm);
+  const replay = replayOnOrbit({ altitudeKm: state.altitudeKm, inclinationDeg: state.inclinationDeg });
   return done(
     state,
     backtestOutput.parse({

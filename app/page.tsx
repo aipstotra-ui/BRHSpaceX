@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import "@/components/home/home.css";
 import { useOrbitImpactRunner } from "@/components/home/impactStore";
+import { Timeline } from "@/components/home/Timeline";
 import { TopBar } from "@/components/home/TopBar";
 import { Verdict } from "@/components/home/Verdict";
 import { Section, Workspace, type WorkspaceTab } from "@/components/home/Workspace";
@@ -121,6 +122,7 @@ export default function HomePage() {
           </Section>
           <Verdict />
         </div>
+        <Timeline />
         <div className="cockpit__bench">
           <div className="cockpit__controls">
             <Section title="Orbit Location" eyebrow="Controls">

@@ -9,3 +9,4 @@
 | M6 | 2026-10-03 | researcher: not used | ml-auditor: not used | verifier: PASS after 1 | cea6c6a |
 
 M6 worker ms per tick 34.021322 (verifier run, 2000 SGP4 propagations). This resolves satellite.js throughput.
+| R1 + storm zones + timeline (ad hoc) | 2026-10-04 | researcher: stopped early at Aiden's request, values labeled estimate | ml-auditor: FINDINGS 0 BLOCKER, 3 SHOULD-FIX fixed (attempt 1) | verifier: not used, checks run inline (tsc, eslint, vitest 106/107, e2e 7/7) | this commit |

@@ -148,6 +148,12 @@ export function OrbitImpact() {
               <th scope="col" className="rok-num">
                 Drag life lost
               </th>
+              <th scope="col" className="rok-num">
+                In auroral oval
+              </th>
+              <th scope="col" className="rok-num">
+                Open to solar protons
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -163,11 +169,23 @@ export function OrbitImpact() {
                 <td className="rok-num">
                   <Num value={storm.deltaDragYears.mid} digits={2} label="estimate" unit="yr" />
                 </td>
+                <td className="rok-num">
+                  <Num value={storm.auroralShare * 100} digits={1} label="estimate" unit="%" />
+                </td>
+                <td className="rok-num">
+                  <Num value={storm.sepShare * 100} digits={1} label="estimate" unit="%" />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <p className="note">
+        Oval and proton shares are the share of the orbit inside the Kp-dependent auroral oval and poleward of the
+        solar-proton cutoff. The proton share only matters during an S1+ proton event. Quiet (Kp 2):{" "}
+        <Num value={result.quietAuroralShare * 100} digits={1} label="estimate" unit="%" /> in the oval,{" "}
+        <Num value={result.quietSepShare * 100} digits={1} label="estimate" unit="%" /> open to protons.
+      </p>
       <p className="note">
         Worker time{" "}
         {workerMs === null ? null : <Num value={workerMs} digits={1} label="estimate" unit="ms" testId="worker-ms" />}

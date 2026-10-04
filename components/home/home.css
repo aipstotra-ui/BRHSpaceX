@@ -557,3 +557,122 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- timeline ---------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.timeline__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.timeline__head .rok-panel__title {
+  margin-bottom: 0;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.timeline__chart {
+  width: 100%;
+  height: 124px;
+  display: block;
+  background: var(--surface-100);
+  border: 1px solid var(--line);
+}
+
+.timeline__grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__band {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__s1 {
+  stroke: var(--ink-subtle);
+  stroke-dasharray: 2 4;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__protons {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__marker {
+  stroke: var(--status-critical);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__cursor {
+  stroke: var(--accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.timeline__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.timeline__controls .rok-btn {
+  min-width: 88px;
+}
+
+.timeline__readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+}
+
+.timeline__readout div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.timeline__readout dt,
+.timeline__readout dd {
+  margin: 0;
+}
+
+.swatch--ring {
+  background: transparent;
+  border: 2px solid;
+  border-radius: var(--radius-full);
+}
+
+.swatch--dashed {
+  border-style: dashed;
+}
+
+.notes-list {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

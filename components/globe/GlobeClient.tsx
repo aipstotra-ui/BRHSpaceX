@@ -1,26 +1,63 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { CameraControls } from "@/components/globe/CameraControls";
 import { createTrailLine, OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
-import { classFromCode } from "@/lib/engine/globe/exposure";
+import { classFromCode, exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
 import { lerpScene } from "@/lib/engine/globe/interpolate";
 import { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS } from "@/lib/engine/globe/timing";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
 import { starmindPositionKm } from "@/lib/engine/orbit/j2";
 import type { StarmindSample } from "@/lib/engine/globe/trail";
 import { GBM_SAA_LAT, GBM_SAA_LON, inSaa } from "@/lib/engine/radiation";
+import { inAuroralOval, inSepCap, sepActive } from "@/lib/engine/orbit/stormZones";
 import { useOrbitStore } from "@/lib/store/orbit";
+import { useTimelineCursor } from "@/lib/store/timeline";
 
 type Phase = "loading" | "error" | "empty" | "ready";
 
 const AURORA_CUTOFF = 5;
 
 type TrackPoint = { latDeg: number; lonDeg: number };
+
+type Rgba = [number, number, number, number];
+
+/** Equirectangular overlay: each pixel takes the color the test returns, or stays clear. */
+function zoneTexture(test: (latDeg: number, lonDeg: number) => Rgba | null): THREE.CanvasTexture {
+  const width = 512;
+  const height = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return new THREE.CanvasTexture(canvas);
+  }
+  const image = context.createImageData(width, height);
+  for (let y = 0; y < height; y += 1) {
+    const lat = 90 - (y / (height - 1)) * 180;
+    for (let x = 0; x < width; x += 1) {
+      const lon = (x / (width - 1)) * 360 - 180;
+      const color = test(lat, lon);
+      if (!color) {
+        continue;
+      }
+      const offset = (y * width + x) * 4;
+      image.data.set(color, offset);
+    }
+  }
+  context.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+const AURORAL_RGBA: Rgba = [61, 220, 151, 90];
+const SEP_RGBA: Rgba = [255, 95, 210, 110];
 
 function saaOverlayTexture(): THREE.CanvasTexture {
   const width = 512;
@@ -66,6 +103,11 @@ function auroraPoints(points: TrackPoint[]): THREE.Points {
   return new THREE.Points(geometry, new THREE.PointsMaterial({ color: "#7d5cff", size: 0.012 }));
 }
 
+function ovationLookup(points: TrackPoint[]): (latDeg: number, lonDeg: number) => boolean {
+  const cells = new Set(points.map((point) => `${Math.round(point.latDeg)}|${(Math.round(point.lonDeg) + 360) % 360}`));
+  return (latDeg, lonDeg) => cells.has(`${Math.round(latDeg)}|${(Math.round(lonDeg) + 360) % 360}`);
+}
+
 export default function GlobeClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -88,8 +130,16 @@ export default function GlobeClient() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
-  const [scrubS, setScrubS] = useState(0);
-  const [trail, setTrail] = useState<StarmindSample[]>([]);
+  const cursor = useTimelineCursor();
+  const scrubS = cursor.offsetS;
+  const kp = cursor.point?.kp ?? null;
+  const protonPfu = cursor.point?.protonPfu ?? null;
+  const replaying = cursor.mode === "may2024";
+  // OVATION is a nowcast, so it only replaces the Kp oval model at the latest observed point.
+  const useOvation =
+    cursor.mode === "now" && cursor.point?.kind === "observed" && Math.abs(cursor.offsetS) < 3 * 3600;
+  const [rawTrail, setRawTrail] = useState<StarmindSample[]>([]);
+  const [sceneReady, setSceneReady] = useState(false);
   const [aurora, setAurora] = useState<TrackPoint[]>([]);
   const [count, setCount] = useState(0);
   const [tickMs, setTickMs] = useState<number | null>(null);
@@ -155,13 +205,7 @@ export default function GlobeClient() {
         setPhase(nextCount === 0 ? "empty" : "ready");
       }
       if (event.data.kind === "starmind" && event.data.trail) {
-        setTrail(event.data.trail);
-        if (sceneRef.current && trailRef.current) {
-          sceneRef.current.remove(trailRef.current);
-          trailRef.current.geometry.dispose();
-          trailRef.current = createTrailLine(event.data.trail);
-          sceneRef.current.add(trailRef.current);
-        }
+        setRawTrail(event.data.trail);
       }
     };
     workerRef.current = worker;
@@ -174,7 +218,9 @@ export default function GlobeClient() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      workerRef.current?.postMessage({ kind: "scrub", epochMs: Date.now() + scrubS * 1000 });
+      if (!replaying) {
+        workerRef.current?.postMessage({ kind: "scrub", epochMs: Date.now() + scrubS * 1000 });
+      }
       workerRef.current?.postMessage({
         kind: "starmind",
         altitudeKm,
@@ -184,7 +230,72 @@ export default function GlobeClient() {
       });
     }, ORBIT_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [altitudeKm, inclinationDeg, raanDeg, scrubS]);
+  }, [altitudeKm, inclinationDeg, raanDeg, scrubS, replaying]);
+
+  const storm: StormContext | undefined = useMemo(() => {
+    if (kp === null) {
+      return undefined;
+    }
+    return { kp, protonPfu, inOvation: useOvation && aurora.length > 0 ? ovationLookup(aurora) : undefined };
+  }, [kp, protonPfu, useOvation, aurora]);
+
+  const trail = useMemo(
+    () =>
+      rawTrail.map((sample) => ({
+        ...sample,
+        code: exposureCode(exposureClass(sample.latDeg, sample.lonDeg, sample.altKm, storm)),
+      })),
+    [rawTrail, storm],
+  );
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || !sceneReady || trail.length === 0) {
+      return;
+    }
+    const line = createTrailLine(trail);
+    trailRef.current = line;
+    scene.add(line);
+    return () => {
+      scene.remove(line);
+      line.geometry.dispose();
+      if (trailRef.current === line) {
+        trailRef.current = null;
+      }
+    };
+  }, [trail, sceneReady]);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene || !sceneReady || kp === null) {
+      return;
+    }
+    const protonsOn = protonPfu !== null && sepActive(protonPfu);
+    if (useOvation && !protonsOn) {
+      return;
+    }
+    // Live OVATION points already show the oval "now", so the Kp model only draws it for other times.
+    const texture = zoneTexture((lat, lon) => {
+      if (protonsOn && inSepCap(lat, lon, kp, protonPfu)) {
+        return SEP_RGBA;
+      }
+      if (!useOvation && inAuroralOval(lat, lon, kp)) {
+        return AURORAL_RGBA;
+      }
+      return null;
+    });
+    const overlay = new THREE.Mesh(
+      new THREE.SphereGeometry(1.006, 64, 48),
+      new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }),
+    );
+    scene.add(overlay);
+    return () => {
+      scene.remove(overlay);
+      overlay.geometry.dispose();
+      texture.dispose();
+      (overlay.material as THREE.Material).dispose();
+    };
+  }, [kp, protonPfu, useOvation, sceneReady]);
 
   useEffect(() => {
     if (!canvasRef.current || !wrapRef.current) {
@@ -208,6 +319,7 @@ export default function GlobeClient() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#000000");
     sceneRef.current = scene;
+    window.setTimeout(() => setSceneReady(true), 0);
     const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 20);
     camera.position.set(0.2, 0.45, 3.15);
     const controls = new OrbitControls(camera, canvas);
@@ -256,9 +368,6 @@ export default function GlobeClient() {
     const craft = createStarmindGroup();
     craftRef.current = craft;
     scene.add(craft);
-    if (auroraRef.current.length > 0) {
-      scene.add(auroraPoints(auroraRef.current));
-    }
     let stats: { begin: () => void; end: () => void; dom: HTMLElement } | null = null;
     if (process.env.NODE_ENV === "development") {
       void import("stats.js").then((mod) => {
@@ -326,12 +435,13 @@ export default function GlobeClient() {
       renderer.dispose();
       stats?.dom.remove();
       sceneRef.current = null;
+      setSceneReady(false);
     };
   }, []);
 
   useEffect(() => {
     const scene = sceneRef.current;
-    if (!scene || aurora.length === 0) {
+    if (!scene || !sceneReady || aurora.length === 0 || !useOvation) {
       return;
     }
     const points = auroraPoints(aurora);
@@ -340,7 +450,7 @@ export default function GlobeClient() {
       scene.remove(points);
       points.geometry.dispose();
     };
-  }, [aurora]);
+  }, [aurora, useOvation, sceneReady]);
 
   return (
     <div ref={wrapRef} className="globe">
@@ -363,24 +473,6 @@ export default function GlobeClient() {
           zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
         }}
       />
-      <label className="rok-field globe__scrub">
-        <span className="rok-field__label eyebrow">
-          Time offset{" "}
-          <span className="data-sm rok-muted">
-            {scrubS >= 0 ? "+" : "−"}
-            {(Math.abs(scrubS) / 3600).toFixed(1)} h
-          </span>
-        </span>
-        <input
-          aria-label="Time scrubber"
-          type="range"
-          min={-43200}
-          max={43200}
-          step={60}
-          value={scrubS}
-          onChange={(event) => setScrubS(Number(event.target.value))}
-        />
-      </label>
       <p className="note">
         Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an estimate. Trail length
         is one orbit, an estimate. SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt

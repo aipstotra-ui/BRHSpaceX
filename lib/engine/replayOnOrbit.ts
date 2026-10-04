@@ -2,9 +2,27 @@ import may2024 from "@/data/replays/may2024.json";
 
 import { type ActionName, actionCost, uncorrectable } from "@/lib/engine/costCheck";
 import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
+import { doseGridAvailable, gridDoseRadPerYear, gridUpsetFlux, type SolarPhase } from "@/lib/engine/orbit/doseGrid";
+import { demoReferenceSaa, orbitEnvironment } from "@/lib/engine/orbit/environment";
+import { sepActive, sepCapFraction } from "@/lib/engine/orbit/stormZones";
+import { omnidirectionalQuietFlux } from "@/lib/engine/radiation";
 
 export const DEFAULT_ORBIT_KM = DERIVED_SHELL.meanAltitudeKm;
+export const DEFAULT_ORBIT_INC_DEG = DERIVED_SHELL.meanInclinationDeg;
 export const SEP_ONSET = "2024-05-10T13:35:00Z";
+
+/**
+ * estimate: May 2024 sits in solar cycle 25's active phase, so the replay reads the AP8/AE8 solar-maximum grid.
+ * The phase choice is a design choice.
+ */
+export const REPLAY_PHASE: SolarPhase = "max";
+
+/**
+ * estimate: shielding depth for replay dose, mm Al. The thinnest grid point, matching the 0 mm presets.
+ */
+export const REPLAY_DEPTH_MM_AL = 0.5;
+
+const HOURS_PER_YEAR = 365.25 * 24;
 
 export interface ReplayHour {
   time: string;
@@ -12,15 +30,25 @@ export interface ReplayHour {
   dst: number | null;
   gLevel: string | null;
   forecastKpP50: number | null;
+  goesProtonFlux?: number | null;
+}
+
+export interface ReplayOrbit {
+  altitudeKm: number;
+  inclinationDeg: number;
 }
 
 export interface OrbitReplay {
   altitudeKm: number;
+  inclinationDeg: number;
   cost: number;
   downtimeHours: number;
   uncorrectable: number;
+  /** Trapped dose over the replay window, rad(Si). Solar-proton dose is not modeled. */
   dose: number;
   actions: ActionName[];
+  /** Per-hour exposure relative to the default orbit's quiet trapped flux. */
+  exposure: number[];
 }
 
 export interface ReplayDelta {
@@ -30,24 +58,65 @@ export interface ReplayDelta {
   dose: number;
 }
 
-function saaFraction(altitudeKm: number): number {
-  return Math.min(0.4, Math.max(0.02, 0.35 - altitudeKm / 8000));
+export const REPLAY_NOTES = [
+  "Trapped exposure is the orbit-averaged AP8 flux above the upset threshold. The M8 cost model's max(0, Kp − 2) factor carries the storm scaling.",
+  "Solar-proton exposure is the GOES >10 MeV flux, times 4π (isotropic, estimate), times the share of the orbit poleward of the Kp-dependent cutoff. Counting every >10 MeV proton as able to upset is an upper bound.",
+  "Both are divided by the default orbit's quiet trapped flux, then fed into the M8 cost model with the default orbit's SAA fraction as the scale.",
+  "estimate: hours with solar protons use at least Kp 3 in that factor, so a proton event counts even when the field is quiet.",
+  "Dose is trapped dose from the R1 grid at solar maximum and 0.5 mm Al. Solar-proton dose is not modeled.",
+];
+
+function trappedFlux(orbit: ReplayOrbit): number {
+  if (doseGridAvailable()) {
+    return gridUpsetFlux(REPLAY_PHASE, orbit.altitudeKm, orbit.inclinationDeg);
+  }
+  const saa = orbitEnvironment({
+    altitudeKm: orbit.altitudeKm,
+    inclinationDeg: orbit.inclinationDeg,
+    sunSynchronous: false,
+    ltanHours: null,
+    raanDeg: 0,
+  }).saaFraction.mid;
+  return saa * omnidirectionalQuietFlux().value;
 }
 
-function score(hours: ReplayHour[], altitudeKm: number): OrbitReplay {
-  const saa = saaFraction(altitudeKm);
+function hourlyDoseRad(orbit: ReplayOrbit): number {
+  if (!doseGridAvailable()) {
+    return 0;
+  }
+  return gridDoseRadPerYear(REPLAY_PHASE, orbit.altitudeKm, orbit.inclinationDeg, REPLAY_DEPTH_MM_AL) / HOURS_PER_YEAR;
+}
+
+function exposureSeries(hours: ReplayHour[], orbit: ReplayOrbit, referenceFlux: number): number[] {
+  const trapped = trappedFlux(orbit);
+  return hours.map((hour) => {
+    const kp = hour.kp ?? 0;
+    const pfu = hour.goesProtonFlux ?? 0;
+    const sep = pfu * 4 * Math.PI * sepCapFraction(orbit, kp, pfu);
+    return referenceFlux > 0 ? (trapped + sep) / referenceFlux : 0;
+  });
+}
+
+function score(hours: ReplayHour[], orbit: ReplayOrbit, referenceFlux: number, scale: number): OrbitReplay {
+  const exposure = exposureSeries(hours, orbit, referenceFlux);
+  const doseRate = hourlyDoseRad(orbit);
+  // The M8 cost model takes max(0, Kp - 2) x SAA. Solar protons do not need a disturbed field, so they get Kp 3.
+  const amountAt = (index: number) => {
+    const kp = hours[index]?.kp ?? 0;
+    const pfu = hours[index]?.goesProtonFlux ?? 0;
+    return uncorrectable(sepActive(pfu) ? Math.max(kp, 3) : kp, scale * (exposure[index] ?? 0), 1);
+  };
   let cost = 0;
   let downtime = 0;
   let bad = 0;
   let dose = 0;
   const actions: ActionName[] = [];
   for (let index = 0; index < hours.length; index += 1) {
-    const window = hours.slice(index, index + 8);
     const totals = new Map<ActionName, number>();
     for (const action of ["continue", "checkpoint", "throttle", "safe mode"] as const) {
       let total = 0;
-      for (const hour of window) {
-        total += actionCost(uncorrectable(hour.kp ?? 0, saa, 1), action);
+      for (let ahead = index; ahead < Math.min(hours.length, index + 8); ahead += 1) {
+        total += actionCost(amountAt(ahead), action);
       }
       totals.set(action, total);
     }
@@ -60,38 +129,59 @@ function score(hours: ReplayHour[], altitudeKm: number): OrbitReplay {
       }
     }
     actions.push(best);
-    const kp = hours[index]?.kp ?? 0;
-    const amount = uncorrectable(kp, saa, 1);
+    const amount = amountAt(index);
     cost += actionCost(amount, best);
     bad += amount;
-    dose += amount * 0.01;
+    dose += doseRate;
     if (best === "safe mode") {
       downtime += 6;
     } else if (best === "checkpoint") {
       downtime += 0.25;
     }
   }
-  return { altitudeKm, cost, downtimeHours: downtime, uncorrectable: bad, dose, actions };
+  return {
+    altitudeKm: orbit.altitudeKm,
+    inclinationDeg: orbit.inclinationDeg,
+    cost,
+    downtimeHours: downtime,
+    uncorrectable: bad,
+    dose,
+    actions,
+    exposure,
+  };
 }
 
-export function replayOnOrbit(chosenAltitudeKm: number, defaultAltitudeKm = DEFAULT_ORBIT_KM) {
+function asOrbit(value: number | ReplayOrbit, inclinationDeg: number): ReplayOrbit {
+  return typeof value === "number" ? { altitudeKm: value, inclinationDeg } : value;
+}
+
+/**
+ * Replays May 2024 on the chosen orbit and on the default orbit.
+ * A bare altitude keeps the default orbit's inclination.
+ */
+export function replayOnOrbit(chosen: number | ReplayOrbit, fallback: number | ReplayOrbit = DEFAULT_ORBIT_KM) {
   const hours = may2024.hours as ReplayHour[];
-  const chosen = score(hours, chosenAltitudeKm);
-  const baseline = score(hours, defaultAltitudeKm);
+  const chosenOrbit = asOrbit(chosen, DEFAULT_ORBIT_INC_DEG);
+  const defaultOrbit = asOrbit(fallback, DEFAULT_ORBIT_INC_DEG);
+  const referenceFlux = trappedFlux({ altitudeKm: DEFAULT_ORBIT_KM, inclinationDeg: DEFAULT_ORBIT_INC_DEG });
+  const scale = demoReferenceSaa();
+  const chosenRun = score(hours, chosenOrbit, referenceFlux, scale);
+  const baseline = score(hours, defaultOrbit, referenceFlux, scale);
   const delta: ReplayDelta = {
-    cost: chosen.cost - baseline.cost,
-    downtimeHours: chosen.downtimeHours - baseline.downtimeHours,
-    uncorrectable: chosen.uncorrectable - baseline.uncorrectable,
-    dose: chosen.dose - baseline.dose,
+    cost: chosenRun.cost - baseline.cost,
+    downtimeHours: chosenRun.downtimeHours - baseline.downtimeHours,
+    uncorrectable: chosenRun.uncorrectable - baseline.uncorrectable,
+    dose: chosenRun.dose - baseline.dose,
   };
-  const firstMove = hours.find((hour, index) => chosen.actions[index] !== "continue");
+  const firstMove = hours.find((hour, index) => chosenRun.actions[index] !== "continue");
   return {
     label: may2024.label,
     markers: may2024.markers,
     hours,
-    chosen,
+    chosen: chosenRun,
     baseline,
     delta,
     firstNonContinue: firstMove?.time ?? null,
+    notes: REPLAY_NOTES,
   };
 }

@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 
-import { classFromCode, EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
+import { classFromCode, EXPOSURE_COLORS, EXPOSURE_LABELS, type ExposureClass } from "@/lib/engine/globe/exposure";
 import type { StarmindSample } from "@/lib/engine/globe/trail";
 
 export function surfaceVector(latDeg: number, lonDeg: number, altKm: number, earthKm = 6378.137): THREE.Vector3 {
@@ -44,11 +44,11 @@ export function OrbitTrail({ samples }: { samples: StarmindSample[] }) {
         {(Object.keys(EXPOSURE_COLORS) as ExposureClass[]).map((kind) => (
           <li key={kind} className="eyebrow">
             <span className="swatch" style={{ background: EXPOSURE_COLORS[kind] }} aria-hidden="true" />
-            {kind}
+            {EXPOSURE_LABELS[kind]}
           </li>
         ))}
       </ul>
-      <p className="note">Trail samples {samples.length}, one orbit.</p>
+      <p className="note">Trail samples {samples.length}, one orbit. Shaded bands: SAA, auroral oval for the timeline Kp, and the solar-proton cap during S1+ events.</p>
     </div>
   );
 }

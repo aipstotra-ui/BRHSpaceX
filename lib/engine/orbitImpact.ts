@@ -8,6 +8,8 @@ import { dragDecayYears, estimatedLifetime, timeToTidYears, type Vehicle } from 
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import { rangeValue } from "@/lib/engine/orbit/range";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
+import { omnidirectionalQuietFlux } from "@/lib/engine/radiation";
+import { zoneFractions } from "@/lib/engine/orbit/stormZones";
 import { radiatorTemperatureK } from "@/lib/engine/thermal";
 
 export interface OrbitImpactInput {
@@ -27,6 +29,10 @@ export interface OrbitImpactInput {
 export interface StormDelta {
   level: string;
   kp: number;
+  /** Share of the orbit inside the Kp-dependent auroral oval. */
+  auroralShare: number;
+  /** Share of the orbit poleward of the solar-proton cutoff, used only during an S1+ proton event. */
+  sepShare: number;
   deltaUpsetPerS: RangeValue;
   deltaDragYears: RangeValue;
 }
@@ -46,6 +52,11 @@ export interface OrbitImpactResult {
   thermalMarginC: RangeValue;
   shieldingMmAl: RangeValue;
   storms: StormDelta[];
+  /** Upsets per second per unit omnidirectional flux (1/cm2/s), so callers can add solar-proton flux. */
+  upsetPerUnitFlux: number;
+  /** Quiet-time (Kp 2) zone shares, for comparison with the storm rows. */
+  quietAuroralShare: number;
+  quietSepShare: number;
 }
 
 const G_LEVELS = [
@@ -68,13 +79,14 @@ function scaleRange(fraction: RangeValue, factor: number, unit: string, assumpti
 }
 
 export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
-  const environment = orbitEnvironment({
+  const request = {
     altitudeKm: input.altitudeKm,
     inclinationDeg: input.inclinationDeg,
     sunSynchronous: input.sunSynchronous,
     ltanHours: input.ltanHours,
     raanDeg: input.raanDeg,
-  });
+  };
+  const environment = orbitEnvironment(request, input.spec.shieldingMmAl);
   const quiet = simulateImpact({
     spec: input.spec,
     payload: input.payload,
@@ -83,11 +95,19 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
     nodeKnown: input.nodeKnown,
     deviceSeu: input.deviceSeu,
   });
-  const upsetRate = scaleRange(environment.saaFraction, quiet.upsetRate.value, "1/s", [
-    "Orbit upset rate is the M4 quiet rate multiplied by the SAA time fraction.",
-    "The M4 flux is an in-SAA example, so it is applied only during that fraction.",
-    ...quiet.upsetRate.assumptions,
-  ]);
+  const inSaaFlux = omnidirectionalQuietFlux().value;
+  const upsetPerUnitFlux = inSaaFlux > 0 ? quiet.upsetRate.value / inSaaFlux : 0;
+  const upsetRate = environment.upsetFlux
+    ? scaleRange(environment.upsetFlux, upsetPerUnitFlux, "1/s", [
+        "Orbit upset rate is the M4 cross-section and bit count times the orbit-averaged AP8 flux above the upset threshold (R1 grid).",
+        ...environment.upsetFlux.assumptions,
+        ...quiet.upsetRate.assumptions,
+      ])
+    : scaleRange(environment.saaFraction, quiet.upsetRate.value, "1/s", [
+        "Orbit upset rate is the M4 quiet rate multiplied by the SAA time fraction.",
+        "The M4 flux is an in-SAA example, so it is applied only during that fraction.",
+        ...quiet.upsetRate.assumptions,
+      ]);
   const tidLimit = resolveTid(input.spec);
   const tidYears = timeToTidYears(tidLimit.value, environment.annualDose);
   const dragYears = dragDecayYears(input.altitudeKm, input.vehicle);
@@ -112,14 +132,18 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
       "The M4 radiator formula ignores sunlight, so the eclipse fraction does not change this temperature.",
     ],
   });
+  const quietZones = zoneFractions(request, 2);
   const storms: StormDelta[] = G_LEVELS.map((level) => {
     const multiplier = estimatedStormMultiplier(level.kp).value;
     const delta = upsetRate.mid * (multiplier - 1);
     const stormDrag = dragDecayYears(input.altitudeKm, input.vehicle, multiplier);
     const deltaDrag = dragYears.mid - stormDrag.mid;
+    const zones = zoneFractions(request, level.kp);
     return {
       level: level.level,
       kp: level.kp,
+      auroralShare: zones.auroral,
+      sepShare: zones.sepCap,
       deltaUpsetPerS: rangeValue({
         low: delta,
         mid: delta,
@@ -164,8 +188,13 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
       high: input.spec.shieldingMmAl,
       unit: "mm Al",
       label: "estimate",
-      assumptions: ["Shielding depth is shown and is not applied to the dose. No thickness curve is used."],
+      assumptions: environment.upsetFlux
+        ? ["Shielding depth is applied to the dose through the R1 grid's depth axis."]
+        : ["Shielding depth is shown and is not applied to the dose. No thickness curve is used."],
     }),
     storms,
+    upsetPerUnitFlux,
+    quietAuroralShare: quietZones.auroral,
+    quietSepShare: quietZones.sepCap,
   };
 }

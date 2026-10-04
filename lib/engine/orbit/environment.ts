@@ -9,6 +9,14 @@ import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
 import { circularElements, type OrbitRequest } from "@/lib/engine/orbit/elements";
 import { circularPositionKm, ECLIPSE_SOURCE, shadowKind } from "@/lib/engine/orbit/eclipse";
 import { raanAfterSeconds } from "@/lib/engine/orbit/j2";
+import {
+  doseGridAvailable,
+  doseGridDepthRange,
+  doseGridModel,
+  gridDoseRadPerYear,
+  gridUpsetFlux,
+  gridUpsetThresholdMeV,
+} from "@/lib/engine/orbit/doseGrid";
 import { annualDoseKrad } from "@/lib/engine/orbit/lifetime";
 import { geographicDipoleL, inAuroralZone, inOuterBelt } from "@/lib/engine/orbit/lshell";
 import { meanMinMax, rangeValue, type RangeValue } from "@/lib/engine/orbit/range";
@@ -17,6 +25,8 @@ import { eclipticLongitudes, sunRightAscensionDeg, sunVectorKm } from "@/lib/eng
 import { GBM_SAA_SOURCE } from "@/lib/engine/radiation";
 
 export interface OrbitEnvironment {
+  /** Orbit-averaged trapped-proton flux above the upset threshold, 1/cm2/s. Null without the R1 grid. */
+  upsetFlux: RangeValue | null;
   saaFraction: RangeValue;
   auroralFraction: RangeValue;
   outerBeltFraction: RangeValue;
@@ -118,7 +128,56 @@ export function demoReferenceSaa(): number {
   return referenceSaa;
 }
 
-export function orbitEnvironment(request: OrbitRequest): OrbitEnvironment {
+export const DOSE_GRID_SOURCE = "https://prbem.github.io/IRBEM/";
+
+/** Trapped dose from the R1 AP8/AE8 + SHIELDOSE-2 grid. Low and high are the two solar phases. */
+function gridAnnualDose(request: OrbitRequest, shieldingMmAl: number): RangeValue {
+  const range = doseGridDepthRange();
+  const depth = range ? Math.min(range.max, Math.max(range.min, shieldingMmAl)) : shieldingMmAl;
+  const atMin = gridDoseRadPerYear("min", request.altitudeKm, request.inclinationDeg, depth) / 1000;
+  const atMax = gridDoseRadPerYear("max", request.altitudeKm, request.inclinationDeg, depth) / 1000;
+  const low = Math.min(atMin, atMax);
+  const high = Math.max(atMin, atMax);
+  const clamped =
+    range && (shieldingMmAl < range.min || shieldingMmAl > range.max)
+      ? [`Shielding ${shieldingMmAl} mm Al is outside the grid, so dose is read at ${depth} mm Al.`]
+      : [];
+  return rangeValue({
+    low,
+    mid: (low + high) / 2,
+    high,
+    unit: "krad(Si)/yr",
+    label: "estimate",
+    sourceUrl: DOSE_GRID_SOURCE,
+    assumptions: [
+      `${doseGridModel()}. Behind ${depth} mm Al, orbit-averaged. Low and high are the solar-minimum and solar-maximum models. Mid is their mean.`,
+      ...clamped,
+      "Trapped protons and electrons only. Solar energetic protons and galactic cosmic rays are not in the grid.",
+      "AP8/AE8 are static models of the 1960s–70s. The SAA has drifted since.",
+    ],
+  });
+}
+
+function gridFlux(request: OrbitRequest): RangeValue {
+  const atMin = gridUpsetFlux("min", request.altitudeKm, request.inclinationDeg);
+  const atMax = gridUpsetFlux("max", request.altitudeKm, request.inclinationDeg);
+  const low = Math.min(atMin, atMax);
+  const high = Math.max(atMin, atMax);
+  return rangeValue({
+    low,
+    mid: (low + high) / 2,
+    high,
+    unit: "1/cm2/s",
+    label: "estimate",
+    sourceUrl: DOSE_GRID_SOURCE,
+    assumptions: [
+      `Orbit-averaged AP8 omnidirectional proton flux above ${gridUpsetThresholdMeV()} MeV, the threshold of the Zou et al. 2015 quiet SAA example.`,
+      "Low and high are the solar-minimum and solar-maximum models. Mid is their mean.",
+    ],
+  });
+}
+
+export function orbitEnvironment(request: OrbitRequest, shieldingMmAl = 0): OrbitEnvironment {
   const started = performance.now();
   const exposed = exposure(request);
   const eclipse = eclipseSamples(request);
@@ -141,8 +200,10 @@ export function orbitEnvironment(request: OrbitRequest): OrbitEnvironment {
     "Sun direction uses the sourced 0.9856 deg/day rate only as the SSO target. Obliquity 23.439° is an estimate. Meeus coefficients are not invented.",
     "SSO RAAN is the sun right ascension plus (LTAN − 12) × 15°. Non-SSO RAAN stays at the requested value.",
   ], ECLIPSE_SOURCE);
-  const annualDose = annualDoseKrad(saa, demoReferenceSaa());
+  const grid = doseGridAvailable();
+  const annualDose = grid ? gridAnnualDose(request, shieldingMmAl) : annualDoseKrad(saa, demoReferenceSaa());
   return {
+    upsetFlux: grid ? gridFlux(request) : null,
     saaFraction: saa,
     auroralFraction: auroral,
     outerBeltFraction: outer,

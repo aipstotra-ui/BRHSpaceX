@@ -6,3 +6,6 @@
 | M3 | 2026-10-03 | researcher: not used | ml-auditor: CLEAN after 1 | verifier: PASS after 1 | 78f342a |
 | M4 | 2026-10-03 | researcher: 4 Qs | ml-auditor: CLEAN after 1 | verifier: PASS after 1 | bd58f11 |
 | M5 | 2026-10-03 | researcher: 7 Qs | ml-auditor: not used | verifier: PASS after 1 | 2530928 |
+| M6 | 2026-10-03 | researcher: not used | ml-auditor: not used | verifier: PASS after 1 | cea6c6a |
+
+M6 worker ms per tick 34.021322 (verifier run, 2000 SGP4 propagations). This resolves satellite.js throughput.

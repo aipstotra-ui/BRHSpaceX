@@ -7,6 +7,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CameraControls } from "@/components/globe/CameraControls";
 import { createTrailLine, OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
+import { classFromCode } from "@/lib/engine/globe/exposure";
 import { lerpScene } from "@/lib/engine/globe/interpolate";
 import { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS } from "@/lib/engine/globe/timing";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
@@ -90,6 +91,8 @@ export default function GlobeClient() {
   const [scrubS, setScrubS] = useState(0);
   const [trail, setTrail] = useState<StarmindSample[]>([]);
   const [aurora, setAurora] = useState<TrackPoint[]>([]);
+  const [count, setCount] = useState(0);
+  const [tickMs, setTickMs] = useState<number | null>(null);
 
   useEffect(() => {
     orbitRef.current = { altitudeKm, inclinationDeg, raanDeg, scrubS };
@@ -147,6 +150,8 @@ export default function GlobeClient() {
         starlinkToRef.current = scenePositions;
         starlinkAtRef.current = performance.now();
         starlinkCountRef.current = nextCount;
+        setCount(nextCount);
+        setTickMs(event.data.ms ?? null);
         setPhase(nextCount === 0 ? "empty" : "ready");
       }
       if (event.data.kind === "starmind" && event.data.trail) {
@@ -358,7 +363,16 @@ export default function GlobeClient() {
           onChange={(event) => setScrubS(Number(event.target.value))}
         />
       </label>
-      <p className="rok-muted">{ILLUSTRATIVE_LABEL}</p>
+      <p className="rok-muted">
+        {ILLUSTRATIVE_LABEL} Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an
+        estimate. Trail length is one orbit, an estimate.
+      </p>
+      <p className="rok-muted">
+        Legend: SAA {classFromCode(1)}, auroral {classFromCode(2)}, outer belt {classFromCode(3)}, nominal{" "}
+        {classFromCode(0)}. SAA polygon is the Fermi GBM ring. Auroral zone and outer belt are NASA SP-8116. Aurora
+        points are OVATION.
+      </p>
+      {tickMs !== null ? <p className="rok-muted">Worker tick {tickMs.toFixed(1)} ms</p> : null}
       {phase === "loading" ? <p className="rok-muted">Loading</p> : null}
       {phase === "error" ? <p style={{ color: "var(--status-critical)" }}>{error ?? "Error"}</p> : null}
       {phase === "empty" ? <p className="rok-muted">Empty</p> : null}

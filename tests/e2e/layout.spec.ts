@@ -19,7 +19,7 @@ for (const width of [1280, 1920]) {
       }
     });
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("/test");
     await expect(page.getByRole("heading", { name: "Space Environment" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Chip outlook" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Orbit Location" })).toBeVisible();
@@ -35,7 +35,7 @@ for (const width of [1280, 1920]) {
 
 test("outlook numbers carry source badges and tabs work from the keyboard", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto("/");
+  await page.goto("/test");
   const outlook = page.getByRole("region", { name: "Chip outlook" });
   await expect(outlook.getByText("Estimated lifetime")).toBeVisible({ timeout: 60_000 });
   const bare = await outlook.locator("[data-orbit-number]:not(:has([data-source-label]))").count();

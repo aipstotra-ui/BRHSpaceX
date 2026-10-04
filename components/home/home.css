@@ -1,4 +1,4 @@
-/* StarMind Nav page layout. 3rok tokens only: no hard-coded colors, fonts, spacing or radii. */
+/* 3rok page layout. 3rok tokens only: no hard-coded colors, fonts, spacing or radii. */
 
 body {
   background: var(--surface-100);

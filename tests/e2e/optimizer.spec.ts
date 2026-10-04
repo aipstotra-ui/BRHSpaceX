@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("Move Starmind to best orbit updates the orbit", async ({ page }) => {
   test.setTimeout(120_000);
-  await page.goto("/");
+  await page.goto("/test");
   await page.getByRole("tab", { name: "Best orbit" }).click();
   const best = page.getByTestId("best-altitude");
   await expect(best).toBeVisible();

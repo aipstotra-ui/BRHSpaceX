@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("altitude slider changes orbit impact and every numeric cell has a source badge", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto("/");
+  await page.goto("/test");
   await expect(page.getByTestId("eclipse-mid")).toBeVisible({ timeout: 60_000 });
   const before = await page.getByTestId("drag-mid").innerText();
   const slider = page.getByRole("slider", { name: "Altitude" });

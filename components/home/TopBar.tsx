@@ -1,5 +1,6 @@
 "use client";
 
+import { AppNav } from "@/components/ui/AppNav";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { FeedPhase } from "@/components/ui/SnapshotBanner";
 import { getPreset } from "@/lib/presets";
@@ -44,8 +45,7 @@ export function TopBar({
     : "Inclined orbit";
 
   return (
-    <header className="rok-nav topbar">
-      <p className="rok-nav__mark">StarMind Nav</p>
+    <AppNav className="topbar">
       <dl className="topbar__context">
         <div>
           <dt className="eyebrow rok-subtle">Chip</dt>
@@ -78,6 +78,6 @@ export function TopBar({
           {copilotOpen ? "Close copilot" : "Ask copilot"}
         </button>
       </div>
-    </header>
+    </AppNav>
   );
 }

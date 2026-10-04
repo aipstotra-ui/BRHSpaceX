@@ -97,7 +97,7 @@ const TABS: WorkspaceTab[] = [
   },
 ];
 
-export default function HomePage() {
+export default function TestPage() {
   useOrbitImpactRunner();
   const feed = useFeedPhase();
   const [tab, setTab] = useState(TABS[0].id);

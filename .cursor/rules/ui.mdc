@@ -4,7 +4,7 @@ globs: app/**,components/**
 alwaysApply: false
 ---
 - Use 3rok-design-system/ tokens and components (PlacementMap and thermal scale for Payload Health).
-- Every displayed number renders a SourceBadge (source | estimate | UNVERIFIED).
+- Every displayed number renders a SourceBadge (source | estimate | UNVERIFIED). Since 2026-10-04 (Aiden), "source" and "estimate" render as a hidden `data-source-label` marker; only "UNVERIFIED" is visible.
 - Every panel has loading, error, and empty states; show the snapshot banner when data comes from data/snapshots/.
 - three, react-globe.gl, satellite.js workers, and onnxruntime-web are client-only (dynamic import, ssr:false). Never import them, ml/, or data/history/ from app/api/**.
 - Dark, minimal, data-dense; no console errors.

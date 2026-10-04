@@ -1,6 +1,8 @@
 import { workletModuleUrl } from "@/lib/grok/audio-worklet";
+import { readCopilotState, writeCopilotState } from "@/lib/grok/copilotState";
+import { COPILOT_INSTRUCTIONS } from "@/lib/grok/instructions";
 import { createPlaybackContext, PcmPlaybackQueue } from "@/lib/grok/playback";
-import { GET_TEST_VALUE_TOOL, runGetTestValue } from "@/lib/grok/testTool";
+import { executeGrokTool, GROK_TOOLS } from "@/lib/grok/tools";
 import { recordToolCall } from "@/lib/grok/toolLog";
 
 export const REALTIME_URL =
@@ -16,20 +18,30 @@ export function openRealtimeSocket(value: string): WebSocket {
   return new WebSocket(REALTIME_URL, [clientSecretProtocol(value)]);
 }
 
-export function buildSessionUpdate() {
+export type VoiceMode = "vad" | "ptt";
+
+async function readBrowserFeed(feed: string): Promise<unknown> {
+  const response = await fetch(`/api/data/${feed}`);
+  const body = (await response.json()) as { data?: unknown };
+  if (!response.ok || body.data === undefined) {
+    throw new Error(feed);
+  }
+  return body.data;
+}
+
+export function buildSessionUpdate(mode: VoiceMode = "vad") {
   return {
     type: "session.update" as const,
     session: {
       voice: VOICE,
-      instructions:
-        "You are the StarMind Nav voice test. When asked for the test value, call get_test_value and speak the returned number exactly.",
-      turn_detection: { type: "server_vad" as const },
+      instructions: COPILOT_INSTRUCTIONS,
+      turn_detection: mode === "ptt" ? null : { type: "server_vad" as const },
       audio: {
         input: { format: { type: "audio/pcm" as const, rate: 24000 } },
         output: { format: { type: "audio/pcm" as const, rate: 24000 } },
       },
       reasoning: { effort: "none" as const },
-      tools: [GET_TEST_VALUE_TOOL],
+      tools: GROK_TOOLS,
     },
   };
 }
@@ -57,15 +69,13 @@ export function toolReplyMessages(
   return [...outputs, { type: "response.create" }];
 }
 
-export function executeToolCall(name: string, args: unknown): string {
-  if (name === GET_TEST_VALUE_TOOL.name) {
-    const output = runGetTestValue();
-    recordToolCall({ name, args, output });
-    return output;
+export async function executeToolCall(name: string, args: unknown): Promise<string> {
+  const result = await executeGrokTool(name, args, readCopilotState(), { readFeed: readBrowserFeed });
+  if (result.changed) {
+    writeCopilotState(result.state);
   }
-  const output = JSON.stringify({ error: "unknown tool" });
-  recordToolCall({ name, args, output });
-  return output;
+  recordToolCall({ name, args, output: result.output });
+  return result.output;
 }
 
 type ServerEvent = {
@@ -95,18 +105,19 @@ export function createRealtimeHandler(playback: { whenIdle: () => Promise<void> 
     flushing = true;
     const batch = pending.splice(0, pending.length);
     await playback.whenIdle();
-    const prepared = batch.map((call) => {
+    const prepared = [];
+    for (const call of batch) {
       let args: unknown = {};
       try {
         args = JSON.parse(call.arguments || "{}") as unknown;
       } catch {
         args = {};
       }
-      return {
+      prepared.push({
         call_id: call.call_id,
-        output: executeToolCall(call.name, args),
-      };
-    });
+        output: await executeToolCall(call.name, args),
+      });
+    }
     for (const message of toolReplyMessages(prepared)) {
       handlers.send(message);
     }
@@ -156,11 +167,14 @@ export function startMicAndSocket(deps: {
   return { mic, socket };
 }
 
-export async function connectVoice(handlers: {
-  onTranscript: (text: string) => void;
-  onFallback: () => void;
-  onAudioDelta: (delta: string) => void;
-}): Promise<{ stop: () => void }> {
+export async function connectVoice(
+  handlers: {
+    onTranscript: (text: string) => void;
+    onFallback: () => void;
+    onAudioDelta: (delta: string) => void;
+  },
+  options?: { mode?: VoiceMode },
+): Promise<{ stop: () => void; setTalking: (talking: boolean) => void; commitInput: () => void }> {
   const tokenResponse = await fetch("/api/grok/token", {
     method: "POST",
     cache: "no-store",
@@ -175,6 +189,8 @@ export async function connectVoice(handlers: {
     throw new Error("token missing");
   }
 
+  const mode = options?.mode ?? "vad";
+  const gate = { talking: mode === "vad" };
   const playbackContext = createPlaybackContext();
   const playback = new PcmPlaybackQueue(playbackContext);
   const { mic, socket } = startMicAndSocket({
@@ -193,7 +209,7 @@ export async function connectVoice(handlers: {
   });
 
   socket.addEventListener("open", () => {
-    socket.send(JSON.stringify(buildSessionUpdate()));
+    socket.send(JSON.stringify(buildSessionUpdate(mode)));
   });
   socket.addEventListener("error", () => {
     handlers.onFallback();
@@ -219,7 +235,7 @@ export async function connectVoice(handlers: {
   const source = playbackContext.createMediaStreamSource(stream);
   const worklet = new AudioWorkletNode(playbackContext, "pcm-downsample");
   worklet.port.onmessage = (event: MessageEvent<{ audio?: string }>) => {
-    if (socket.readyState === WebSocket.OPEN && event.data.audio) {
+    if (socket.readyState === WebSocket.OPEN && event.data.audio && gate.talking) {
       socket.send(
         JSON.stringify({
           type: "input_audio_buffer.append",
@@ -231,6 +247,14 @@ export async function connectVoice(handlers: {
   source.connect(worklet);
 
   return {
+    setTalking(talking: boolean) {
+      gate.talking = talking;
+    },
+    commitInput() {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "input_audio_buffer.commit" }));
+      }
+    },
     stop() {
       socket.close();
       for (const track of stream.getTracks()) {

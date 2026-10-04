@@ -10,7 +10,7 @@ import { OrbitOptimizer } from "@/components/panels/OrbitOptimizer";
 import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { SpaceEnvironment } from "@/components/panels/SpaceEnvironment";
 import { StormScenario } from "@/components/panels/StormScenario";
-import { VoiceTest } from "@/components/panels/VoiceTest";
+import { Copilot } from "@/components/panels/Copilot";
 import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
 import { useShellStore, type PanelPhase } from "@/lib/store";
 
@@ -63,7 +63,7 @@ export default function HomePage() {
         }}
       >
         <SnapshotFeedStatus />
-        <VoiceTest />
+        <Copilot />
         {SECTIONS.map((title) => (
           <section
             key={title}

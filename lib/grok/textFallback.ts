@@ -1,4 +1,7 @@
-import { GET_TEST_VALUE_TOOL, runGetTestValue } from "@/lib/grok/testTool";
+import { defaultCopilotState, type CopilotState } from "@/lib/grok/copilotState";
+import { COPILOT_INSTRUCTIONS } from "@/lib/grok/instructions";
+import { readCopilotFeed } from "@/lib/grok/serverFeed";
+import { executeGrokTool, GROK_TOOLS } from "@/lib/grok/tools";
 import { recordToolCall, type ToolLogEntry } from "@/lib/grok/toolLog";
 
 const RESPONSES_URL = "https://api.x.ai/v1/responses";
@@ -12,6 +15,7 @@ type JsonRecord = Record<string, unknown>;
 export type TextFallbackResult = {
   text: string;
   tools: ToolLogEntry[];
+  state: CopilotState;
 };
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -40,27 +44,23 @@ function assistantText(items: JsonRecord[]): string {
   return parts.join("");
 }
 
-function toolOutput(name: string): string {
-  if (name === GET_TEST_VALUE_TOOL.name) {
-    return runGetTestValue();
-  }
-  return JSON.stringify({ error: "unknown tool" });
-}
-
 export async function runTextFallback(
   input: string,
   apiKey: string,
   doFetch: typeof fetch,
+  initialState: CopilotState = defaultCopilotState(),
 ): Promise<TextFallbackResult> {
   const tools: ToolLogEntry[] = [];
+  let state = initialState;
   let previousResponseId: string | undefined;
   let requestInput: unknown = [{ role: "user", content: input }];
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
     const body: JsonRecord = {
       model: TEXT_MODEL,
+      instructions: COPILOT_INSTRUCTIONS,
       input: requestInput,
-      tools: [GET_TEST_VALUE_TOOL],
+      tools: GROK_TOOLS,
     };
     if (previousResponseId) {
       body.previous_response_id = previousResponseId;
@@ -78,10 +78,11 @@ export async function runTextFallback(
     const items = outputItems(payload);
     const calls = items.filter((item) => item.type === "function_call");
     if (calls.length === 0) {
-      return { text: assistantText(items), tools };
+      return { text: assistantText(items), tools, state };
     }
 
-    const functionOutputs = calls.map((call) => {
+    const functionOutputs = [];
+    for (const call of calls) {
       const name = typeof call.name === "string" ? call.name : "";
       const rawArgs = typeof call.arguments === "string" ? call.arguments : "{}";
       let args: unknown = {};
@@ -90,20 +91,21 @@ export async function runTextFallback(
       } catch {
         args = {};
       }
-      const output = toolOutput(name);
-      const entry = { name, args, output };
+      const result = await executeGrokTool(name, args, state, { readFeed: readCopilotFeed });
+      state = result.state;
+      const entry = { name, args, output: result.output };
       tools.push(entry);
       recordToolCall(entry);
-      return {
+      functionOutputs.push({
         type: "function_call_output",
         call_id: call.call_id,
-        output,
-      };
-    });
+        output: result.output,
+      });
+    }
 
     previousResponseId = isRecord(payload) && typeof payload.id === "string" ? payload.id : undefined;
     requestInput = functionOutputs;
   }
 
-  return { text: "", tools };
+  return { text: "", tools, state };
 }

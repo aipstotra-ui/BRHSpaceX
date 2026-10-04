@@ -19,8 +19,9 @@ import {
   startMicAndSocket,
   toolReplyMessages,
 } from "@/lib/grok/realtime";
+import { defaultCopilotState } from "@/lib/grok/copilotState";
 import { runTextFallback } from "@/lib/grok/textFallback";
-import { TEST_VALUE } from "@/lib/grok/testTool";
+import { executeGrokTool, GROK_TOOLS } from "@/lib/grok/tools";
 import { getToolLog, resetToolLog } from "@/lib/grok/toolLog";
 
 afterEach(() => {
@@ -54,7 +55,9 @@ describe("voice session", () => {
     expect(session.session.audio.input.format).toEqual({ type: "audio/pcm", rate: PCM_RATE });
     expect(session.session.audio.output.format).toEqual({ type: "audio/pcm", rate: PCM_RATE });
     expect(session.session.reasoning).toEqual({ effort: "none" });
-    expect(session.session.tools[0]?.name).toBe("get_test_value");
+    expect(session.session.instructions).toContain("Never state a number");
+    expect(session.session.tools.map((tool) => tool.name)).toEqual(GROK_TOOLS.map((tool) => tool.name));
+    expect(buildSessionUpdate("ptt").session.turn_detection).toBeNull();
     expect(JSON.stringify(session)).not.toContain("anchor");
   });
 
@@ -98,17 +101,18 @@ describe("voice session", () => {
       onFallback: () => undefined,
       send: (message) => sent.push(message as { type: string }),
     });
+    const moveArgs = JSON.stringify({ kp: 7.7 });
     handler.onEvent({
       type: "response.function_call_arguments.done",
-      name: "get_test_value",
+      name: "recommend_best_move",
       call_id: "call-a",
-      arguments: "{}",
+      arguments: moveArgs,
     });
     handler.onEvent({
       type: "response.function_call_arguments.done",
-      name: "get_test_value",
+      name: "recommend_best_move",
       call_id: "call-b",
-      arguments: "{}",
+      arguments: moveArgs,
     });
     handler.onEvent({ type: "response.done" });
     await Promise.resolve();
@@ -120,10 +124,10 @@ describe("voice session", () => {
       "conversation.item.create",
       "response.create",
     ]);
-    expect(getToolLog().map((entry) => entry.output)).toEqual([
-      JSON.stringify({ value: TEST_VALUE.value, label: "estimate" }),
-      JSON.stringify({ value: TEST_VALUE.value, label: "estimate" }),
-    ]);
+    const expected = (
+      await executeGrokTool("recommend_best_move", { kp: 7.7 }, defaultCopilotState())
+    ).output;
+    expect(getToolLog().map((entry) => entry.output)).toEqual([expected, expected]);
     const planned = toolReplyMessages([
       { call_id: "call-a", output: "1" },
       { call_id: "call-b", output: "2" },
@@ -182,9 +186,9 @@ describe("grok routes", () => {
             output: [
               {
                 type: "function_call",
-                name: "get_test_value",
+                name: "recommend_best_move",
                 call_id: "call-1",
-                arguments: "{}",
+                arguments: JSON.stringify({ kp: 7.7 }),
               },
             ],
           });

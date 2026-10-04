@@ -9,6 +9,7 @@ import { OrbitLocation } from "@/components/panels/OrbitLocation";
 import { OrbitOptimizer } from "@/components/panels/OrbitOptimizer";
 import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { SpaceEnvironment } from "@/components/panels/SpaceEnvironment";
+import { StormScenario } from "@/components/panels/StormScenario";
 import { VoiceTest } from "@/components/panels/VoiceTest";
 import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
 import { useShellStore, type PanelPhase } from "@/lib/store";
@@ -82,6 +83,7 @@ export default function HomePage() {
             {title === "Best Move" ? <BestMove /> : null}
             {title === "Time Machine" ? <TimeMachine /> : null}
             {title === "Space Environment" ? <SpaceEnvironment /> : null}
+            {title === "Storm Scenario" ? <StormScenario /> : null}
             {title !== "AI Forecast" &&
             title !== "Chip Spec Studio" &&
             title !== "Payload Health" &&
@@ -90,6 +92,7 @@ export default function HomePage() {
             title !== "Orbit Optimizer" &&
             title !== "Best Move" &&
             title !== "Time Machine" &&
+            title !== "Storm Scenario" &&
             title !== "Space Environment" ? (
               <PanelBody phase={panelPhase} />
             ) : null}

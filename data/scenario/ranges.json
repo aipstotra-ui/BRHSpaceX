@@ -1,0 +1,37 @@
+{
+  "speedKmS": {
+    "min": 228.0,
+    "max": 1189.0,
+    "count": 276245,
+    "source": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text",
+    "years": "1995+"
+  },
+  "densityCm3": {
+    "min": 0.1,
+    "max": 137.2,
+    "count": 271563,
+    "source": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text",
+    "years": "1995+"
+  },
+  "bzNt": {
+    "min": -57.8,
+    "max": 58.9,
+    "count": 276547,
+    "source": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text",
+    "years": "1995+"
+  },
+  "cmeSpeedKmS": {
+    "min": 228.0,
+    "max": 1189.0,
+    "count": 276245,
+    "source": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text",
+    "years": "1995+",
+    "note": "DONKI CME speeds are not in the repo. This bound is the OMNI solar-wind speed extreme, used as the CME speed limit."
+  },
+  "durationH": {
+    "min": 1,
+    "max": 48,
+    "source": "Consecutive OMNI hours with Kp >= 5, 1995+",
+    "years": "1995+"
+  }
+}

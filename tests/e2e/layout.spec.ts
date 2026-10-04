@@ -40,6 +40,9 @@ test("outlook numbers carry source badges and tabs work from the keyboard", asyn
   await expect(outlook.getByText("Estimated lifetime")).toBeVisible({ timeout: 60_000 });
   const bare = await outlook.locator("[data-orbit-number]:not(:has([data-source-label]))").count();
   expect(bare).toBe(0);
+  // Provenance stays in the DOM, but only UNVERIFIED is shown on screen.
+  await expect(page.locator('[data-source-label="estimate"]:visible')).toHaveCount(0);
+  await expect(page.locator('[data-source-label="source"]:visible')).toHaveCount(0);
 
   await page.getByRole("tab", { name: "Orbit risk" }).focus();
   await page.keyboard.press("ArrowRight");

@@ -61,11 +61,21 @@ export function Copilot() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ input: draft, state }),
     });
-    const data = (await response.json()) as {
+    const data = (await response.json().catch(() => ({}))) as {
       text?: string;
       tools?: ToolLogEntry[];
       state?: CopilotState;
+      error?: string;
     };
+    if (!response.ok) {
+      setStatus("error");
+      setTranscript(
+        data.error === "missing server key"
+          ? "Copilot is unavailable: the server has no xAI API key (XAI_API_KEY)."
+          : `Copilot request failed (${response.status}${data.error ? `: ${data.error}` : ""}).`,
+      );
+      return;
+    }
     for (const tool of data.tools ?? []) {
       recordToolCall(tool);
     }

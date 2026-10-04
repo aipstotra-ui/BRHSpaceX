@@ -1,0 +1,1 @@
+{"feature_names": ["kp", "kp_p10", "kp_p50", "kp_p90", "dst", "saa", "auroral", "eclipse", "sigma_bits", "shielding", "ecc"], "output_name": "probabilities", "override_percent": 15, "override_note": "estimate: if the classifier action costs more than 15% above the cheapest P50 action, use the cheapest.", "zipmap": false}

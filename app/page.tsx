@@ -1,6 +1,8 @@
 "use client";
 
 import { AIForecast } from "@/components/panels/AIForecast";
+import { BestMove } from "@/components/panels/BestMove";
+import { TimeMachine } from "@/components/panels/TimeMachine";
 import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
 import { OrbitImpact } from "@/components/panels/OrbitImpact";
 import { OrbitLocation } from "@/components/panels/OrbitLocation";
@@ -77,6 +79,8 @@ export default function HomePage() {
             {title === "Orbit Location" ? <OrbitLocation /> : null}
             {title === "Orbit Impact" ? <OrbitImpact /> : null}
             {title === "Orbit Optimizer" ? <OrbitOptimizer /> : null}
+            {title === "Best Move" ? <BestMove /> : null}
+            {title === "Time Machine" ? <TimeMachine /> : null}
             {title === "Space Environment" ? <SpaceEnvironment /> : null}
             {title !== "AI Forecast" &&
             title !== "Chip Spec Studio" &&
@@ -84,6 +88,8 @@ export default function HomePage() {
             title !== "Orbit Location" &&
             title !== "Orbit Impact" &&
             title !== "Orbit Optimizer" &&
+            title !== "Best Move" &&
+            title !== "Time Machine" &&
             title !== "Space Environment" ? (
               <PanelBody phase={panelPhase} />
             ) : null}

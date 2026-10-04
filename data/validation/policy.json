@@ -1,0 +1,24 @@
+{
+  "version": "policy-v2",
+  "split": "test 2023+",
+  "policy_cost": 8753.701866666426,
+  "always_on_cost": 8916.387999999746,
+  "threshold_cost": 21343.303600000556,
+  "oracle_cost": 8699.287999999802,
+  "oracle_gap_closed_percent": 74.93603562107874,
+  "pass": true,
+  "rows": 17121,
+  "feature_names": [
+    "kp",
+    "kp_p10",
+    "kp_p50",
+    "kp_p90",
+    "dst",
+    "saa",
+    "auroral",
+    "eclipse",
+    "sigma_bits",
+    "shielding",
+    "ecc"
+  ]
+}

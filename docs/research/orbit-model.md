@@ -66,3 +66,21 @@ These are not in the L2 tables. Each one is an `estimate`.
 - Vehicle inputs, because AI1 mass, drag area, Cd, and end-of-life altitude are unpublished: mass 1000 kg, drag area 10 m², Cd 2.2, end-of-life altitude 120 km. These are not Starlink values. The 840 m² figure is the confirmed solar-array reading and is not a drag area.
 - Non-SSO RAAN 0°. No LTAN is taken from the Starlink snapshot.
 - Dose has no SPENVIS table. Annual dose is the 750 rad(Si)/5 yr anchor scaled by SAA fraction. The anchor orbit is UNVERIFIED, so every dose and TID lifetime stays an `estimate`.
+
+## R1 dose grid and storm zones (2026-10-04)
+
+Aiden asked to skip the full L2 research pass for these ("it doesn't have to be most accurate"). Every row below is an `estimate` or `UNVERIFIED` until a researcher pass confirms it.
+
+| Item | Value | Unit | Source URL | Accessed | Status | Note |
+|---|---|---|---|---|---|---|
+| Trapped dose model | AP8/AE8 (IRBEM via SpacePy 0.7.0) + SHIELDOSE-2, Si detector, nucmeth 1 | n/a | https://prbem.github.io/IRBEM/ | 2026-10-04 | estimate | Built by `scripts/orbit/dose_table.py` into `data/orbit/dose_table.json`. |
+| Field paired with each model | AP8MIN/AE8MIN: Jensen–Cain 1960 at 1964-01-01. AP8MAX/AE8MAX: GSFC 12/66 at 1970-01-01 | n/a | https://prbem.github.io/IRBEM/ | 2026-10-04 | UNVERIFIED | Conventional pairing; not checked against the IRBEM manual line by line. |
+| SHIELDOSE-2 geometry column | index 2 = spherical (center of solid Al sphere), factor 1 | n/a | SpacePy 0.7.0 `irbempy/__init__.py` line 1689: `['Semi-Inf Slab', 'Finite Slab', 'Spherical']` | 2026-10-04 | CONFIRMED (order) | Normalization factor 1 is UNVERIFIED. |
+| Upset threshold | 70 | MeV | https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2015JA021312 | 2026-10-04 | estimate | Same channel as the Zou et al. 2015 quiet SAA example already used in M4. |
+| Geomagnetic north pole, 2025 | 80.8 N, 72.6 W | degree | https://www.ngdc.noaa.gov/geomag/GeomagneticPoles.shtml | 2026-10-04 | UNVERIFIED | Centered dipole, IGRF-14. |
+| Auroral equatorward edge | 66 − 2·Kp | degree magnetic latitude | https://doi.org/10.1029/JA088iA07p05692 | 2026-10-04 | estimate | After Gussenhoven, Hardy & Heinemann 1983; rounded, not checked against the paper. |
+| Auroral poleward edge | 76 − 1·Kp | degree magnetic latitude | http://www.spaceweather.gov/content/space-weather-glossary | 2026-10-04 | estimate | Design choice so quiet Kp 2 roughly matches NOAA's 67–75° average oval. |
+| SEP (~10 MeV) cutoff | 65 − 1·Kp | degree magnetic latitude | https://doi.org/10.1029/2000JA000212 | 2026-10-04 | estimate | After Leske et al. 2001 (SAMPEX); rounded, not checked against the paper. |
+| NOAA S-scale | S1 10, S2 100, S3 1e3, S4 1e4, S5 1e5 | pfu (>10 MeV) | https://www.spaceweather.gov/noaa-scales-explanation | 2026-10-04 | CONFIRMED | Well-known table; same page as the G-scale row. |
+| SEP upset conversion | GOES >10 MeV pfu × 4π × share of orbit poleward of cutoff | 1/cm2/s | n/a | 2026-10-04 | estimate | Counting every >10 MeV proton as able to upset is an upper bound. |
+| Replay solar phase and depth | AP8/AE8 max, 0.5 mm Al | n/a | n/a | 2026-10-04 | estimate | May 2024 is near cycle-25 maximum; 0.5 mm is the thinnest grid point. |

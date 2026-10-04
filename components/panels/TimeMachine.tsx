@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 
+import { SourceBadge } from "@/components/ui/SourceBadge";
 import { CLIMATOLOGY_SENTENCE } from "@/lib/engine/orbit/climatology";
-import { DEFAULT_ORBIT_KM, SEP_ONSET, replayOnOrbit } from "@/lib/engine/replayOnOrbit";
+import { DEFAULT_ORBIT_INC_DEG, DEFAULT_ORBIT_KM, SEP_ONSET, replayOnOrbit } from "@/lib/engine/replayOnOrbit";
 import { useOrbitStore } from "@/lib/store/orbit";
+import { useTimelineStore } from "@/lib/store/timeline";
 
 function mark(value: number): string {
   if (Math.abs(value) < 1e-9) {
@@ -14,62 +16,102 @@ function mark(value: number): string {
 }
 
 export function TimeMachine() {
-  const chosenAltitude = useOrbitStore((state) => state.altitudeKm);
-  const [scrub, setScrub] = useState(0);
-  const replay = replayOnOrbit(chosenAltitude, DEFAULT_ORBIT_KM);
+  const altitudeKm = useOrbitStore((state) => state.altitudeKm);
+  const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
+  const mode = useTimelineStore((state) => state.mode);
+  const index = useTimelineStore((state) => state.index);
+  const setMode = useTimelineStore((state) => state.setMode);
+  const setIndex = useTimelineStore((state) => state.setIndex);
+  const replay = useMemo(
+    () =>
+      replayOnOrbit(
+        { altitudeKm, inclinationDeg },
+        { altitudeKm: DEFAULT_ORBIT_KM, inclinationDeg: DEFAULT_ORBIT_INC_DEG },
+      ),
+    [altitudeKm, inclinationDeg],
+  );
+  const scrub = mode === "may2024" ? index : 0;
   const hour = replay.hours[scrub];
+  const onDefault =
+    Math.abs(altitudeKm - DEFAULT_ORBIT_KM) < 1e-6 && Math.abs(inclinationDeg - DEFAULT_ORBIT_INC_DEG) < 1e-6;
+
+  const rows: [string, number, number, string][] = [
+    ["Cost", replay.delta.cost, 2, ""],
+    ["Downtime", replay.delta.downtimeHours, 2, "h"],
+    ["Uncorrectable", replay.delta.uncorrectable, 2, ""],
+    ["Trapped dose", replay.delta.dose, 3, "rad(Si)"],
+  ];
+
   return (
-    <div className="body">
-      <p>May 2024 replay, labeled {replay.label}. {CLIMATOLOGY_SENTENCE}</p>
+    <div className="body stack stack--tight">
+      <p>
+        May 2024 replay, labeled {replay.label}. {CLIMATOLOGY_SENTENCE}
+      </p>
       <p data-testid="sep-marker">SEP onset {SEP_ONSET}</p>
-      <p data-testid="first-move">First non-continue {replay.firstNonContinue}</p>
+      <p data-testid="first-move">First non-continue {replay.firstNonContinue ?? "none"}</p>
       <label className="rok-field">
-        Replay hour
+        <span className="rok-field__label eyebrow">Replay hour</span>
         <input
           aria-label="Replay scrubber"
           type="range"
           min={0}
           max={replay.hours.length - 1}
           value={scrub}
-          onChange={(event) => setScrub(Number(event.target.value))}
+          onChange={(event) => {
+            if (useTimelineStore.getState().mode !== "may2024") {
+              setMode("may2024");
+            }
+            // The timeline loads replay points on the next tick; set the hour after it does.
+            const next = Number(event.target.value);
+            window.setTimeout(() => setIndex(next), 0);
+          }}
         />
       </label>
       {hour ? (
-        <p>
-          {hour.time} Kp {hour.kp} {hour.gLevel} action {replay.chosen.actions[scrub]}
+        <p className="data-sm">
+          {hour.time} Kp {hour.kp === null ? "n/a" : hour.kp.toFixed(2)} {hour.gLevel} · protons{" "}
+          {hour.goesProtonFlux == null ? "n/a" : `${hour.goesProtonFlux.toFixed(1)} pfu`} · action{" "}
+          <strong>{replay.chosen.actions[scrub]}</strong>
         </p>
       ) : null}
-      <table>
-        <thead>
-          <tr>
-            <th>Delta</th>
-            <th>Chosen minus default</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cost</td>
-            <td>{replay.delta.cost.toFixed(2)}</td>
-            <td>{mark(replay.delta.cost)}</td>
-          </tr>
-          <tr>
-            <td>Downtime h</td>
-            <td>{replay.delta.downtimeHours.toFixed(2)}</td>
-            <td>{mark(replay.delta.downtimeHours)}</td>
-          </tr>
-          <tr>
-            <td>Uncorrectable</td>
-            <td>{replay.delta.uncorrectable.toFixed(2)}</td>
-            <td>{mark(replay.delta.uncorrectable)}</td>
-          </tr>
-          <tr>
-            <td>Dose</td>
-            <td>{replay.delta.dose.toFixed(4)}</td>
-            <td>{mark(replay.delta.dose)}</td>
-          </tr>
-        </tbody>
-      </table>
+      {onDefault ? (
+        <p className="note">
+          The chosen orbit is the default orbit, so every delta is zero. Move the orbit to compare.
+        </p>
+      ) : null}
+      <div className="table-scroll">
+        <table className="rok-table">
+          <caption className="sr-only">Chosen orbit minus default orbit over the replay</caption>
+          <thead>
+            <tr>
+              <th scope="col">Delta</th>
+              <th scope="col" className="rok-num">
+                Chosen minus default
+              </th>
+              <th scope="col">Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([title, value, digits, unit]) => (
+              <tr key={title}>
+                <th scope="row">{title}</th>
+                <td className="rok-num">
+                  <span className="num">
+                    {value.toFixed(digits)}
+                    {unit ? <span className="num__unit"> {unit}</span> : null} <SourceBadge label="estimate" />
+                  </span>
+                </td>
+                <td>{mark(value)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ul className="note notes-list">
+        {replay.notes.map((note) => (
+          <li key={note}>{note}</li>
+        ))}
+      </ul>
     </div>
   );
 }

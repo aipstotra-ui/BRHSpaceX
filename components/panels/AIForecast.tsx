@@ -6,6 +6,7 @@ import { SourceBadge } from "@/components/ui/SourceBadge";
 import { buildHourlyFromFeeds, computeFeatureMap, issueTimeIso, vectorFromMap } from "@/lib/ml/features";
 import { calibrateQuantiles, type TargetName } from "@/lib/ml/forecast";
 import { runModel } from "@/lib/ml/ort";
+import { useTimelineStore } from "@/lib/store/timeline";
 import type { SourceLabel } from "@/lib/types";
 import forecastReport from "@/data/validation/forecast.json";
 import modelCard from "@/public/models/model-card.json";
@@ -139,6 +140,12 @@ export function AIForecast() {
         }
         setIssue(issueIso);
         setBands(next);
+        useTimelineStore.getState().setForecast(
+          issueIso,
+          next
+            .filter((band) => band.target === "kp")
+            .map((band) => ({ horizonH: band.horizon, p10: band.p10, p50: band.p50, p90: band.p90 })),
+        );
         setPhase(next.length === 0 ? "empty" : "ready");
       } catch {
         if (!cancelled) {

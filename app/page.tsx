@@ -1,104 +1,145 @@
 "use client";
 
+import { useState } from "react";
+
+import "@/components/home/home.css";
+import { useOrbitImpactRunner } from "@/components/home/impactStore";
+import { Timeline } from "@/components/home/Timeline";
+import { TopBar } from "@/components/home/TopBar";
+import { Verdict } from "@/components/home/Verdict";
+import { Section, Workspace, type WorkspaceTab } from "@/components/home/Workspace";
 import { AIForecast } from "@/components/panels/AIForecast";
 import { BestMove } from "@/components/panels/BestMove";
-import { TimeMachine } from "@/components/panels/TimeMachine";
 import { ChipSpecStudio } from "@/components/panels/ChipSpecStudio";
+import { Copilot } from "@/components/panels/Copilot";
 import { OrbitImpact } from "@/components/panels/OrbitImpact";
 import { OrbitLocation } from "@/components/panels/OrbitLocation";
 import { OrbitOptimizer } from "@/components/panels/OrbitOptimizer";
 import { PayloadHealth } from "@/components/panels/PayloadHealth";
 import { SpaceEnvironment } from "@/components/panels/SpaceEnvironment";
 import { StormScenario } from "@/components/panels/StormScenario";
-import { Copilot } from "@/components/panels/Copilot";
-import { SnapshotFeedStatus } from "@/components/ui/SnapshotBanner";
-import { useShellStore, type PanelPhase } from "@/lib/store";
+import { TimeMachine } from "@/components/panels/TimeMachine";
+import { SnapshotFeedStatus, useFeedPhase } from "@/components/ui/SnapshotBanner";
 
-const SECTIONS = [
-  "Chip Spec Studio",
-  "Space Environment",
-  "Orbit Location",
-  "Orbit Impact",
-  "Orbit Optimizer",
-  "AI Forecast",
-  "Payload Health",
-  "Best Move",
-  "Time Machine",
-  "Storm Scenario",
-  "Validation Lab",
-] as const;
-
-function sectionId(title: string): string {
-  return title.toLowerCase().replaceAll(" ", "-");
-}
-
-function PanelBody({ phase }: { phase: PanelPhase }) {
-  if (phase === "loading") {
-    return <p className="body rok-muted">Loading</p>;
-  }
-  if (phase === "error") {
-    return (
-      <p className="body" style={{ color: "var(--status-critical)" }}>
-        Error
-      </p>
-    );
-  }
-  return <p className="body rok-muted">Empty</p>;
-}
+const TABS: WorkspaceTab[] = [
+  {
+    id: "risk",
+    label: "Orbit risk",
+    hint: "Every number behind the outlook: low, mid and high ranges, and what each storm level adds.",
+    content: (
+      <Section title="Orbit Impact" eyebrow="Ranges">
+        <OrbitImpact />
+      </Section>
+    ),
+  },
+  {
+    id: "chip",
+    label: "Chip",
+    hint: "Pick a chip preset or enter your own specs, then see how each tile of the payload holds up.",
+    content: (
+      <>
+        <Section title="Chip Spec Studio" eyebrow="Payload">
+          <ChipSpecStudio />
+        </Section>
+        <Section title="Payload Health" eyebrow="Tiles">
+          <PayloadHealth />
+        </Section>
+      </>
+    ),
+  },
+  {
+    id: "optimize",
+    label: "Best orbit",
+    hint: "Rank candidate orbits for this chip using storm history (climatology), then move Starmind there.",
+    content: (
+      <Section title="Orbit Optimizer" eyebrow="Climatology">
+        <OrbitOptimizer />
+      </Section>
+    ),
+  },
+  {
+    id: "weather",
+    label: "Space weather",
+    hint: "The next 24 hours of geomagnetic activity, what the payload should do now, and what-if storms.",
+    content: (
+      <>
+        <Section title="AI Forecast" eyebrow="Next 24 h">
+          <AIForecast />
+        </Section>
+        <Section title="Best Move" eyebrow="Policy">
+          <BestMove />
+        </Section>
+        <Section title="Storm Scenario" eyebrow="What-if">
+          <StormScenario />
+        </Section>
+      </>
+    ),
+  },
+  {
+    id: "replay",
+    label: "May 2024 replay",
+    hint: "Replay the May 2024 superstorm hour by hour on the chosen orbit.",
+    content: (
+      <Section title="Time Machine" eyebrow="Test period">
+        <TimeMachine />
+      </Section>
+    ),
+  },
+  {
+    id: "validation",
+    label: "Validation",
+    hint: "Every core number next to its published reference.",
+    content: (
+      <Section title="Validation Lab" eyebrow="Evidence">
+        <p className="body rok-muted">Empty. The Validation Lab (M10) is not built yet.</p>
+      </Section>
+    ),
+  },
+];
 
 export default function HomePage() {
-  const panelPhase = useShellStore((state) => state.panelPhase);
+  useOrbitImpactRunner();
+  const feed = useFeedPhase();
+  const [tab, setTab] = useState(TABS[0].id);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   return (
-    <>
-      <header className="rok-nav">
-        <p className="rok-nav__mark">StarMind Nav</p>
-      </header>
-      <main
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-5)",
-          padding: "var(--space-6)",
+    <div className="app">
+      <TopBar
+        feed={feed}
+        copilotOpen={copilotOpen}
+        onCopilot={() => setCopilotOpen((open) => !open)}
+        onChangeChip={() => {
+          setTab("chip");
+          document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
-      >
-        <SnapshotFeedStatus />
-        <Copilot />
-        {SECTIONS.map((title) => (
-          <section
-            key={title}
-            className="rok-panel"
-            aria-labelledby={sectionId(title)}
-          >
-            <p className="eyebrow rok-panel__eyebrow">Section</p>
-            <h2 id={sectionId(title)} className="heading-md rok-panel__title">
-              {title}
-            </h2>
-            {title === "AI Forecast" ? <AIForecast /> : null}
-            {title === "Chip Spec Studio" ? <ChipSpecStudio /> : null}
-            {title === "Payload Health" ? <PayloadHealth /> : null}
-            {title === "Orbit Location" ? <OrbitLocation /> : null}
-            {title === "Orbit Impact" ? <OrbitImpact /> : null}
-            {title === "Orbit Optimizer" ? <OrbitOptimizer /> : null}
-            {title === "Best Move" ? <BestMove /> : null}
-            {title === "Time Machine" ? <TimeMachine /> : null}
-            {title === "Space Environment" ? <SpaceEnvironment /> : null}
-            {title === "Storm Scenario" ? <StormScenario /> : null}
-            {title !== "AI Forecast" &&
-            title !== "Chip Spec Studio" &&
-            title !== "Payload Health" &&
-            title !== "Orbit Location" &&
-            title !== "Orbit Impact" &&
-            title !== "Orbit Optimizer" &&
-            title !== "Best Move" &&
-            title !== "Time Machine" &&
-            title !== "Storm Scenario" &&
-            title !== "Space Environment" ? (
-              <PanelBody phase={panelPhase} />
-            ) : null}
-          </section>
-        ))}
+      />
+      <SnapshotFeedStatus phase={feed} />
+      <main className="cockpit">
+        <div className="cockpit__hero">
+          <Section title="Space Environment" eyebrow="Live orbit">
+            <SpaceEnvironment />
+          </Section>
+          <Verdict />
+        </div>
+        <Timeline />
+        <div className="cockpit__bench">
+          <div className="cockpit__controls">
+            <Section title="Orbit Location" eyebrow="Controls">
+              <OrbitLocation />
+            </Section>
+          </div>
+          <Workspace tabs={TABS} active={tab} onChange={setTab} />
+        </div>
       </main>
-    </>
+      <aside
+        id="copilot-drawer"
+        className="drawer"
+        aria-label="Grok copilot"
+        hidden={!copilotOpen}
+      >
+        <Copilot />
+      </aside>
+    </div>
   );
 }

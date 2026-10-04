@@ -12,6 +12,37 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "replays" / "may2024.json"
 
 
+INTEGRAL_FLOOR_KEV = 10_000.0
+
+
+def integral_above_10mev(protons: pd.DataFrame) -> pd.Series:
+    """GOES-16 SGPS differential channels -> integral flux above 10 MeV, pfu (1/cm2/s/sr), per timestamp.
+
+    Differential flux is per keV. Per sensor, each channel spans from its lower edge to that sensor's next lower
+    edge (estimate: SGPS upper edges are not in the parquet). The slice from 10 MeV to the first channel above it
+    is priced at that channel's flux, a slight underestimate on a falling spectrum. The >500 MeV integral channel
+    is added as is. Sensors are averaged.
+    """
+    parts = []
+    for sensor, rows in protons.groupby("sensor"):
+        diff = rows.loc[rows["flux_kind"] == "differential"]
+        top = rows.loc[rows["flux_kind"] != "differential"]
+        edges = sorted(diff["energy_low_kev"].unique())
+        last = float(top["energy_low_kev"].min()) if len(top) else edges[-1] * 2
+        upper = dict(zip(edges, edges[1:] + [last]))
+        above = [edge for edge in edges if edge >= INTEGRAL_FLOOR_KEV]
+        first = above[0] if above else None
+        width = diff["energy_low_kev"].map(
+            lambda low: (upper[low] - low) + (low - INTEGRAL_FLOOR_KEV if low == first else 0.0)
+            if low >= INTEGRAL_FLOOR_KEV
+            else 0.0
+        )
+        flux = (diff["flux"].clip(lower=0) * width).groupby(diff["time"]).sum()
+        flux = flux.add(top.groupby("time")["flux"].sum(), fill_value=0.0)
+        parts.append(flux.rename(sensor))
+    return pd.concat(parts, axis=1).mean(axis=1)
+
+
 def g_level(kp: float) -> str:
     for level, minimum in ((5, 9), (4, 8), (3, 7), (2, 6), (1, 5)):
         if kp >= minimum:
@@ -30,11 +61,13 @@ def main() -> None:
     merged = window.merge(forecasts[["time", "kp_p50"]], on="time", how="left")
     protons = pq.read_table(
         ROOT / "data" / "history" / "goes_protons_202405.parquet",
-        columns=["time", "flux"],
+        columns=["time", "sensor", "energy_low_kev", "flux", "flux_kind"],
     ).to_pandas()
     protons["time"] = pd.to_datetime(protons["time"], utc=True)
     protons = protons.loc[(protons["time"] >= start) & (protons["time"] <= end)]
-    hourly_flux = protons.groupby(protons["time"].dt.floor("h"))["flux"].mean()
+    integral = integral_above_10mev(protons)
+    # Stamp each hourly mean at the end of its hour so a replay hour never sees later minutes.
+    hourly_flux = integral.groupby(integral.index.ceil("h")).mean()
     hours = []
     for row in merged.itertuples(index=False):
         stamp = row.time.floor("h")

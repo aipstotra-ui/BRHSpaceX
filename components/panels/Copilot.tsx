@@ -80,23 +80,12 @@ export function Copilot() {
   }
 
   return (
-    <section className="rok-panel demo-card" aria-labelledby="copilot">
+    <section className="rok-panel" aria-labelledby="copilot">
       <p className="eyebrow rok-panel__eyebrow">Voice</p>
       <h2 id="copilot" className="heading-md rok-panel__title">
-        Ask StarMind
+        Copilot
       </h2>
-      <p className="body">Ask with your voice, or type. The numbers come from the same score and orbit as the page.</p>
-      <div className="demo-pills">
-        {[
-          "How safe is this orbit in 2003?",
-          "Move Starmind to 600 km.",
-          "Where is the safest orbit for a stormy Sun?",
-        ].map((prompt) => (
-          <button key={prompt} type="button" className="demo-pill" onClick={() => setDraft(prompt)}>
-            {prompt}
-          </button>
-        ))}
-      </div>
+      <p className="body">Ask for the forecast, a move, a ranked orbit, or a storm scenario. Spoken numbers come from tool calls.</p>
       {fallback ? (
         <p className="rok-badge eyebrow" data-testid="fallback-badge">
           fallback mode

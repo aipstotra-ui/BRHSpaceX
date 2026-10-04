@@ -66,7 +66,7 @@ function auroraPoints(points: TrackPoint[]): THREE.Points {
   return new THREE.Points(geometry, new THREE.PointsMaterial({ color: "#7d5cff", size: 0.012 }));
 }
 
-export default function GlobeClient({ presentation = false }: { presentation?: boolean }) {
+export default function GlobeClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -193,8 +193,8 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
     const canvas = canvasRef.current;
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-      renderer.setClearColor(0x000000, 0);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
+      renderer.setClearColor(0x000000, 1);
     } catch {
       window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
@@ -206,7 +206,7 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
     }
     renderer.setPixelRatio(1);
     const scene = new THREE.Scene();
-    scene.background = null;
+    scene.background = new THREE.Color("#000000");
     sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 20);
     camera.position.set(0.2, 0.45, 3.15);
@@ -249,7 +249,7 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
     starGeometry.setDrawRange(0, 0);
     const points = new THREE.Points(
       starGeometry,
-      new THREE.PointsMaterial({ color: "#ffe56a", size: 0.014, sizeAttenuation: true }),
+      new THREE.PointsMaterial({ color: "#f5f7fb", size: 0.012, sizeAttenuation: true }),
     );
     pointsRef.current = points;
     scene.add(points);
@@ -260,7 +260,7 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
       scene.add(auroraPoints(auroraRef.current));
     }
     let stats: { begin: () => void; end: () => void; dom: HTMLElement } | null = null;
-    if (process.env.NODE_ENV === "development" && !presentation) {
+    if (process.env.NODE_ENV === "development") {
       void import("stats.js").then((mod) => {
         const panel = new mod.default();
         panel.showPanel(0);
@@ -271,15 +271,13 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
     }
     let frame = 0;
     const resize = () => {
-      const width = wrapRef.current?.clientWidth ?? 640;
-      const size = Math.max(320, Math.min(720, Math.floor(width)));
+      const size = 640;
       renderer.setPixelRatio(1);
       renderer.setSize(size, size, true);
-      canvas.style.maxWidth = "100%";
-      canvas.style.height = "auto";
+      canvas.style.maxWidth = "none";
       canvas.style.display = "block";
       canvas.style.margin = "0 auto";
-      canvas.style.background = "transparent";
+      canvas.style.background = "#000";
       renderer.setViewport(0, 0, size, size);
       camera.aspect = 1;
       camera.updateProjectionMatrix();
@@ -329,7 +327,7 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
       stats?.dom.remove();
       sceneRef.current = null;
     };
-  }, [presentation]);
+  }, []);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -346,47 +344,39 @@ export default function GlobeClient({ presentation = false }: { presentation?: b
 
   return (
     <div ref={wrapRef} style={{ position: "relative" }}>
-      {presentation ? null : (
-        <CameraControls
-          follow={follow}
-          onFollow={setFollow}
-          onZoom={(direction) => {
-            zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
-          }}
+      <CameraControls
+        follow={follow}
+        onFollow={setFollow}
+        onZoom={(direction) => {
+          zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
+        }}
+      />
+      <label className="rok-field">
+        Time scrubber (s)
+        <input
+          aria-label="Time scrubber"
+          type="range"
+          min={-43200}
+          max={43200}
+          step={60}
+          value={scrubS}
+          onChange={(event) => setScrubS(Number(event.target.value))}
         />
-      )}
-      {presentation ? null : (
-        <label className="rok-field">
-          Time scrubber (s)
-          <input
-            aria-label="Time scrubber"
-            type="range"
-            min={-43200}
-            max={43200}
-            step={60}
-            value={scrubS}
-            onChange={(event) => setScrubS(Number(event.target.value))}
-          />
-        </label>
-      )}
-      {presentation ? null : (
-        <p className="rok-muted">
-          {ILLUSTRATIVE_LABEL} Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an
-          estimate. Trail length is one orbit, an estimate.
-        </p>
-      )}
-      {presentation ? null : (
-        <p className="rok-muted">
-          Legend: SAA {classFromCode(1)}, auroral {classFromCode(2)}, outer belt {classFromCode(3)}, nominal{" "}
-          {classFromCode(0)}. SAA polygon is the Fermi GBM ring. Auroral zone and outer belt are NASA SP-8116. Aurora
-          points are OVATION.
-        </p>
-      )}
-      {presentation || tickMs === null ? null : <p className="rok-muted">Worker tick {tickMs.toFixed(1)} ms</p>}
-      {presentation ? null : phase === "loading" ? <p className="rok-muted">Loading</p> : null}
+      </label>
+      <p className="rok-muted">
+        {ILLUSTRATIVE_LABEL} Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an
+        estimate. Trail length is one orbit, an estimate.
+      </p>
+      <p className="rok-muted">
+        Legend: SAA {classFromCode(1)}, auroral {classFromCode(2)}, outer belt {classFromCode(3)}, nominal{" "}
+        {classFromCode(0)}. SAA polygon is the Fermi GBM ring. Auroral zone and outer belt are NASA SP-8116. Aurora
+        points are OVATION.
+      </p>
+      {tickMs !== null ? <p className="rok-muted">Worker tick {tickMs.toFixed(1)} ms</p> : null}
+      {phase === "loading" ? <p className="rok-muted">Loading</p> : null}
       {phase === "error" ? <p style={{ color: "var(--status-critical)" }}>{error ?? "Error"}</p> : null}
-      {presentation ? null : phase === "empty" ? <p className="rok-muted">Empty</p> : null}
-      {presentation ? null : <OrbitTrail samples={trail} />}
+      {phase === "empty" ? <p className="rok-muted">Empty</p> : null}
+      <OrbitTrail samples={trail} />
       <canvas ref={canvasRef} aria-label="Round Earth" />
     </div>
   );

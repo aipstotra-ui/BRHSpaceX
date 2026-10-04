@@ -7,6 +7,6 @@ const GlobeClient = dynamic(() => import("./GlobeClient"), {
   loading: () => <p className="body rok-muted">Loading</p>,
 });
 
-export function Globe({ presentation = false }: { presentation?: boolean }) {
-  return <GlobeClient presentation={presentation} />;
+export function Globe() {
+  return <GlobeClient />;
 }

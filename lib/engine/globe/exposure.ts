@@ -8,7 +8,7 @@ export const EXPOSURE_COLORS: Record<ExposureClass, string> = {
   SAA: "#e23b3b",
   auroral: "#3ddc97",
   "outer belt": "#e0a100",
-  nominal: "#ffd23a",
+  nominal: "#8fb4d6",
 };
 
 /** SAA wins, then the auroral zone, then the outer belt. */

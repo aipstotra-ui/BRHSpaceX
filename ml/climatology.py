@@ -25,8 +25,8 @@ OUT = ROOT / "data" / "orbit" / "climatology.json"
 
 # estimate: F10.7 sfu bands standing in for solar-cycle phase.
 # Sunspot number was not parsed (OMNI word 40).
-F107_LOW = 80.0
-F107_HIGH = 150.0
+F107_LOW = 64.0
+F107_HIGH = 200.0
 LEVELS = ("G0", "G1", "G2", "G3", "G4", "G5")
 
 

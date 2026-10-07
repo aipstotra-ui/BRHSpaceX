@@ -7,7 +7,7 @@ import { formatNumber, Num } from "@/components/panels/OrbitImpact";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
-import { SAA_EDGE_FLUX } from "@/lib/engine/globe/protonMap";
+import { SAA_EDGE_FLUX, saaBeltNote } from "@/lib/engine/globe/protonMap";
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import { auroralBoundaryMlatDeg, sepActive, zoneFractions } from "@/lib/engine/orbit/stormZones";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
@@ -113,6 +113,7 @@ export function Verdict() {
   const kp = cursor.point?.kp ?? 2;
   const pfu = cursor.point?.protonPfu ?? null;
   const protonsOn = pfu !== null && sepActive(pfu);
+  const beltNote = useMemo(() => saaBeltNote(altitudeKm), [altitudeKm]);
   const zones = useMemo(
     () => zoneFractions({ altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg }, kp),
     [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, kp],
@@ -229,7 +230,9 @@ export function Verdict() {
               kind="SAA"
               title="South Atlantic Anomaly"
               value={result.saaFraction}
-              what={`Time where trapped protons above 10 MeV reach ${SAA_EDGE_FLUX} /cm²/s (AP8), the red zone on the globe.`}
+              what={`Time where trapped protons above 10 MeV reach ${SAA_EDGE_FLUX} /cm²/s (AP8), the red zone on the globe.${
+                beltNote ? ` ${beltNote}` : ""
+              }`}
             />
             <Share
               kind="SEP"

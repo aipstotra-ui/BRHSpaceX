@@ -106,6 +106,48 @@ export function inSaaAp8(latDeg: number, lonDeg: number, altKm: number): boolean
   return inSaaFlux(trappedProtonMap(), latDeg, lonDeg, altKm);
 }
 
+const longitudeShares = new Map<number, number>();
+
+/**
+ * Share of the 360 one-degree longitudes where the SAA contour is present at some latitude, at this altitude
+ * (rounded to 10 km). About 0.4 at 500 km; 1 from about 1500 km, where the contour circles the Earth.
+ */
+export function saaLongitudeShare(altKm: number): number {
+  const key = Math.round(altKm / 10) * 10;
+  const hit = longitudeShares.get(key);
+  if (hit !== undefined) {
+    return hit;
+  }
+  const map = trappedProtonMap();
+  let covered = 0;
+  for (let lon = -179.5; lon < 180; lon += 1) {
+    for (let lat = -89.5; lat < 90; lat += 1) {
+      if (protonLogAt(map, lat, lon, key) >= SAA_EDGE_LOG) {
+        covered += 1;
+        break;
+      }
+    }
+  }
+  const share = covered / 360;
+  longitudeShares.set(key, share);
+  return share;
+}
+
+/** From this longitude share up, the SAA reads as part of the inner belt. A display choice (about 800 km). */
+export const BELT_NOTE_SHARE = 0.5;
+
+/** One sentence saying the SAA has merged into the inner proton belt, or null while it is still a regional dip. */
+export function saaBeltNote(altKm: number): string | null {
+  const share = saaLongitudeShare(altKm);
+  if (share < BELT_NOTE_SHARE) {
+    return null;
+  }
+  if (share >= 1) {
+    return "At this altitude it circles the Earth: this is time inside the inner proton belt, of which the SAA is the low-altitude dip.";
+  }
+  return `At this altitude the zone spans ${Math.round(share * 100)} % of longitudes: it is spreading from the South Atlantic into the inner proton belt.`;
+}
+
 /** The altitude the map is read at: the grid clamps outside its first and last layer. */
 export function protonMapAltitudeKm(altKm: number): number {
   const { altitudesKm } = trappedProtonMap().file;

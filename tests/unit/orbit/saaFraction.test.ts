@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { saaBeltNote, saaLongitudeShare } from "@/lib/engine/globe/protonMap";
 import { demoReferenceSaa, orbitEnvironment } from "@/lib/engine/orbit/environment";
 
 function saaAt(altitudeKm: number, inclinationDeg: number): number {
@@ -30,6 +31,28 @@ describe("SAA fraction (AP8 contour)", () => {
     expect(inside.saaFraction.assumptions.some((line) => line.includes("outside the map"))).toBe(false);
     const below = orbitEnvironment({ altitudeKm: 250, inclinationDeg: 53, sunSynchronous: false, ltanHours: null, raanDeg: 0 });
     expect(below.saaFraction.assumptions.some((line) => line.includes("read at 300 km"))).toBe(true);
+  });
+
+  it("spreads from a regional dip into a belt that circles the Earth", () => {
+    expect(saaLongitudeShare(500)).toBeLessThan(0.5);
+    expect(saaLongitudeShare(1500)).toBe(1);
+    let previous = 0;
+    for (let altitude = 300; altitude <= 2000; altitude += 50) {
+      const share = saaLongitudeShare(altitude);
+      expect(share).toBeGreaterThanOrEqual(previous);
+      previous = share;
+    }
+  });
+
+  it("says so in the assumptions once the SAA has merged into the inner belt", () => {
+    const belt = (altitudeKm: number) =>
+      orbitEnvironment({ altitudeKm, inclinationDeg: 53, sunSynchronous: false, ltanHours: null, raanDeg: 0 })
+        .saaFraction.assumptions.some((line) => line.includes("inner proton belt"));
+    expect(belt(550)).toBe(false);
+    expect(belt(1200)).toBe(true);
+    expect(belt(1500)).toBe(true);
+    expect(saaBeltNote(1200)).toContain("spans");
+    expect(saaBeltNote(1500)).toContain("circles the Earth");
   });
 
   it("keeps the cost model's reference scale on the GBM polygon", () => {

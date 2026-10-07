@@ -7,7 +7,7 @@ import {
 } from "@/lib/engine/orbit/constants";
 import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
 import { circularElements, type OrbitRequest } from "@/lib/engine/orbit/elements";
-import { inSaaAp8, protonMapAltitudeKm, SAA_EDGE_FLUX } from "@/lib/engine/globe/protonMap";
+import { inSaaAp8, protonMapAltitudeKm, SAA_EDGE_FLUX, saaBeltNote } from "@/lib/engine/globe/protonMap";
 import { circularPositionKm, ECLIPSE_SOURCE, shadowKind } from "@/lib/engine/orbit/eclipse";
 import { raanAfterSeconds } from "@/lib/engine/orbit/j2";
 import {
@@ -195,6 +195,7 @@ export function orbitEnvironment(request: OrbitRequest, shieldingMmAl = 0): Orbi
   const exposed = exposure(request);
   const eclipse = eclipseSamples(request);
   const mapAltitudeKm = protonMapAltitudeKm(request.altitudeKm);
+  const beltNote = saaBeltNote(mapAltitudeKm);
   const sampling = [
     "72 samples per orbit and 24 Earth-rotation phases are estimates. Earth rotation 7.2921150e-5 rad/s is an estimate.",
     "Low and high are the minimum and maximum across those phases. Mid is the mean.",
@@ -204,6 +205,7 @@ export function orbitEnvironment(request: OrbitRequest, shieldingMmAl = 0): Orbi
     ...(mapAltitudeKm !== request.altitudeKm
       ? [`${request.altitudeKm.toFixed(0)} km is outside the map, so the SAA is read at ${mapAltitudeKm} km.`]
       : []),
+    ...(beltNote ? [beltNote] : []),
     "The edge is a display choice. AP8's SAA edge is steep: moving it to 1 or 100 /cm²/s changed this fraction by under 3 percentage points for the 400–700 km orbits checked.",
     "AP8 is a 1960s–70s model paired with a modern field; flux magnitudes are approximate.",
     ...sampling,

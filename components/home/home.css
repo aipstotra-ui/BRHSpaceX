@@ -615,6 +615,29 @@
   min-width: 88px;
 }
 
+.timeline__controls input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.timeline__speed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+.timeline__speed select {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  background: var(--surface-300);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
 .timeline__readout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

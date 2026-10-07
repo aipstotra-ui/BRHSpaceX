@@ -5,8 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { propagateGp, type GpRecord } from "@/lib/engine/globe/sgp4";
 import { STARLINK_POINT_CAP, subsampleShellIndexes } from "@/lib/engine/globe/subsample";
-import { propagateStarlink, starmindNow } from "@/lib/engine/propagate.worker";
-import { starmindPositionKm } from "@/lib/engine/orbit/j2";
+import { propagateStarlink } from "@/lib/engine/propagate.worker";
 
 describe("globe propagation", () => {
   it("matches satellite.js for one snapshot TLE", () => {
@@ -26,12 +25,6 @@ describe("globe propagation", () => {
     const batch = propagateStarlink([record], date.getTime());
     expect(batch[0]).toBeCloseTo(fromWorker.latDeg, 6);
     expect(batch[2]).toBeCloseTo(fromWorker.altKm, 6);
-  });
-
-  it("matches j2.ts for the Starmind fix", () => {
-    const direct = starmindPositionKm(462.5739441337271, 53.15968545669517, 0, 1200);
-    const fromWorker = starmindNow(462.5739441337271, 53.15968545669517, 0, 1_200_000);
-    expect(fromWorker).toEqual(direct);
   });
 
   it("keeps the Starlink draw under 2000 points", () => {

@@ -2,9 +2,13 @@ import type { OrbitInputs } from "@/lib/cases/schema";
 
 /** "SSO 06:00 LTAN" or "Inclined orbit": the same words the testing page's top bar uses. */
 export function orbitKind(orbit: Pick<OrbitInputs, "sunSynchronous" | "ltanHours">): string {
-  return orbit.sunSynchronous
-    ? `SSO ${String(orbit.ltanHours ?? 0).padStart(2, "0")}:00 LTAN`
-    : "Inclined orbit";
+  return orbit.sunSynchronous ? `SSO ${clockTime(orbit.ltanHours ?? 0)} LTAN` : "Inclined orbit";
+}
+
+/** 6.25 → "06:15". The LTAN slider moves in quarter hours. */
+function clockTime(hours: number): string {
+  const minutes = Math.round(hours * 60) % (24 * 60);
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
 
 /** One orbit in one line, with capitalised units. */

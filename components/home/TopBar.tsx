@@ -3,6 +3,7 @@
 import { AppNav } from "@/components/ui/AppNav";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { FeedPhase } from "@/components/ui/SnapshotBanner";
+import { orbitKind } from "@/lib/cases/format";
 import { getPreset } from "@/lib/presets";
 import { useShellStore } from "@/lib/store";
 import { useOrbitStore } from "@/lib/store/orbit";
@@ -40,9 +41,7 @@ export function TopBar({
   const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
   const ltanHours = useOrbitStore((state) => state.ltanHours);
   const chip = getPreset(presetId);
-  const orbitKind = sunSynchronous
-    ? `SSO ${String(ltanHours ?? 0).padStart(2, "0")}:00 LTAN`
-    : "Inclined orbit";
+  const kind = orbitKind({ sunSynchronous, ltanHours });
 
   return (
     <AppNav className="topbar">
@@ -58,7 +57,7 @@ export function TopBar({
         <div>
           <dt className="eyebrow rok-subtle">Orbit</dt>
           <dd className="data-sm">
-            {orbitKind} · {altitudeKm.toFixed(0)} KM · {inclinationDeg.toFixed(1)}°
+            {kind} · {altitudeKm.toFixed(0)} KM · {inclinationDeg.toFixed(1)}°
           </dd>
         </div>
       </dl>

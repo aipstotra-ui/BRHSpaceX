@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function setTimeline(page: Page, index: number) {
+/** The slider moves in whole minutes of UTC time. */
+async function setTimeline(page: Page, iso: string) {
+  const index = Math.floor(Date.parse(iso) / 60_000);
   await page.getByRole("slider", { name: "Timeline position" }).evaluate((element, value) => {
     const input = element as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -20,14 +22,14 @@ test("the May 2024 timeline moves the danger zones in the outlook", async ({ pag
   await expect(outlook.getByText("Estimated lifetime")).toBeVisible({ timeout: 60_000 });
 
   // 2024-05-05 00:00, quiet.
-  await setTimeline(page, 0);
+  await setTimeline(page, "2024-05-05T00:00:00Z");
   const readout = page.locator(".timeline__readout");
   await expect(readout).toContainText("2024-05-05 00:00 UTC");
   await expect(outlook.getByText("Proton event", { exact: true })).toHaveCount(0);
   const quietOval = await outlook.getByText(/Oval edge at/).innerText();
 
   // 2024-05-10 17:00: G3 storm and the SEP peak.
-  await setTimeline(page, 137);
+  await setTimeline(page, "2024-05-10T17:00:00Z");
   await expect(readout).toContainText("2024-05-10 17:00 UTC");
   await expect(readout).toContainText("protons reach");
   await expect(outlook.getByText("Proton event", { exact: true })).toBeVisible();
@@ -36,19 +38,19 @@ test("the May 2024 timeline moves the danger zones in the outlook", async ({ pag
   expect(bare).toBe(0);
 
   // Kp 9 on 11 May: the chip ages faster, the AI shows its earlier call, and life is used up.
-  await setTimeline(page, 0);
+  await setTimeline(page, "2024-05-05T00:00:00Z");
   const lifeBefore = Number((await outlook.getByTestId("life-left").innerText()).split(/\s/)[0]);
-  await setTimeline(page, 146);
+  await setTimeline(page, "2024-05-11T02:00:00Z");
   await expect(outlook.getByTestId("aging")).toContainText("faster");
   const ai = page.getByRole("region", { name: "AI analysis" });
   await expect(ai).toContainText("For this 3-hour block the AI predicted Kp");
   await expect(ai).toContainText("How it did in May 2024");
   await expect(ai.getByText(/% confident/)).toBeVisible({ timeout: 30_000 });
-  await setTimeline(page, 287);
+  await setTimeline(page, "2024-05-16T23:00:00Z");
   await expect(outlook.getByTestId("aging")).toContainText("extra days");
   const lifeAfter = Number((await outlook.getByTestId("life-left").innerText()).split(/\s/)[0]);
   expect(lifeAfter).toBeLessThan(lifeBefore);
-  await setTimeline(page, 137);
+  await setTimeline(page, "2024-05-10T17:00:00Z");
 
   // The Time Machine follows the same hour.
   await page.getByRole("tab", { name: "May 2024 replay" }).click();

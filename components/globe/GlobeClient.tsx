@@ -5,22 +5,22 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { CameraControls } from "@/components/globe/CameraControls";
-import { createTrailLine, OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
+import { createTrailLine, OrbitTrail, surfaceVector, updateTrailLine } from "@/components/globe/OrbitTrail";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
-import { classFromCode, exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
-import { lerpScene } from "@/lib/engine/globe/interpolate";
-import { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS } from "@/lib/engine/globe/timing";
+import { classFromCode, type StormContext } from "@/lib/engine/globe/exposure";
+import { starmindTrailAtUtc } from "@/lib/engine/globe/trail";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
-import { starmindPositionKm } from "@/lib/engine/orbit/j2";
-import type { StarmindSample } from "@/lib/engine/globe/trail";
+import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { GBM_SAA_LAT, GBM_SAA_LON, inSaa } from "@/lib/engine/radiation";
 import { inAuroralOval, inSepCap, sepActive } from "@/lib/engine/orbit/stormZones";
 import { useOrbitStore } from "@/lib/store/orbit";
-import { useTimelineCursor } from "@/lib/store/timeline";
+import { useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
 
 type Phase = "loading" | "error" | "empty" | "ready";
 
 const AURORA_CUTOFF = 5;
+/** Starlink is only drawn in "now" mode: today's snapshot elements say nothing about where satellites were in a past storm. */
+const STARLINK_MODES = new Set(["now"]);
 
 type TrackPoint = { latDeg: number; lonDeg: number };
 
@@ -114,41 +114,45 @@ export default function GlobeClient() {
   const workerRef = useRef<Worker | null>(null);
   const followRef = useRef(false);
   const zoomRef = useRef(2.6);
-  const orbitRef = useRef({ altitudeKm: 0, inclinationDeg: 0, raanDeg: 0, scrubS: 0 });
-  const starlinkFromRef = useRef<Float32Array | null>(null);
-  const starlinkToRef = useRef<Float32Array | null>(null);
-  const starlinkAtRef = useRef(0);
+  const orbitRef = useRef<StarmindOrbit>({
+    altitudeKm: 0,
+    inclinationDeg: 0,
+    sunSynchronous: false,
+    ltanHours: null,
+    raanDeg: 0,
+  });
+  const stormRef = useRef<StormContext | undefined>(undefined);
+  const starlinkOnRef = useRef(true);
   const starlinkCountRef = useRef(0);
-  const auroraRef = useRef<TrackPoint[]>([]);
+  const starlinkWantMsRef = useRef<number | null>(null);
+  const starlinkBusyRef = useRef(false);
   const pointsRef = useRef<THREE.Points | null>(null);
-  const trailRef = useRef<THREE.LineSegments | null>(null);
-  const craftRef = useRef<THREE.Group | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
   const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
+  const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
+  const ltanHours = useOrbitStore((state) => state.ltanHours);
   const raanDeg = useOrbitStore((state) => state.raanDeg);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
   const cursor = useTimelineCursor();
-  const scrubS = cursor.offsetS;
   const kp = cursor.point?.kp ?? null;
   const protonPfu = cursor.point?.protonPfu ?? null;
-  const replaying = cursor.mode === "may2024";
+  const starlinkOn = STARLINK_MODES.has(cursor.mode);
   // OVATION is a nowcast, so it only replaces the Kp oval model at the latest observed point.
   const useOvation =
     cursor.mode === "now" && cursor.point?.kind === "observed" && Math.abs(cursor.offsetS) < 3 * 3600;
-  const [rawTrail, setRawTrail] = useState<StarmindSample[]>([]);
   const [sceneReady, setSceneReady] = useState(false);
   const [aurora, setAurora] = useState<TrackPoint[]>([]);
   const [count, setCount] = useState(0);
   const [tickMs, setTickMs] = useState<number | null>(null);
 
   useEffect(() => {
-    orbitRef.current = { altitudeKm, inclinationDeg, raanDeg, scrubS };
+    orbitRef.current = { altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg };
     followRef.current = follow;
-    auroraRef.current = aurora;
-  }, [altitudeKm, inclinationDeg, raanDeg, scrubS, follow, aurora]);
+    starlinkOnRef.current = starlinkOn;
+  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, starlinkOn]);
 
   useEffect(() => {
     let cancelled = false;
@@ -177,60 +181,44 @@ export default function GlobeClient() {
 
   useEffect(() => {
     const worker = createPropagateWorker();
-    worker.onmessage = (event: MessageEvent<{ kind: string; positions?: Float32Array; count?: number; ms?: number; trail?: StarmindSample[]; message?: string }>) => {
+    worker.onmessage = (event: MessageEvent<{ kind: string; positions?: Float32Array; count?: number; ms?: number; message?: string }>) => {
       if (event.data.kind === "error") {
         setError(event.data.message ?? "Error");
         setPhase("error");
         return;
       }
       if (event.data.kind === "starlink" && event.data.positions) {
+        starlinkBusyRef.current = false;
         const nextCount = event.data.count ?? event.data.positions.length / 3;
-        const scenePositions = new Float32Array(nextCount * 3);
-        for (let index = 0; index < nextCount; index += 1) {
-          const at = surfaceVector(
-            event.data.positions[index * 3],
-            event.data.positions[index * 3 + 1],
-            event.data.positions[index * 3 + 2],
-          );
-          scenePositions[index * 3] = at.x;
-          scenePositions[index * 3 + 1] = at.y;
-          scenePositions[index * 3 + 2] = at.z;
+        const attribute = pointsRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+        if (attribute) {
+          const at = new THREE.Vector3();
+          const drawn = Math.min(nextCount, attribute.count);
+          for (let index = 0; index < drawn; index += 1) {
+            surfaceVector(
+              event.data.positions[index * 3],
+              event.data.positions[index * 3 + 1],
+              event.data.positions[index * 3 + 2],
+              at,
+            );
+            attribute.setXYZ(index, at.x, at.y, at.z);
+          }
+          attribute.needsUpdate = true;
+          starlinkCountRef.current = drawn;
         }
-        starlinkFromRef.current = starlinkToRef.current ?? scenePositions;
-        starlinkToRef.current = scenePositions;
-        starlinkAtRef.current = performance.now();
-        starlinkCountRef.current = nextCount;
         setCount(nextCount);
         setTickMs(event.data.ms ?? null);
         setPhase(nextCount === 0 ? "empty" : "ready");
       }
-      if (event.data.kind === "starmind" && event.data.trail) {
-        setRawTrail(event.data.trail);
-      }
     };
     workerRef.current = worker;
-    worker.postMessage({ kind: "init", epochMs: Date.now() });
+    starlinkBusyRef.current = true;
+    worker.postMessage({ kind: "init", epochMs: useTimelineStore.getState().simTimeMs || Date.now() });
     return () => {
       worker.terminate();
       workerRef.current = null;
     };
   }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!replaying) {
-        workerRef.current?.postMessage({ kind: "scrub", epochMs: Date.now() + scrubS * 1000 });
-      }
-      workerRef.current?.postMessage({
-        kind: "starmind",
-        altitudeKm,
-        inclinationDeg,
-        raanDeg,
-        epochMs: scrubS * 1000,
-      });
-    }, ORBIT_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [altitudeKm, inclinationDeg, raanDeg, scrubS, replaying]);
 
   const storm: StormContext | undefined = useMemo(() => {
     if (kp === null) {
@@ -239,31 +227,9 @@ export default function GlobeClient() {
     return { kp, protonPfu, inOvation: useOvation && aurora.length > 0 ? ovationLookup(aurora) : undefined };
   }, [kp, protonPfu, useOvation, aurora]);
 
-  const trail = useMemo(
-    () =>
-      rawTrail.map((sample) => ({
-        ...sample,
-        code: exposureCode(exposureClass(sample.latDeg, sample.lonDeg, sample.altKm, storm)),
-      })),
-    [rawTrail, storm],
-  );
-
   useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || trail.length === 0) {
-      return;
-    }
-    const line = createTrailLine(trail);
-    trailRef.current = line;
-    scene.add(line);
-    return () => {
-      scene.remove(line);
-      line.geometry.dispose();
-      if (trailRef.current === line) {
-        trailRef.current = null;
-      }
-    };
-  }, [trail, sceneReady]);
+    stormRef.current = storm;
+  }, [storm]);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -366,8 +332,10 @@ export default function GlobeClient() {
     pointsRef.current = points;
     scene.add(points);
     const craft = createStarmindGroup();
-    craftRef.current = craft;
     scene.add(craft);
+    const trailLine = createTrailLine();
+    scene.add(trailLine);
+    const craftAt = new THREE.Vector3();
     let stats: { begin: () => void; end: () => void; dom: HTMLElement } | null = null;
     if (process.env.NODE_ENV === "development") {
       void import("stats.js").then((mod) => {
@@ -396,22 +364,23 @@ export default function GlobeClient() {
     if (wrapRef.current) {
       observer.observe(wrapRef.current);
     }
-    const animate = (now: number) => {
+    const animate = () => {
       stats?.begin();
-      const attribute = points.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
-      const from = starlinkFromRef.current;
-      const to = starlinkToRef.current;
-      if (attribute && from && to) {
-        const elapsed = (now - starlinkAtRef.current) / STARLINK_TICK_MS;
-        const drawn = lerpScene(from, to, elapsed, attribute.array as Float32Array);
-        attribute.needsUpdate = true;
-        points.geometry.setDrawRange(0, Math.min(drawn, starlinkCountRef.current));
+      const simTimeMs = useTimelineStore.getState().simTimeMs;
+      // Starlink: ask the worker for the current simulation time whenever it is free and the time has moved.
+      points.visible = starlinkOnRef.current;
+      points.geometry.setDrawRange(0, starlinkOnRef.current ? starlinkCountRef.current : 0);
+      if (starlinkOnRef.current && !starlinkBusyRef.current && starlinkWantMsRef.current !== simTimeMs) {
+        starlinkBusyRef.current = true;
+        starlinkWantMsRef.current = simTimeMs;
+        workerRef.current?.postMessage({ kind: "scrub", epochMs: simTimeMs });
       }
       const orbit = orbitRef.current;
-      const fix = starmindPositionKm(orbit.altitudeKm, orbit.inclinationDeg, orbit.raanDeg, orbit.scrubS);
-      const at = surfaceVector(fix.latDeg, fix.lonDeg, fix.altKm);
+      const fix = starmindAtUtc(orbit, simTimeMs);
+      const at = surfaceVector(fix.latDeg, fix.lonDeg, fix.altKm, craftAt);
       craft.position.copy(at);
       craft.userData.radiusKm = fix.radiusKm;
+      updateTrailLine(trailLine, starmindTrailAtUtc(orbit, simTimeMs, stormRef.current));
       const distance = zoomRef.current;
       if (followRef.current) {
         controls.enabled = false;
@@ -432,6 +401,8 @@ export default function GlobeClient() {
       observer.disconnect();
       window.removeEventListener("resize", resize);
       controls.dispose();
+      trailLine.geometry.dispose();
+      (trailLine.material as THREE.Material).dispose();
       renderer.dispose();
       stats?.dom.remove();
       sceneRef.current = null;
@@ -465,7 +436,7 @@ export default function GlobeClient() {
         ) : null}
         {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
       </div>
-      <OrbitTrail samples={trail} />
+      <OrbitTrail />
       <CameraControls
         follow={follow}
         onFollow={setFollow}
@@ -475,7 +446,7 @@ export default function GlobeClient() {
       />
       <p className="note">
         Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an estimate. Trail length
-        is one orbit, an estimate. SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt
+        is one orbit, an estimate.{starlinkOn ? "" : " Starlink is hidden during historical replays."} SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt
         are NASA SP-8116. Aurora points (violet) are OVATION.
         {tickMs !== null ? ` Worker tick ${tickMs.toFixed(1)} ms.` : ""}
       </p>

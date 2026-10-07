@@ -1,17 +1,11 @@
-import { starlinkFloats, type GpRecord } from "@/lib/engine/globe/sgp4";
+import { satrecFloats, satrecsFor, starlinkFloats, type GpRecord } from "@/lib/engine/globe/sgp4";
 import { subsampleShellIndexes } from "@/lib/engine/globe/subsample";
-import { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS } from "@/lib/engine/globe/timing";
-import { starmindTrail, type StarmindSample } from "@/lib/engine/globe/trail";
-import { starmindPositionKm, type StarmindFix } from "@/lib/engine/orbit/j2";
 
-export { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS };
 
+/** "init" loads the snapshot; "scrub" propagates the constellation to the simulation time. Nothing ticks on its own. */
 export interface WorkerIn {
-  kind: "init" | "scrub" | "starmind";
+  kind: "init" | "scrub";
   epochMs?: number;
-  altitudeKm?: number;
-  inclinationDeg?: number;
-  raanDeg?: number;
   records?: GpRecord[];
 }
 
@@ -20,26 +14,8 @@ export interface WorkerScope {
   postMessage: (message: unknown, transfer?: Transferable[]) => void;
 }
 
-export function starmindNow(
-  altitudeKm: number,
-  inclinationDeg: number,
-  raanDeg: number,
-  epochMs: number,
-): StarmindFix {
-  return starmindPositionKm(altitudeKm, inclinationDeg, raanDeg, epochMs / 1000);
-}
-
 export function propagateStarlink(records: GpRecord[], epochMs: number): Float32Array {
   return starlinkFloats(records, new Date(epochMs));
-}
-
-export function propagateStarmindTrail(
-  altitudeKm: number,
-  inclinationDeg: number,
-  raanDeg: number,
-  epochMs: number,
-): StarmindSample[] {
-  return starmindTrail(altitudeKm, inclinationDeg, raanDeg, epochMs / 1000);
 }
 
 export function selectStarlink(records: GpRecord[]): GpRecord[] {
@@ -52,51 +28,26 @@ export function selectStarlink(records: GpRecord[]): GpRecord[] {
   return indexes.map((index) => records[index]);
 }
 
-let selected: GpRecord[] = [];
+let satrecs: ReturnType<typeof satrecsFor> = [];
 let epochMs = Date.now();
-let timer: ReturnType<typeof setInterval> | null = null;
 
 function postStarlink(scope: WorkerScope) {
   const started = performance.now();
-  const positions = propagateStarlink(selected, epochMs);
+  const positions = satrecFloats(satrecs, new Date(epochMs));
   const ms = performance.now() - started;
-  scope.postMessage({ kind: "starlink", positions, count: positions.length / 3, ms }, [positions.buffer]);
+  scope.postMessage({ kind: "starlink", positions, count: positions.length / 3, ms, epochMs }, [positions.buffer]);
 }
 
 export function handleWorkerMessage(scope: WorkerScope, data: WorkerIn) {
   if (data.kind === "init" && data.records) {
-    selected = selectStarlink(data.records);
+    satrecs = satrecsFor(selectStarlink(data.records));
     epochMs = data.epochMs ?? Date.now();
     postStarlink(scope);
-    if (timer) {
-      clearInterval(timer);
-    }
-    timer = setInterval(() => {
-      epochMs += STARLINK_TICK_MS;
-      postStarlink(scope);
-    }, STARLINK_TICK_MS);
     return;
   }
   if (data.kind === "scrub") {
     epochMs = data.epochMs ?? epochMs;
     postStarlink(scope);
-    return;
-  }
-  if (data.kind === "starmind") {
-    const started = performance.now();
-    const trail = propagateStarmindTrail(
-      data.altitudeKm ?? 0,
-      data.inclinationDeg ?? 0,
-      data.raanDeg ?? 0,
-      data.epochMs ?? epochMs,
-    );
-    const now = starmindNow(data.altitudeKm ?? 0, data.inclinationDeg ?? 0, data.raanDeg ?? 0, data.epochMs ?? epochMs);
-    scope.postMessage({
-      kind: "starmind",
-      trail,
-      now,
-      ms: performance.now() - started,
-    });
   }
 }
 

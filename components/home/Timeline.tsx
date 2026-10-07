@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 
 import may2024 from "@/data/replays/may2024.json";
 import { AI_REPLAY } from "@/components/home/useAiAnalysis";
@@ -8,17 +8,19 @@ import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
 import { gscale } from "@/lib/engine/gscale";
 import { auroralBoundaryMlatDeg, sepActive, sepCutoffMlatDeg, sscale } from "@/lib/engine/orbit/stormZones";
-import { useTimelineStore, type TimelineMode, type TimelinePoint } from "@/lib/store/timeline";
+import { SPEED_LABELS, SPEEDS, useClockDriver, useClockStore, type Speed } from "@/lib/store/clock";
+import { liveReferenceMs, timelineRange, useTimelineStore, type TimelineMode, type TimelinePoint } from "@/lib/store/timeline";
 
 type KpRow = { time_tag: string; Kp: number };
 type ProtonRow = { time_tag: string; flux: number; energy: string };
 type ReplayHour = { time: string; kp: number | null; goesProtonFlux: number | null };
 
 const HOUR_MS = 3_600_000;
+const MINUTE_MS = 60_000;
 /** estimate: how far back "now" mode shows observed Kp. */
 const HISTORY_HOURS = 24;
-/** estimate: playback speed, timeline steps per second. */
-const PLAY_STEPS_PER_S = 6;
+/** Default playback speed per mode: about 5 minutes for the 48-hour window, 1 hour per second for a replay. */
+const DEFAULT_SPEED: Record<TimelineMode, Speed> = { now: 600, may2024: 3600 };
 
 async function readFeed<T>(id: string): Promise<T | null> {
   try {
@@ -81,6 +83,47 @@ function formatUtc(timeMs: number): string {
   return new Date(timeMs).toISOString().slice(0, 16).replace("T", " ") + " UTC";
 }
 
+type ChartScale = {
+  x: (timeMs: number) => number;
+  y: (kp: number) => number;
+  barWidth: number;
+};
+
+/** Kp bars and forecast whiskers. Memoised so the moving cursor does not redraw them every frame. */
+const KpBars = memo(function KpBars({ points, index, chart }: { points: TimelinePoint[]; index: number; chart: ChartScale }) {
+  return (
+    <>
+      {points.map((p, i) =>
+        p.kp === null ? null : (
+          <rect
+            key={p.timeMs}
+            x={chart.x(p.timeMs) - chart.barWidth / 2}
+            y={chart.y(p.kp)}
+            width={chart.barWidth}
+            height={112 - chart.y(p.kp)}
+            fill={p.kind === "forecast" ? "none" : kpColor(p.kp)}
+            stroke={p.kind === "forecast" ? kpColor(p.kp) : "none"}
+            strokeDasharray={p.kind === "forecast" ? "3 2" : undefined}
+            opacity={i === index ? 1 : 0.75}
+          />
+        ),
+      )}
+      {points.map((p) =>
+        p.kind === "forecast" && p.kpP10 != null && p.kpP90 != null ? (
+          <line
+            key={`band-${p.timeMs}`}
+            x1={chart.x(p.timeMs)}
+            x2={chart.x(p.timeMs)}
+            y1={chart.y(p.kpP90)}
+            y2={chart.y(p.kpP10)}
+            className="timeline__band"
+          />
+        ) : null,
+      )}
+    </>
+  );
+});
+
 export function Timeline() {
   const mode = useTimelineStore((state) => state.mode);
   const points = useTimelineStore((state) => state.points);
@@ -90,9 +133,15 @@ export function Timeline() {
   const setMode = useTimelineStore((state) => state.setMode);
   const setPoints = useTimelineStore((state) => state.setPoints);
   const setIndex = useTimelineStore((state) => state.setIndex);
+  const simTimeMs = useTimelineStore((state) => state.simTimeMs);
+  const setSimTime = useTimelineStore((state) => state.setSimTime);
+  const playing = useClockStore((state) => state.playing);
+  const setPlaying = useClockStore((state) => state.setPlaying);
+  const speed = useClockStore((state) => state.speed);
+  const setSpeed = useClockStore((state) => state.setSpeed);
   const [phase, setPhase] = useState<"loading" | "ready" | "error" | "empty">("loading");
-  const [playing, setPlaying] = useState(false);
-  const timer = useRef<number | null>(null);
+  const [snapshotNow, setSnapshotNow] = useState<number | null>(null);
+  useClockDriver();
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +160,11 @@ export function Timeline() {
         setPhase("error");
         return;
       }
-      const now = Date.now();
+      const { referenceMs: now, stale } = liveReferenceMs(
+        kpRows.map((row) => utc(row.time_tag)),
+        Date.now(),
+      );
+      setSnapshotNow(stale ? now : null);
       const protons = (protonRows ?? []).filter((row) => row.energy === ">=10 MeV");
       const observed: TimelinePoint[] = kpRows
         .map((row) => ({ timeMs: utc(row.time_tag), kp: row.Kp }))
@@ -138,25 +191,6 @@ export function Timeline() {
       cancelled = true;
     };
   }, [mode, forecastKp, forecastIssueIso, setPoints]);
-
-  useEffect(() => {
-    if (!playing) {
-      return;
-    }
-    timer.current = window.setInterval(() => {
-      const state = useTimelineStore.getState();
-      if (state.index >= state.points.length - 1) {
-        setPlaying(false);
-        return;
-      }
-      state.setIndex(state.index + 1);
-    }, 1000 / PLAY_STEPS_PER_S);
-    return () => {
-      if (timer.current !== null) {
-        window.clearInterval(timer.current);
-      }
-    };
-  }, [playing]);
 
   const chart = useMemo(() => {
     if (points.length === 0) {
@@ -188,8 +222,10 @@ export function Timeline() {
       ...ai.map((row) => `${x(row.t).toFixed(1)},${y(row.p90).toFixed(1)}`),
       ...ai.slice().reverse().map((row) => `${x(row.t).toFixed(1)},${y(row.p10).toFixed(1)}`),
     ].join(" ");
-    return { x, y, barWidth, protonPath, logY, aiLine, aiBand };
+    return { scale: { x, y, barWidth }, x, y, protonPath, logY, aiLine, aiBand };
   }, [points]);
+
+  const range = timelineRange(points);
 
   const point = points[index] ?? null;
   const markers = mode === "may2024" ? may2024.markers.sepOnset.map((iso) => utc(iso)) : [];
@@ -219,6 +255,7 @@ export function Timeline() {
               aria-pressed={mode === value}
               onClick={() => {
                 setPlaying(false);
+                setSpeed(DEFAULT_SPEED[value]);
                 setMode(value);
               }}
             >
@@ -242,33 +279,7 @@ export function Timeline() {
             {[5, 7, 9].map((kp) => (
               <line key={kp} x1="0" x2="1000" y1={chart.y(kp)} y2={chart.y(kp)} className="timeline__grid" />
             ))}
-            {points.map((p, i) =>
-              p.kp === null ? null : (
-                <rect
-                  key={p.timeMs}
-                  x={chart.x(p.timeMs) - chart.barWidth / 2}
-                  y={chart.y(p.kp)}
-                  width={chart.barWidth}
-                  height={112 - chart.y(p.kp)}
-                  fill={p.kind === "forecast" ? "none" : kpColor(p.kp)}
-                  stroke={p.kind === "forecast" ? kpColor(p.kp) : "none"}
-                  strokeDasharray={p.kind === "forecast" ? "3 2" : undefined}
-                  opacity={i === index ? 1 : 0.75}
-                />
-              ),
-            )}
-            {points.map((p) =>
-              p.kind === "forecast" && p.kpP10 != null && p.kpP90 != null ? (
-                <line
-                  key={`band-${p.timeMs}`}
-                  x1={chart.x(p.timeMs)}
-                  x2={chart.x(p.timeMs)}
-                  y1={chart.y(p.kpP90)}
-                  y2={chart.y(p.kpP10)}
-                  className="timeline__band"
-                />
-              ) : null,
-            )}
+            <KpBars points={points} index={index} chart={chart.scale} />
             {mode === "may2024" && chart.aiLine ? (
               <>
                 <polygon points={chart.aiBand} className="timeline__ai-band" />
@@ -282,7 +293,7 @@ export function Timeline() {
             {markers.map((at) => (
               <line key={at} x1={chart.x(at)} x2={chart.x(at)} y1="4" y2="112" className="timeline__marker" />
             ))}
-            <line x1={chart.x(point.timeMs)} x2={chart.x(point.timeMs)} y1="0" y2="124" className="timeline__cursor" />
+            <line x1={chart.x(simTimeMs)} x2={chart.x(simTimeMs)} y1="0" y2="124" className="timeline__cursor" />
           </svg>
           <div className="timeline__controls">
             <button
@@ -290,7 +301,7 @@ export function Timeline() {
               className="rok-btn rok-btn--sm button"
               aria-pressed={playing}
               onClick={() => {
-                if (!playing && index >= points.length - 1) {
+                if (!playing && range && simTimeMs >= range.endMs) {
                   setIndex(0);
                 }
                 setPlaying(!playing);
@@ -301,21 +312,36 @@ export function Timeline() {
             <input
               type="range"
               aria-label="Timeline position"
-              aria-valuetext={formatUtc(point.timeMs)}
-              min={0}
-              max={points.length - 1}
-              value={index}
+              aria-valuetext={formatUtc(simTimeMs)}
+              min={Math.floor((range?.startMs ?? 0) / MINUTE_MS)}
+              max={Math.floor((range?.endMs ?? 0) / MINUTE_MS)}
+              step={1}
+              value={Math.floor(simTimeMs / MINUTE_MS)}
               onChange={(event) => {
                 setPlaying(false);
-                setIndex(Number(event.target.value));
+                setSimTime(Number(event.target.value) * MINUTE_MS);
               }}
             />
+            <label className="timeline__speed">
+              <span className="eyebrow rok-subtle">Speed</span>
+              <select
+                aria-label="Playback speed"
+                value={speed}
+                onChange={(event) => setSpeed(Number(event.target.value) as Speed)}
+              >
+                {SPEEDS.map((value) => (
+                  <option key={value} value={value}>
+                    {SPEED_LABELS[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <dl className="timeline__readout" aria-live="polite">
             <div>
               <dt className="eyebrow rok-subtle">Time</dt>
               <dd className="data-sm">
-                {formatUtc(point.timeMs)}{" "}
+                {formatUtc(simTimeMs)}{" "}
                 <span className="rok-subtle">
                   {point.kind === "forecast" ? "AI forecast P50" : point.kind === "observed" ? "observed" : "test period"}
                 </span>
@@ -374,6 +400,9 @@ export function Timeline() {
             {mode === "may2024"
               ? " Blue line and band: the AI +3 h forecast for each 3-hour block, issued at the block start (P50, P10–P90). Vertical ticks: SEP onsets. Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end."
               : " Forecast proton flux repeats the latest observation."}
+            {mode === "now" && snapshotNow !== null
+              ? ` The live feed is unavailable, so "now" is the newest saved observation, ${formatUtc(snapshotNow)}.`
+              : null}
           </p>
         </>
       ) : null}

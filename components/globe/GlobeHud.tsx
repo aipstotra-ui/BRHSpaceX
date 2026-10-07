@@ -48,10 +48,13 @@ export function GlobeHud({
   stateRef,
   playing,
   speedLabel,
+  note,
 }: {
   stateRef: RefObject<HudState | null>;
   playing: boolean;
   speedLabel: string;
+  /** One quiet line under the play state, e.g. the spacecraft scale. */
+  note: string;
 }) {
   const [hud, setHud] = useState<HudState | null>(null);
 
@@ -74,6 +77,9 @@ export function GlobeHud({
           {formatUtc(hud.utcMs)}
         </p>
         <p className="eyebrow rok-subtle">{playing ? `Playing ${speedLabel}` : "Paused"}</p>
+        <p className="data-sm rok-subtle globe-hud__note" data-testid="hud-scale">
+          {note}
+        </p>
       </div>
       <div className="globe-hud__badges" aria-label="Starmind right now">
         <StatusBadge status={EXPOSURE_STATUS[hud.exposure]}>

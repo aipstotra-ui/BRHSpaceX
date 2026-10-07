@@ -21,7 +21,7 @@ import {
   type TrackPoint,
 } from "@/components/globe/scene/zones";
 import { LayerToggles, DEFAULT_LAYERS, type Layers } from "@/components/globe/LayerToggles";
-import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
+import { createCraft, scaleLabel, type CraftScale } from "@/components/globe/StarmindModel";
 import { exposureClass, type SaaTest, type StormContext } from "@/lib/engine/globe/exposure";
 import { gmstRad, kmToScene, sunAt } from "@/lib/engine/globe/frames";
 import { decodeProtonMap, inSaaFlux, type ProtonMap, type ProtonMapFile } from "@/lib/engine/globe/protonMap";
@@ -43,8 +43,12 @@ const STARLINK_MODES = new Set(["now"]);
 const STARLINK_CAPACITY = 2000;
 /** Camera distance from Earth's centre in free mode, Earth radii, per zoom step value. */
 const FREE_DISTANCE_PER_ZOOM = 1.2;
-/** How quickly the follow camera catches up, per second. */
+/** How quickly the follow camera settles on its offset, per second. */
 const FOLLOW_RATE = 4;
+/** Follow camera offset in the craft's frame, in wingspans: behind (-X), above (+Y), to the side (+Z). */
+const FOLLOW_OFFSET = { back: 1.7, up: 0.6, side: 0.9 };
+/** Near plane of the world pass. The craft has its own pass, so this can stay comfortable for the Earth. */
+const WORLD_NEAR = 1e-4;
 
 export default function GlobeClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,6 +57,7 @@ export default function GlobeClient() {
   const followRef = useRef(false);
   const zoomRef = useRef(2.6);
   const zoomChangedRef = useRef(false);
+  const craftScaleRef = useRef<CraftScale>("enlarged");
   const orbitRef = useRef<StarmindOrbit>({
     altitudeKm: 0,
     inclinationDeg: 0,
@@ -85,6 +90,7 @@ export default function GlobeClient() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
+  const [craftScale, setCraftScale] = useState<CraftScale>("enlarged");
   const cursor = useTimelineCursor();
   const kp = cursor.point?.kp ?? null;
   const protonPfu = cursor.point?.protonPfu ?? null;
@@ -107,10 +113,11 @@ export default function GlobeClient() {
   useEffect(() => {
     orbitRef.current = { altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg };
     followRef.current = follow;
+    craftScaleRef.current = craftScale;
     starlinkOnRef.current = starlinkOn && layers.starlink;
     layersRef.current = layers;
     auroraAvailableRef.current = kp !== null || useOvation;
-  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, starlinkOn, layers, kp, useOvation]);
+  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, craftScale, starlinkOn, layers, kp, useOvation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,11 +281,6 @@ export default function GlobeClient() {
     const earthGroup = earth.group;
     earthGroupRef.current = earthGroup;
 
-    // Lights only affect the craft; the Earth shader does its own sunlight.
-    const sunLight = new THREE.DirectionalLight("#ffffff", 2.4);
-    scene.add(sunLight);
-    scene.add(new THREE.AmbientLight("#9fb4d0", 0.08));
-
     const auroraLayer = createAuroraLayer();
     earthGroup.add(auroraLayer.mesh);
     auroraLayerRef.current = auroraLayer;
@@ -303,8 +305,9 @@ export default function GlobeClient() {
     groundTrackRef.current = groundTrack;
     const ring = createOrbitRing();
     scene.add(ring);
-    const craft = createStarmindGroup();
-    scene.add(craft);
+    // The craft has its own scene and lights; it is drawn after the world (see the render passes below).
+    const craft = createCraft();
+    renderer.autoClear = false;
 
     window.setTimeout(() => setSceneReady(true), 0);
 
@@ -336,10 +339,15 @@ export default function GlobeClient() {
     // Scratch vectors reused every frame. The orbit maths still returns a few small objects per frame.
     const craftAt = new THREE.Vector3();
     const sunScene = new THREE.Vector3();
-    const followGoal = new THREE.Vector3();
-    const lookGoal = new THREE.Vector3();
-    const look = new THREE.Vector3();
-    const up = new THREE.Vector3(0, 1, 0);
+    const nextAt = new THREE.Vector3();
+    const velocity = new THREE.Vector3();
+    const zenith = new THREE.Vector3();
+    const along = new THREE.Vector3();
+    const side = new THREE.Vector3();
+    const offsetGoal = new THREE.Vector3();
+    const offset = new THREE.Vector3();
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    let wasFollowing = false;
     const sunKm = { x: 0, y: 0, z: 0 };
     let last = performance.now();
     let frame = 0;
@@ -363,7 +371,6 @@ export default function GlobeClient() {
       const sun = sunAt(simTimeMs);
       kmToScene(sun.unit, sunScene);
       earth.setSunDirection(sunScene);
-      sunLight.position.copy(sunScene).multiplyScalar(10);
 
       // Starlink: ask the worker for the current simulation time whenever it is free and the time has moved.
       starlink.visible = starlinkOnRef.current;
@@ -377,8 +384,9 @@ export default function GlobeClient() {
       const orbit = orbitRef.current;
       const fix = starmindAtUtc(orbit, simTimeMs);
       kmToScene({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, craftAt);
-      craft.position.copy(craftAt);
-      craft.userData.radiusKm = fix.radiusKm;
+      const ahead = starmindAtUtc(orbit, simTimeMs + 1000);
+      kmToScene({ x: ahead.xKm, y: ahead.yKm, z: ahead.zKm }, nextAt);
+      velocity.subVectors(nextAt, craftAt);
       updateOrbitRing(ring, orbit, simTimeMs);
       if (groundTrack.visible) {
         updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current, saaTestRef.current));
@@ -388,36 +396,71 @@ export default function GlobeClient() {
       sunKm.y = sun.unit.y * SHADOW_AU_KM;
       sunKm.z = sun.unit.z * SHADOW_AU_KM;
       const sample = sampleAt(timeline.points, simTimeMs);
+      const shadow = shadowKind({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, sunKm);
+      craft.setScale(craftScaleRef.current);
+      craft.update(craftAt, velocity, sunScene, shadow);
       hudRef.current = {
         utcMs: simTimeMs,
         latDeg: fix.latDeg,
         lonDeg: fix.lonDeg,
         altKm: fix.altKm,
         exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current, saaTestRef.current),
-        shadow: shadowKind({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, sunKm),
+        shadow,
         kp: sample.kp,
         protonPfu: sample.protonPfu,
       };
 
-      if (followRef.current) {
-        // Chase view: above the craft, eased so playback does not jerk the camera.
+      const following = followRef.current;
+      const size = craft.sizeScene();
+      if (following) {
+        // Chase view in the craft's own frame, horizon level. The offset (not the position) is eased, so the camera
+        // keeps up at any playback speed.
         controls.enabled = false;
-        followGoal.copy(craftAt).multiplyScalar(zoomRef.current * 0.55 + 0.45).addScaledVector(up, 0.25);
-        lookGoal.copy(craftAt);
-        const ease = 1 - Math.exp(-FOLLOW_RATE * dt);
-        camera.position.lerp(followGoal, ease);
-        look.lerp(lookGoal, ease);
-        camera.lookAt(look);
+        zenith.copy(craftAt).normalize();
+        along.copy(velocity).addScaledVector(zenith, -velocity.dot(zenith)).normalize();
+        side.crossVectors(along, zenith);
+        const distance = size * (zoomRef.current / 2.6);
+        offsetGoal
+          .copy(along)
+          .multiplyScalar(-FOLLOW_OFFSET.back * distance)
+          .addScaledVector(zenith, FOLLOW_OFFSET.up * distance)
+          .addScaledVector(side, FOLLOW_OFFSET.side * distance);
+        if (!wasFollowing) {
+          offset.subVectors(camera.position, craftAt);
+        }
+        offset.lerp(offsetGoal, 1 - Math.exp(-FOLLOW_RATE * dt));
+        camera.position.copy(craftAt).add(offset);
+        camera.up.copy(zenith);
+        camera.lookAt(craftAt);
       } else {
+        if (wasFollowing) {
+          camera.up.copy(worldUp);
+          camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
+        }
         controls.enabled = true;
         if (zoomChangedRef.current) {
           camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
           zoomChangedRef.current = false;
         }
-        look.set(0, 0, 0);
         controls.update();
       }
+      wasFollowing = following;
+
+      // Pass 1: the world. Pass 2: the craft. When following, the craft pass gets a fresh depth buffer and a near
+      // plane scaled to the craft, so even the true-scale 75 m model stays sharp. Otherwise it shares the world's
+      // depth, so the Earth hides it when it is behind.
+      renderer.clear();
+      camera.near = following ? WORLD_NEAR : 0.01;
+      camera.far = 200;
+      camera.updateProjectionMatrix();
       renderer.render(scene, camera);
+      if (following) {
+        renderer.clearDepth();
+        camera.near = size * 0.01;
+        camera.far = size * 400 + 1;
+        camera.updateProjectionMatrix();
+      }
+      renderer.render(craft.scene, camera);
       stats?.end();
       frame = window.requestAnimationFrame(animate);
     };
@@ -445,7 +488,7 @@ export default function GlobeClient() {
       auroraLayerRef.current = null;
       sepLayerRef.current = null;
       groundTrackRef.current = null;
-      craft.traverse(disposeObject);
+      craft.dispose();
       earth.dispose();
       renderer.dispose();
       stats?.dom.remove();
@@ -459,8 +502,7 @@ export default function GlobeClient() {
     <div ref={wrapRef} className="globe">
       <div className="globe__stage">
         <canvas ref={canvasRef} aria-label="Round Earth" />
-        <GlobeHud stateRef={hudRef} playing={playing} speedLabel={SPEED_LABELS[speed]} />
-        <p className="globe__overlay eyebrow">{ILLUSTRATIVE_LABEL}</p>
+        <GlobeHud stateRef={hudRef} playing={playing} speedLabel={SPEED_LABELS[speed]} note={scaleLabel(craftScale)} />
         {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
         {phase === "error" ? <p className="globe__status error">{error ?? "Error"}</p> : null}
         {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
@@ -470,6 +512,8 @@ export default function GlobeClient() {
       <CameraControls
         follow={follow}
         onFollow={setFollow}
+        scale={craftScale}
+        onScale={setCraftScale}
         onZoom={(direction) => {
           zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
           zoomChangedRef.current = true;

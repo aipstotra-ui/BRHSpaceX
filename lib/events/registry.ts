@@ -1,3 +1,4 @@
+import feb2022 from "@/data/replays/feb2022.json";
 import may2024 from "@/data/replays/may2024.json";
 
 /**
@@ -42,7 +43,7 @@ export interface ReplayFile {
   hours: ReplayHourRow[];
 }
 
-export type EventId = "may2024";
+export type EventId = "may2024" | "feb2022";
 
 export type MarkerKind = "sep" | "peak" | "flare" | "cme" | "launch" | "loss";
 
@@ -78,6 +79,10 @@ function markerList(times: string[] | undefined, kind: MarkerKind, label: string
 }
 
 const may2024Replay = may2024 as unknown as ReplayFile;
+const feb2022Replay = feb2022 as unknown as ReplayFile;
+
+/** Fang et al. 2022, Space Weather 20(11): 38 of the 49 Group 4-7 Starlinks were lost (docs/research/reference-values.md). */
+export const STARLINK_2022_SOURCE = "https://doi.org/10.1029/2022SW003193";
 
 export const EVENTS: readonly StormEvent[] = [
   {
@@ -96,6 +101,23 @@ export const EVENTS: readonly StormEvent[] = [
     ],
     protonNote:
       "Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end.",
+  },
+  {
+    id: "feb2022",
+    title: "Feb 2022 Starlink loss",
+    shortName: "Feb 2022",
+    dates: "1–10 Feb 2022",
+    stresses: ["drag"],
+    story:
+      "Two minor storm periods (Kp 5+, G1, on 3 and 4 Feb; Dst −66 nT) came as 49 Starlink satellites were released near 210 km on 3 Feb. The extra drag brought down 38 of them (Fang et al. 2022). Protons stayed below S1: a drag event, not a radiation event.",
+    split: "validation",
+    replay: feb2022Replay,
+    markers: [
+      ...markerList(feb2022Replay.markers.launch, "launch", "Group 4-7 launch"),
+      ...markerList(feb2022Replay.markers.reentry, "loss", "Reentry"),
+    ],
+    protonNote:
+      "Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end. Reentry markers are SATCAT decay dates (day only); the launch time is from a secondary source and unverified.",
   },
 ];
 
@@ -120,7 +142,7 @@ export function eventForMode(mode: string): StormEvent | null {
 
 export const SPLIT_TEXT: Record<SplitTag, string> = {
   "in-sample": "in the forecaster's training period",
-  validation: "in the forecaster's validation period",
+  validation: "in the forecaster's validation years, so it is not an independent test",
   test: "in the forecaster's test period (never trained or tuned on)",
 };
 

@@ -988,6 +988,14 @@
   stroke: var(--status-caution);
 }
 
+.timeline__marker--launch {
+  stroke: var(--accent);
+}
+
+.timeline__marker--loss {
+  stroke: var(--ink-muted);
+}
+
 .timeline__markers {
   display: flex;
   flex-wrap: wrap;
@@ -1026,7 +1034,10 @@
   background: var(--status-caution);
 }
 
-.marker-dot--launch,
-.marker-dot--loss {
+.marker-dot--launch {
   background: var(--accent);
+}
+
+.marker-dot--loss {
+  background: var(--ink-muted);
 }

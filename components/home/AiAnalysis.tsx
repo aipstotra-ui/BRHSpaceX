@@ -137,6 +137,15 @@ export function AiAnalysis() {
                 predicting the CME days ahead. This event is {SPLIT_TEXT[event.split]}.
               </p>
             </>
+          ) : event ? (
+            <>
+              <p className="data-md">No G3+ storm to score</p>
+              <p className="body-sm">
+                Kp never reached 7 in this replay, so there is no first warning or G3+ block record. The forecast
+                band above still shows the +3 h call for each block.
+              </p>
+              <p className="note">This event is {SPLIT_TEXT[event.split]}.</p>
+            </>
           ) : kp3 && kp24 ? (
             <>
               <p className="data-md">{Math.round(kp3.skill * 100)} % better than persistence</p>

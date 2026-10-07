@@ -45,6 +45,24 @@ EVENTS: dict[str, dict] = {
             "kp9": ["2024-05-11T00:00:00Z", "2024-05-11T09:00:00Z"],
         },
     },
+    "feb2022": {
+        "window": ("2022-02-01T00:00:00Z", "2022-02-10T23:00:00Z"),
+        "protons": {"kind": "sgps", "file": "goes_protons_202202.parquet"},
+        # 2020-2022 is the forecaster's validation period (ml/splits.py).
+        "label": "validation period",
+        # 2022 is the validation "diagnostic" slice (ml/train_forecast.py val_slices): not used for fitting, early
+        # stopping or calibration, but its scores were read during development, so it is not a clean test.
+        "aiNote": "Browser forecaster (public/models) run on validation-period inputs. 2022 was not used for fitting, "
+        "early stopping or calibration, but its scores were read during development, so this is not an independent test.",
+        "markers": {
+            # Starlink Group 4-7 launch, 3 Feb 2022 18:13 UT. UNVERIFIED: from a search-index summary of Copernicus
+            # NPG preprint npg-2024-9; the page itself could not be opened (egress blocked). The date is CONFIRMED in
+            # docs/research/reference-values.md.
+            "launch": ["2022-02-03T18:13:00Z"],
+            # Payload decay dates in data/snapshots/satcat_2022-010.json inside the window (day only, placed at 00:00).
+            "reentry": ["2022-02-06T00:00:00Z", "2022-02-07T00:00:00Z", "2022-02-08T00:00:00Z", "2022-02-09T00:00:00Z"],
+        },
+    },
 }
 
 
@@ -192,7 +210,7 @@ def build(event: str) -> dict:
     return {
         "label": spec["label"],
         "aiForecast": {
-            "note": AI_NOTE.format(label=spec["label"].replace(" ", "-")),
+            "note": spec.get("aiNote") or AI_NOTE.format(label=spec["label"].replace(" ", "-")),
             "rows": forecasts,
             "firstWarning": first_warning(forecasts, hours),
         },

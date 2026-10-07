@@ -57,3 +57,19 @@ test("the May 2024 timeline moves the danger zones in the outlook", async ({ pag
   await expect(page.getByRole("slider", { name: "Replay scrubber" })).toHaveValue("137");
   await expect(page.getByText(/The AI policy (cut|raised) the storm cost/)).toBeVisible({ timeout: 60_000 });
 });
+
+test("the Feb 2022 Starlink replay is selectable and its markers move the clock", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto("/test");
+  await page.getByRole("button", { name: /Feb 2022 Starlink loss/ }).click();
+  const readout = page.locator(".timeline__readout");
+  await expect(readout).toContainText("2022-02-01 00:00 UTC");
+  await expect(readout).toContainText("validation period");
+  await expect(page.getByText(/brought down 38 of them/)).toBeVisible();
+  await page.getByRole("button", { name: /Group 4-7 launch/ }).click();
+  await expect(readout).toContainText("2022-02-03 18:13 UTC");
+  const ai = page.getByRole("region", { name: "AI analysis" });
+  await expect(ai).toContainText("How it did in Feb 2022");
+  await expect(ai).toContainText("No G3+ storm to score");
+  await expect(page.getByTestId("hud-time")).toContainText("2022-02-03 18:13");
+});

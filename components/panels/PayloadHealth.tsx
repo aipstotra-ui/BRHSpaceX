@@ -190,7 +190,7 @@ export function PayloadHealth() {
       <h3 className="heading-md">Forecast stress</h3>
       {phase === "loading" ? <p className="body rok-muted">Loading</p> : null}
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }} data-testid="forecast-status">
+        <p className="body error" data-testid="forecast-status">
           Error
         </p>
       ) : null}

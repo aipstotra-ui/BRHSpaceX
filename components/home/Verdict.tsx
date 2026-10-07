@@ -140,7 +140,7 @@ export function Verdict() {
         Chip outlook
       </h2>
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }}>
+        <p className="body error">
           Error
         </p>
       ) : phase === "empty" ? (

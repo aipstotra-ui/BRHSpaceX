@@ -84,7 +84,7 @@ export function OrbitImpact() {
   }
   if (phase === "error") {
     return (
-      <p className="body" style={{ color: "var(--status-critical)" }}>
+      <p className="body error">
         Error
       </p>
     );

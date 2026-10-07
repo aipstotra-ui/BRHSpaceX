@@ -102,7 +102,7 @@ export function Copilot() {
         </p>
       ) : null}
       <p className="body rok-muted">Status {status}</p>
-      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
+      <div className="row">
         <button
           type="button"
           className="rok-btn"
@@ -130,7 +130,7 @@ export function Copilot() {
           </li>
         ))}
       </ul>
-      <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
+      <div className="row">
         <button type="button" className="rok-btn" onClick={() => void startVoice()}>
           Start voice
         </button>
@@ -151,7 +151,7 @@ export function Copilot() {
           </button>
         ) : null}
       </div>
-      <label className="rok-field" style={{ marginTop: "var(--space-4)" }}>
+      <label className="rok-field space-above">
         <span className="rok-field__label eyebrow">Fallback text</span>
         <input
           className="rok-field__input body"

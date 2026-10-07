@@ -459,7 +459,7 @@ export default function GlobeClient() {
         <p className="globe__overlay eyebrow">{ILLUSTRATIVE_LABEL}</p>
         {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
         {phase === "error" ? (
-          <p className="globe__status" style={{ color: "var(--status-critical)" }}>
+          <p className="globe__status error">
             {error ?? "Error"}
           </p>
         ) : null}

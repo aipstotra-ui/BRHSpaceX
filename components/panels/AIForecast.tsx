@@ -169,7 +169,7 @@ export function AIForecast() {
       </p>
       {phase === "loading" ? <p className="body rok-muted">Loading</p> : null}
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }}>
+        <p className="body error">
           Error
         </p>
       ) : null}

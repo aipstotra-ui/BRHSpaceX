@@ -115,7 +115,7 @@ export function AiPolicyReplay({
   }, [plan, amounts, always, hindsight, hours]);
 
   if (failed) {
-    return <p className="body" style={{ color: "var(--status-critical)" }}>Error</p>;
+    return <p className="body error">Error</p>;
   }
   if (!plan || !summary) {
     return <p className="body rok-muted">Running the AI policy on 288 hours</p>;

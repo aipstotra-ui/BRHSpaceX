@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 const LINKS = [
   { href: "/cases", label: "Cases" },
@@ -19,8 +19,27 @@ function isActive(pathname: string, href: string): boolean {
  */
 export function AppNav({ className, children }: { className?: string; children?: ReactNode }) {
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
+
+  // The bar wraps on narrow screens, so sticky offsets below it read its real height from --topbar-h.
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) {
+      return;
+    }
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      root.style.setProperty("--topbar-h", `${Math.ceil(header.getBoundingClientRect().height)}px`);
+    });
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--topbar-h");
+    };
+  }, []);
+
   return (
-    <header className={className ? `rok-nav ${className}` : "rok-nav"}>
+    <header ref={headerRef} className={className ? `rok-nav ${className}` : "rok-nav"}>
       <Link
         className="rok-nav__mark"
         href="/"

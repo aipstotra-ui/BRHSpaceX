@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
 import { gmstRad, geodeticToScene, kmToScene, sunAt } from "@/lib/engine/globe/frames";
-import { starmindTrailAtUtc, TRAIL_SAMPLES } from "@/lib/engine/globe/trail";
+import { GROUND_TRACK_SAMPLES, groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { argumentRateRadPerSec, ORBIT_EPOCH_MS, raanAtUtc, starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { ssoInclinationDeg } from "@/lib/engine/orbit/sso";
 
@@ -132,13 +132,29 @@ describe("Starmind at an absolute time", () => {
     expect(Math.abs(wrap180(raanAtUtc(dawn, at) - raanAtUtc(dawnDusk, at)))).toBeCloseTo(180, 9);
   });
 
+  it("puts the inertial craft exactly over its ground point once the Earth group turns by GMST", () => {
+    const earth = new THREE.Group();
+    const at = Date.UTC(2024, 4, 10, 17, 42);
+    for (const orbit of [shell, dawnDusk]) {
+      const fix = starmindAtUtc(orbit, at);
+      earth.rotation.y = gmstRad(at);
+      earth.updateMatrixWorld(true);
+      const ground = geodeticToScene(fix.latDeg, fix.lonDeg, fix.altKm);
+      const fromEarth = new THREE.Vector3(ground.x, ground.y, ground.z).applyMatrix4(earth.matrixWorld);
+      const inertial = kmToScene({ x: fix.xKm, y: fix.yKm, z: fix.zKm });
+      expect(fromEarth.x).toBeCloseTo(inertial.x, 9);
+      expect(fromEarth.y).toBeCloseTo(inertial.y, 9);
+      expect(fromEarth.z).toBeCloseTo(inertial.z, 9);
+    }
+  });
+
   it("ends the ground track exactly at the craft", () => {
     const at = Date.UTC(2024, 4, 11, 0);
-    const trail = starmindTrailAtUtc(shell, at);
+    const trail = groundTrackAtUtc(shell, at);
     const craft = starmindAtUtc(shell, at);
-    expect(trail).toHaveLength(TRAIL_SAMPLES + 1);
-    expect(trail[TRAIL_SAMPLES].latDeg).toBeCloseTo(craft.latDeg, 9);
-    expect(trail[TRAIL_SAMPLES].lonDeg).toBeCloseTo(craft.lonDeg, 9);
+    expect(trail).toHaveLength(GROUND_TRACK_SAMPLES + 1);
+    expect(trail[GROUND_TRACK_SAMPLES].latDeg).toBeCloseTo(craft.latDeg, 9);
+    expect(trail[GROUND_TRACK_SAMPLES].lonDeg).toBeCloseTo(craft.lonDeg, 9);
   });
 
   it("moves continuously: one simulated minute moves the craft about 4°, not a jump", () => {

@@ -5,108 +5,45 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { CameraControls } from "@/components/globe/CameraControls";
-import { createTrailLine, OrbitTrail, surfaceVector, updateTrailLine } from "@/components/globe/OrbitTrail";
+import { GlobeHud, type HudState } from "@/components/globe/GlobeHud";
+import { OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
+import { createEarth } from "@/components/globe/scene/earth";
+import { createGroundTrack, createOrbitRing, updateGroundTrack, updateOrbitRing } from "@/components/globe/scene/orbit";
+import { createStars } from "@/components/globe/scene/stars";
+import {
+  AURORAL_RGBA,
+  auroraPoints,
+  overlaySphere,
+  ovationLookup,
+  saaOutline,
+  saaOverlayTexture,
+  SEP_RGBA,
+  zoneTexture,
+  type TrackPoint,
+} from "@/components/globe/scene/zones";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
-import { classFromCode, type StormContext } from "@/lib/engine/globe/exposure";
-import { starmindTrailAtUtc } from "@/lib/engine/globe/trail";
+import { exposureClass, type StormContext } from "@/lib/engine/globe/exposure";
+import { gmstRad, kmToScene, sunAt } from "@/lib/engine/globe/frames";
+import { groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
+import { SHADOW_AU_KM } from "@/lib/engine/orbit/constants";
+import { shadowKind } from "@/lib/engine/orbit/eclipse";
 import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
-import { GBM_SAA_LAT, GBM_SAA_LON, inSaa } from "@/lib/engine/radiation";
 import { inAuroralOval, inSepCap, sepActive } from "@/lib/engine/orbit/stormZones";
+import { SPEED_LABELS, useClockStore } from "@/lib/store/clock";
 import { useOrbitStore } from "@/lib/store/orbit";
-import { useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
+import { sampleAt, useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
 
 type Phase = "loading" | "error" | "empty" | "ready";
 
 const AURORA_CUTOFF = 5;
 /** Starlink is only drawn in "now" mode: today's snapshot elements say nothing about where satellites were in a past storm. */
 const STARLINK_MODES = new Set(["now"]);
-
-type TrackPoint = { latDeg: number; lonDeg: number };
-
-type Rgba = [number, number, number, number];
-
-/** Equirectangular overlay: each pixel takes the color the test returns, or stays clear. */
-function zoneTexture(test: (latDeg: number, lonDeg: number) => Rgba | null): THREE.CanvasTexture {
-  const width = 512;
-  const height = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return new THREE.CanvasTexture(canvas);
-  }
-  const image = context.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    const lat = 90 - (y / (height - 1)) * 180;
-    for (let x = 0; x < width; x += 1) {
-      const lon = (x / (width - 1)) * 360 - 180;
-      const color = test(lat, lon);
-      if (!color) {
-        continue;
-      }
-      const offset = (y * width + x) * 4;
-      image.data.set(color, offset);
-    }
-  }
-  context.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-const AURORAL_RGBA: Rgba = [61, 220, 151, 90];
-const SEP_RGBA: Rgba = [255, 95, 210, 110];
-
-function saaOverlayTexture(): THREE.CanvasTexture {
-  const width = 512;
-  const height = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return new THREE.CanvasTexture(canvas);
-  }
-  const image = context.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    const lat = 90 - (y / (height - 1)) * 180;
-    for (let x = 0; x < width; x += 1) {
-      const lon = (x / (width - 1)) * 360 - 180;
-      if (!inSaa(lat, lon)) {
-        continue;
-      }
-      const offset = (y * width + x) * 4;
-      image.data[offset] = 214;
-      image.data[offset + 1] = 48;
-      image.data[offset + 2] = 112;
-      image.data[offset + 3] = 120;
-    }
-  }
-  context.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-function auroraPoints(points: TrackPoint[]): THREE.Points {
-  const positions = new Float32Array(points.length * 3);
-  points.forEach((point, index) => {
-    const at = surfaceVector(point.latDeg, point.lonDeg, 80);
-    positions[index * 3] = at.x;
-    positions[index * 3 + 1] = at.y;
-    positions[index * 3 + 2] = at.z;
-  });
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return new THREE.Points(geometry, new THREE.PointsMaterial({ color: "#7d5cff", size: 0.012 }));
-}
-
-function ovationLookup(points: TrackPoint[]): (latDeg: number, lonDeg: number) => boolean {
-  const cells = new Set(points.map((point) => `${Math.round(point.latDeg)}|${(Math.round(point.lonDeg) + 360) % 360}`));
-  return (latDeg, lonDeg) => cells.has(`${Math.round(latDeg)}|${(Math.round(lonDeg) + 360) % 360}`);
-}
+const STARLINK_CAPACITY = 2000;
+/** Camera distance from Earth's centre in free mode, Earth radii, per zoom step value. */
+const FREE_DISTANCE_PER_ZOOM = 1.2;
+/** How quickly the follow camera catches up, per second. */
+const FOLLOW_RATE = 4;
 
 export default function GlobeClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -114,6 +51,7 @@ export default function GlobeClient() {
   const workerRef = useRef<Worker | null>(null);
   const followRef = useRef(false);
   const zoomRef = useRef(2.6);
+  const zoomChangedRef = useRef(false);
   const orbitRef = useRef<StarmindOrbit>({
     altitudeKm: 0,
     inclinationDeg: 0,
@@ -122,17 +60,20 @@ export default function GlobeClient() {
     raanDeg: 0,
   });
   const stormRef = useRef<StormContext | undefined>(undefined);
+  const hudRef = useRef<HudState | null>(null);
   const starlinkOnRef = useRef(true);
   const starlinkCountRef = useRef(0);
   const starlinkWantMsRef = useRef<number | null>(null);
   const starlinkBusyRef = useRef(false);
-  const pointsRef = useRef<THREE.Points | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
+  const starlinkRef = useRef<THREE.Points | null>(null);
+  const earthGroupRef = useRef<THREE.Group | null>(null);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
   const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
   const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
   const ltanHours = useOrbitStore((state) => state.ltanHours);
   const raanDeg = useOrbitStore((state) => state.raanDeg);
+  const playing = useClockStore((state) => state.playing);
+  const speed = useClockStore((state) => state.speed);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
@@ -181,6 +122,7 @@ export default function GlobeClient() {
 
   useEffect(() => {
     const worker = createPropagateWorker();
+    const at = new THREE.Vector3();
     worker.onmessage = (event: MessageEvent<{ kind: string; positions?: Float32Array; count?: number; ms?: number; message?: string }>) => {
       if (event.data.kind === "error") {
         setError(event.data.message ?? "Error");
@@ -190,9 +132,8 @@ export default function GlobeClient() {
       if (event.data.kind === "starlink" && event.data.positions) {
         starlinkBusyRef.current = false;
         const nextCount = event.data.count ?? event.data.positions.length / 3;
-        const attribute = pointsRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+        const attribute = starlinkRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
         if (attribute) {
-          const at = new THREE.Vector3();
           const drawn = Math.min(nextCount, attribute.count);
           for (let index = 0; index < drawn; index += 1) {
             surfaceVector(
@@ -231,9 +172,10 @@ export default function GlobeClient() {
     stormRef.current = storm;
   }, [storm]);
 
+  // Kp oval and proton cap overlay, on the rotating Earth.
   useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || kp === null) {
+    const earthGroup = earthGroupRef.current;
+    if (!earthGroup || !sceneReady || kp === null) {
       return;
     }
     const protonsOn = protonPfu !== null && sepActive(protonPfu);
@@ -250,18 +192,29 @@ export default function GlobeClient() {
       }
       return null;
     });
-    const overlay = new THREE.Mesh(
-      new THREE.SphereGeometry(1.006, 64, 48),
-      new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }),
-    );
-    scene.add(overlay);
+    const overlay = overlaySphere(texture, 1.006);
+    earthGroup.add(overlay);
     return () => {
-      scene.remove(overlay);
+      earthGroup.remove(overlay);
       overlay.geometry.dispose();
       texture.dispose();
       (overlay.material as THREE.Material).dispose();
     };
   }, [kp, protonPfu, useOvation, sceneReady]);
+
+  useEffect(() => {
+    const earthGroup = earthGroupRef.current;
+    if (!earthGroup || !sceneReady || aurora.length === 0 || !useOvation) {
+      return;
+    }
+    const points = auroraPoints(aurora);
+    earthGroup.add(points);
+    return () => {
+      earthGroup.remove(points);
+      points.geometry.dispose();
+      (points.material as THREE.Material).dispose();
+    };
+  }, [aurora, useOvation, sceneReady]);
 
   useEffect(() => {
     if (!canvasRef.current || !wrapRef.current) {
@@ -271,7 +224,6 @@ export default function GlobeClient() {
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
-      renderer.setClearColor(0x000000, 1);
     } catch {
       window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
@@ -281,61 +233,58 @@ export default function GlobeClient() {
       window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
     }
-    renderer.setPixelRatio(1);
+    renderer.setClearColor(0x000000, 1);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    // Scene axes are inertial (see lib/engine/globe/frames.ts); the Earth group turns by GMST.
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#000000");
-    sceneRef.current = scene;
-    window.setTimeout(() => setSceneReady(true), 0);
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 20);
-    camera.position.set(0.2, 0.45, 3.15);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 200);
+    camera.position.set(0.25, 0.9, 2.95);
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
-    scene.add(new THREE.AmbientLight("#ffffff", 0.7));
-    const sun = new THREE.DirectionalLight("#ffffff", 1.2);
-    sun.position.set(3, 2, 1);
-    scene.add(sun);
-    const earthMaterial = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 1 });
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), earthMaterial);
-    scene.add(earth);
-    // NASA Blue Marble image shipped with three-globe's examples. Public-domain Earth photograph.
-    new THREE.TextureLoader().load("/globe/earth-day.jpg", (earthTexture) => {
-      earthTexture.colorSpace = THREE.SRGBColorSpace;
-      earthTexture.anisotropy = 8;
-      earthMaterial.map = earthTexture;
-      earthMaterial.needsUpdate = true;
-    });
-    scene.add(
-      new THREE.Mesh(
-        new THREE.SphereGeometry(1.004, 64, 48),
-        new THREE.MeshBasicMaterial({
-          map: saaOverlayTexture(),
-          transparent: true,
-          depthWrite: false,
-        }),
-      ),
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 1.25;
+    controls.maxDistance = 8;
+
+    const stars = createStars();
+    scene.add(stars);
+    const earth = createEarth();
+    scene.add(earth.root);
+    const earthGroup = earth.group;
+    earthGroupRef.current = earthGroup;
+
+    // Lights only affect the craft; the Earth shader does its own sunlight.
+    const sunLight = new THREE.DirectionalLight("#ffffff", 2.4);
+    scene.add(sunLight);
+    scene.add(new THREE.AmbientLight("#9fb4d0", 0.08));
+
+    const saaOverlay = overlaySphere(saaOverlayTexture(), 1.004);
+    earthGroup.add(saaOverlay);
+    const saaLine = saaOutline();
+    earthGroup.add(saaLine);
+
+    const starlinkGeometry = new THREE.BufferGeometry();
+    starlinkGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(STARLINK_CAPACITY * 3), 3));
+    starlinkGeometry.setDrawRange(0, 0);
+    const starlink = new THREE.Points(
+      starlinkGeometry,
+      new THREE.PointsMaterial({ color: "#6fd3ff", size: 2.2, sizeAttenuation: false, toneMapped: false, transparent: true, opacity: 0.8 }),
     );
-    const saaPoints: number[] = [];
-    for (let index = 0; index < GBM_SAA_LAT.length; index += 1) {
-      const at = surfaceVector(GBM_SAA_LAT[index], GBM_SAA_LON[index], 40);
-      saaPoints.push(at.x, at.y, at.z);
-    }
-    const saaGeometry = new THREE.BufferGeometry();
-    saaGeometry.setAttribute("position", new THREE.Float32BufferAttribute(saaPoints, 3));
-    scene.add(new THREE.Line(saaGeometry, new THREE.LineBasicMaterial({ color: "#e23b3b" })));
-    const starGeometry = new THREE.BufferGeometry();
-    starGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(2000 * 3), 3));
-    starGeometry.setDrawRange(0, 0);
-    const points = new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({ color: "#f5f7fb", size: 0.012, sizeAttenuation: true }),
-    );
-    pointsRef.current = points;
-    scene.add(points);
+    starlink.name = "starlink";
+    starlinkRef.current = starlink;
+    earthGroup.add(starlink);
+
+    const groundTrack = createGroundTrack();
+    earthGroup.add(groundTrack);
+    const ring = createOrbitRing();
+    scene.add(ring);
     const craft = createStarmindGroup();
     scene.add(craft);
-    const trailLine = createTrailLine();
-    scene.add(trailLine);
-    const craftAt = new THREE.Vector3();
+
+    window.setTimeout(() => setSceneReady(true), 0);
+
     let stats: { begin: () => void; end: () => void; dom: HTMLElement } | null = null;
     if (process.env.NODE_ENV === "development") {
       void import("stats.js").then((mod) => {
@@ -346,48 +295,93 @@ export default function GlobeClient() {
         stats = panel;
       });
     }
-    let frame = 0;
+
     const resize = () => {
-      // Square canvas that fits its column, capped at the old fixed 640 px.
-      const size = Math.max(240, Math.min(640, Math.floor(wrapRef.current?.clientWidth ?? 640)));
+      const width = Math.max(260, Math.floor(wrapRef.current?.clientWidth ?? 640));
+      const height = Math.round(Math.min(760, Math.max(300, width * 0.82)));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(size, size, true);
-      canvas.style.maxWidth = "100%";
-      canvas.style.display = "block";
-      canvas.style.margin = "0 auto";
-      canvas.style.background = "var(--surface-100)";
-      camera.aspect = 1;
+      renderer.setSize(width, height, false);
+      canvas.style.width = "100%";
+      canvas.style.height = `${height}px`;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
     resize();
     const observer = new ResizeObserver(resize);
-    if (wrapRef.current) {
-      observer.observe(wrapRef.current);
-    }
-    const animate = () => {
+    observer.observe(wrapRef.current);
+
+    // Scratch vectors reused every frame. The orbit maths still returns a few small objects per frame.
+    const craftAt = new THREE.Vector3();
+    const sunScene = new THREE.Vector3();
+    const followGoal = new THREE.Vector3();
+    const lookGoal = new THREE.Vector3();
+    const look = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+    const sunKm = { x: 0, y: 0, z: 0 };
+    let last = performance.now();
+    let frame = 0;
+
+    const animate = (now: number) => {
       stats?.begin();
-      const simTimeMs = useTimelineStore.getState().simTimeMs;
+      const dt = Math.min(0.25, (now - last) / 1000);
+      last = now;
+      const timeline = useTimelineStore.getState();
+      const simTimeMs = timeline.simTimeMs;
+
+      earthGroup.rotation.y = gmstRad(simTimeMs);
+      const sun = sunAt(simTimeMs);
+      kmToScene(sun.unit, sunScene);
+      earth.setSunDirection(sunScene);
+      sunLight.position.copy(sunScene).multiplyScalar(10);
+
       // Starlink: ask the worker for the current simulation time whenever it is free and the time has moved.
-      points.visible = starlinkOnRef.current;
-      points.geometry.setDrawRange(0, starlinkOnRef.current ? starlinkCountRef.current : 0);
+      starlink.visible = starlinkOnRef.current;
+      starlink.geometry.setDrawRange(0, starlinkOnRef.current ? starlinkCountRef.current : 0);
       if (starlinkOnRef.current && !starlinkBusyRef.current && starlinkWantMsRef.current !== simTimeMs) {
         starlinkBusyRef.current = true;
         starlinkWantMsRef.current = simTimeMs;
         workerRef.current?.postMessage({ kind: "scrub", epochMs: simTimeMs });
       }
+
       const orbit = orbitRef.current;
       const fix = starmindAtUtc(orbit, simTimeMs);
-      const at = surfaceVector(fix.latDeg, fix.lonDeg, fix.altKm, craftAt);
-      craft.position.copy(at);
+      kmToScene({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, craftAt);
+      craft.position.copy(craftAt);
       craft.userData.radiusKm = fix.radiusKm;
-      updateTrailLine(trailLine, starmindTrailAtUtc(orbit, simTimeMs, stormRef.current));
-      const distance = zoomRef.current;
+      updateOrbitRing(ring, orbit, simTimeMs);
+      updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current));
+
+      sunKm.x = sun.unit.x * SHADOW_AU_KM;
+      sunKm.y = sun.unit.y * SHADOW_AU_KM;
+      sunKm.z = sun.unit.z * SHADOW_AU_KM;
+      const sample = sampleAt(timeline.points, simTimeMs);
+      hudRef.current = {
+        utcMs: simTimeMs,
+        latDeg: fix.latDeg,
+        lonDeg: fix.lonDeg,
+        altKm: fix.altKm,
+        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current),
+        shadow: shadowKind({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, sunKm),
+        kp: sample.kp,
+        protonPfu: sample.protonPfu,
+      };
+
       if (followRef.current) {
+        // Chase view: above the craft, eased so playback does not jerk the camera.
         controls.enabled = false;
-        camera.position.set(at.x * distance, at.y * distance + 0.4, at.z * distance);
-        camera.lookAt(at);
+        followGoal.copy(craftAt).multiplyScalar(zoomRef.current * 0.55 + 0.45).addScaledVector(up, 0.25);
+        lookGoal.copy(craftAt);
+        const ease = 1 - Math.exp(-FOLLOW_RATE * dt);
+        camera.position.lerp(followGoal, ease);
+        look.lerp(lookGoal, ease);
+        camera.lookAt(look);
       } else {
         controls.enabled = true;
+        if (zoomChangedRef.current) {
+          camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
+          zoomChangedRef.current = false;
+        }
+        look.set(0, 0, 0);
         controls.update();
       }
       renderer.render(scene, camera);
@@ -395,45 +389,42 @@ export default function GlobeClient() {
       frame = window.requestAnimationFrame(animate);
     };
     frame = window.requestAnimationFrame(animate);
-    window.addEventListener("resize", resize);
+
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("resize", resize);
       controls.dispose();
-      trailLine.geometry.dispose();
-      (trailLine.material as THREE.Material).dispose();
+      const disposeObject = (object: THREE.Object3D) => {
+        const mesh = object as THREE.Mesh;
+        mesh.geometry?.dispose();
+        const material = mesh.material as THREE.Material | THREE.Material[] | undefined;
+        const materials = Array.isArray(material) ? material : material ? [material] : [];
+        for (const item of materials) {
+          (item as THREE.MeshBasicMaterial).map?.dispose();
+          item.dispose();
+        }
+      };
+      for (const object of [stars, saaOverlay, saaLine, starlink, groundTrack, ring]) {
+        disposeObject(object);
+      }
+      craft.traverse(disposeObject);
+      earth.dispose();
       renderer.dispose();
       stats?.dom.remove();
-      sceneRef.current = null;
+      earthGroupRef.current = null;
+      starlinkRef.current = null;
       setSceneReady(false);
     };
   }, []);
-
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || aurora.length === 0 || !useOvation) {
-      return;
-    }
-    const points = auroraPoints(aurora);
-    scene.add(points);
-    return () => {
-      scene.remove(points);
-      points.geometry.dispose();
-    };
-  }, [aurora, useOvation, sceneReady]);
 
   return (
     <div ref={wrapRef} className="globe">
       <div className="globe__stage">
         <canvas ref={canvasRef} aria-label="Round Earth" />
+        <GlobeHud stateRef={hudRef} playing={playing} speedLabel={SPEED_LABELS[speed]} />
         <p className="globe__overlay eyebrow">{ILLUSTRATIVE_LABEL}</p>
         {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
-        {phase === "error" ? (
-          <p className="globe__status error">
-            {error ?? "Error"}
-          </p>
-        ) : null}
+        {phase === "error" ? <p className="globe__status error">{error ?? "Error"}</p> : null}
         {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
       </div>
       <OrbitTrail />
@@ -442,12 +433,15 @@ export default function GlobeClient() {
         onFollow={setFollow}
         onZoom={(direction) => {
           zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
+          zoomChangedRef.current = true;
         }}
       />
       <p className="note">
-        Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an estimate. Trail length
-        is one orbit, an estimate.{starlinkOn ? "" : " Starlink is hidden during historical replays."} SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt
-        are NASA SP-8116. Aurora points (violet) are OVATION.
+        Day side, night side and terminator follow the Sun at the timeline time; the Earth turns by sidereal time.
+        Starlink points are subsampled ({count} shown)
+        {starlinkOn ? "" : " and hidden during historical replays, since today's elements cannot place them then"}.
+        OVATION cutoff {AURORA_CUTOFF} is an estimate. The SAA polygon is the Fermi GBM ring. Auroral zone and outer belt
+        are NASA SP-8116. Aurora points (violet) are OVATION. Stars are decorative.
         {tickMs !== null ? ` Worker tick ${tickMs.toFixed(1)} ms.` : ""}
       </p>
     </div>

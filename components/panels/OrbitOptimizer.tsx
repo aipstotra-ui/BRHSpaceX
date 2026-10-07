@@ -79,26 +79,28 @@ export function OrbitOptimizer() {
           />
         </label>
       ))}
-      <table>
-        <thead>
-          <tr>
-            <th>Altitude km</th>
-            <th>LTAN h</th>
-            <th>Score</th>
-            <th>Binding</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranked.map((row) => (
-            <tr key={`${row.altitudeKm}-${row.ltanHours}`}>
-              <td>{row.altitudeKm}</td>
-              <td>{row.ltanHours}</td>
-              <td>{row.score.toFixed(3)}</td>
-              <td>{row.binding}</td>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Altitude km</th>
+              <th>LTAN h</th>
+              <th>Score</th>
+              <th>Binding</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ranked.map((row) => (
+              <tr key={`${row.altitudeKm}-${row.ltanHours}`}>
+                <td>{row.altitudeKm}</td>
+                <td>{row.ltanHours}</td>
+                <td>{row.score.toFixed(3)}</td>
+                <td>{row.binding}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {best ? <TransferAnimation targetAltitudeKm={best.altitudeKm} targetLtanHours={best.ltanHours} /> : null}
     </div>
   );

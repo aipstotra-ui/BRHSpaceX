@@ -84,7 +84,7 @@
 
 .cockpit__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -185,6 +185,19 @@
 .table-scroll {
   overflow-x: auto;
   border: 1px solid var(--line);
+}
+
+/* ScrollFades marks boxes with more table off-screen; fade that edge so it is clear the table scrolls. */
+.table-scroll[data-more-right] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+
+.table-scroll[data-more-left] {
+  mask-image: linear-gradient(to right, transparent, #000 40px);
+}
+
+.table-scroll[data-more-left][data-more-right] {
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
 }
 
 .table-scroll .rok-table th[scope="row"] {
@@ -370,10 +383,6 @@
 }
 
 @media (max-width: 640px) {
-  .globe-hud__readout {
-    margin-bottom: var(--space-7);
-  }
-
   .globe-hud__badges {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -1040,4 +1049,76 @@
 
 .marker-dot--loss {
   background: var(--ink-muted);
+}
+
+/* Touch targets: sliders, disclosure summaries and the layer checkboxes reach at least 24 px. */
+.rok-panel input[type="range"],
+.timeline__controls input[type="range"] {
+  min-height: 24px;
+}
+
+summary {
+  min-height: 24px;
+  padding-block: var(--space-1);
+}
+
+.layer-toggles__row {
+  min-height: 24px;
+}
+
+.layer-toggles__row input {
+  width: 16px;
+  height: 16px;
+}
+
+.topbar__link {
+  min-height: 24px;
+}
+
+@media (max-width: 640px) {
+  /* Play and speed on one line, the slider full width under them. */
+  .timeline__controls {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .timeline__controls input[type="range"] {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .timeline__speed {
+    margin-left: auto;
+  }
+
+  /* Marker chips in one row that scrolls sideways instead of one chip per line. */
+  .timeline__markers {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+    scrollbar-width: thin;
+  }
+
+  .marker-chip {
+    white-space: nowrap;
+  }
+
+  /* The globe readout stays compact so the Earth stays visible. */
+  .globe-hud {
+    padding: var(--space-2);
+  }
+
+  .globe-hud__note {
+    display: none;
+  }
+
+  .globe-hud__top,
+  .globe-hud__badges,
+  .globe-hud__readout {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .globe-hud__readout {
+    margin-bottom: var(--space-2);
+  }
 }

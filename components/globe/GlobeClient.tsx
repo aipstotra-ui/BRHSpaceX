@@ -32,6 +32,7 @@ import { shadowKind } from "@/lib/engine/orbit/eclipse";
 import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { auroralBoundaryMlatDeg, auroralPolewardMlatDeg, sepCutoffMlatDeg } from "@/lib/engine/orbit/stormZones";
 import { SPEED_LABELS, useClockStore } from "@/lib/store/clock";
+import { usePrefersReducedMotion } from "@/lib/ui/motion";
 import { useOrbitStore } from "@/lib/store/orbit";
 import { sampleAt, useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
 
@@ -91,6 +92,9 @@ export default function GlobeClient() {
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
   const [craftScale, setCraftScale] = useState<CraftScale>("enlarged");
+  const [earthReady, setEarthReady] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
   const cursor = useTimelineCursor();
   const kp = cursor.point?.kp ?? null;
   const protonPfu = cursor.point?.protonPfu ?? null;
@@ -114,10 +118,11 @@ export default function GlobeClient() {
     orbitRef.current = { altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg };
     followRef.current = follow;
     craftScaleRef.current = craftScale;
+    reducedMotionRef.current = reducedMotion;
     starlinkOnRef.current = starlinkOn && layers.starlink;
     layersRef.current = layers;
     auroraAvailableRef.current = kp !== null || useOvation;
-  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, craftScale, starlinkOn, layers, kp, useOvation]);
+  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, craftScale, reducedMotion, starlinkOn, layers, kp, useOvation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -269,14 +274,14 @@ export default function GlobeClient() {
     camera.position.set(0.25, 0.9, 2.95);
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
-    controls.enableDamping = true;
+    controls.enableDamping = !reducedMotionRef.current;
     controls.dampingFactor = 0.08;
     controls.minDistance = 1.25;
     controls.maxDistance = 8;
 
     const stars = createStars();
     scene.add(stars);
-    const earth = createEarth();
+    const earth = createEarth(() => setEarthReady(true));
     scene.add(earth.root);
     const earthGroup = earth.group;
     earthGroupRef.current = earthGroup;
@@ -324,7 +329,8 @@ export default function GlobeClient() {
 
     const resize = () => {
       const width = Math.max(260, Math.floor(wrapRef.current?.clientWidth ?? 640));
-      const height = Math.round(Math.min(760, Math.max(300, width * 0.82)));
+      // Phones get a near-square canvas, so the readout does not cover the Earth.
+      const height = Math.round(Math.min(760, Math.max(300, width * (width < 640 ? 1.05 : 0.82))));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(width, height, false);
       canvas.style.width = "100%";
@@ -428,7 +434,8 @@ export default function GlobeClient() {
         if (!wasFollowing) {
           offset.subVectors(camera.position, craftAt);
         }
-        offset.lerp(offsetGoal, 1 - Math.exp(-FOLLOW_RATE * dt));
+        // Reduced motion: no easing, the camera sits on its offset at once.
+        offset.lerp(offsetGoal, reducedMotionRef.current ? 1 : 1 - Math.exp(-FOLLOW_RATE * dt));
         camera.position.copy(craftAt).add(offset);
         camera.up.copy(zenith);
         camera.lookAt(craftAt);
@@ -438,6 +445,7 @@ export default function GlobeClient() {
           camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
         }
         controls.enabled = true;
+        controls.enableDamping = !reducedMotionRef.current;
         if (zoomChangedRef.current) {
           camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
           zoomChangedRef.current = false;
@@ -503,9 +511,9 @@ export default function GlobeClient() {
       <div className="globe__stage">
         <canvas ref={canvasRef} aria-label="Round Earth" />
         <GlobeHud stateRef={hudRef} playing={playing} speedLabel={SPEED_LABELS[speed]} note={scaleLabel(craftScale)} />
-        {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
+        {!earthReady && phase !== "error" ? <p className="globe__status rok-muted">Loading</p> : null}
         {phase === "error" ? <p className="globe__status error">{error ?? "Error"}</p> : null}
-        {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
+        {phase === "empty" && starlinkOn ? <p className="globe__status rok-muted">No Starlink elements in the snapshot</p> : null}
       </div>
       <LayerToggles layers={layers} onChange={setLayers} />
       <OrbitTrail />

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import "../3rok-design-system/tokens.css";
 import "../3rok-design-system/components/bundle.css";
+import { ScrollFades } from "@/components/ui/ScrollFades";
+
 import { inter, jetbrainsMono, spaceGrotesk } from "./fonts";
 
 export const metadata: Metadata = {
@@ -14,7 +16,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ScrollFades />
+      </body>
     </html>
   );
 }

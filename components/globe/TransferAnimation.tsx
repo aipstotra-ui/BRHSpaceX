@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { HOHMANN_LABEL, hohmannDeltaVMs } from "@/lib/engine/orbit/hohmann";
 import { ssoInclinationDeg } from "@/lib/engine/orbit/sso";
 import { useOrbitStore } from "@/lib/store/orbit";
+import { prefersReducedMotion } from "@/lib/ui/motion";
 
 export function TransferAnimation({
   targetAltitudeKm,
@@ -25,10 +26,12 @@ export function TransferAnimation({
       return;
     }
     const start = useOrbitStore.getState().altitudeKm;
+    // Reduced motion: arrive at once instead of sweeping the altitude over 1.2 s.
+    const durationMs = prefersReducedMotion() ? 0 : 1200;
     const began = performance.now();
     let frame = 0;
     const step = (now: number) => {
-      const t = Math.min(1, (now - began) / 1200);
+      const t = durationMs === 0 ? 1 : Math.min(1, (now - began) / durationMs);
       const next = start + (targetAltitudeKm - start) * t;
       setSunSynchronous(true);
       setAltitudeKm(t < 1 ? next : targetAltitudeKm);

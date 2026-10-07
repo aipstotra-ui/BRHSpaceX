@@ -103,7 +103,8 @@ export interface EarthLayer {
   dispose: () => void;
 }
 
-export function createEarth(): EarthLayer {
+/** onReady runs once the day map has loaded, i.e. when the Earth stops being a placeholder. */
+export function createEarth(onReady?: () => void): EarthLayer {
   const group = new THREE.Group();
   const sunDirection = new THREE.Vector3(1, 0, 0);
   const uniforms = {
@@ -146,6 +147,7 @@ export function createEarth(): EarthLayer {
   load("/globe/earth-day.jpg", (texture) => {
     uniforms.dayMap.value = texture;
     uniforms.hasDay.value = 1;
+    onReady?.();
   });
   load("/globe/earth-night.jpg", (texture) => {
     uniforms.nightMap.value = texture;

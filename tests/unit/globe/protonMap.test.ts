@@ -1,28 +1,28 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it } from "vitest";
 
 import { exposureClass } from "@/lib/engine/globe/exposure";
 import { geodeticToScene } from "@/lib/engine/globe/frames";
 import {
-  decodeProtonMap,
   inSaaFlux,
   protonLayer,
   protonLogAt,
+  protonMapAltitudeKm,
   SAA_EDGE_LOG,
-  type ProtonMapFile,
+  trappedProtonMap,
 } from "@/lib/engine/globe/protonMap";
 import { inSaa } from "@/lib/engine/radiation";
 import { DIPOLE_POLE_LAT_DEG, DIPOLE_POLE_LON_DEG, magneticLatitudeDeg } from "@/lib/engine/orbit/stormZones";
 
-const map = decodeProtonMap(JSON.parse(readFileSync("public/globe/proton-flux-map.json", "utf8")) as ProtonMapFile);
+const map = trappedProtonMap();
 
 describe("AP8 proton map", () => {
   it("decodes the whole grid", () => {
     const { altitudesKm, latCount, lonCount } = map.file;
     expect(map.logs).toHaveLength(altitudesKm.length * latCount * lonCount);
     expect(altitudesKm[0]).toBe(300);
-    expect(altitudesKm[altitudesKm.length - 1]).toBe(1500);
+    expect(altitudesKm[altitudesKm.length - 1]).toBe(2000);
+    expect(protonMapAltitudeKm(2500)).toBe(2000);
+    expect(protonMapAltitudeKm(550)).toBe(550);
   });
 
   it("peaks over the South Atlantic and is quiet over Europe", () => {
@@ -73,11 +73,10 @@ describe("AP8 proton map", () => {
     expect(Math.min(...values)).toBe(0);
   });
 
-  it("classifies the craft with the flux map when the globe passes it", () => {
-    const fluxSaa = (lat: number, lon: number, alt: number) => inSaaFlux(map, lat, lon, alt);
+  it("classifies the craft with the flux contour, not the GBM polygon", () => {
     // 40°S 40°W at 600 km: inside the flux contour, south of where the GBM polygon stops.
-    expect(exposureClass(-40, -40, 600, undefined, fluxSaa)).toBe("SAA");
-    expect(exposureClass(-40, -40, 600)).not.toBe("SAA");
+    expect(inSaa(-40, -40)).toBe(false);
+    expect(exposureClass(-40, -40, 600)).toBe("SAA");
   });
 });
 

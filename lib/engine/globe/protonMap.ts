@@ -1,5 +1,7 @@
+import mapFile from "@/data/orbit/proton_flux_map.json";
+
 /**
- * The AP8MIN >10 MeV trapped-proton map built by scripts/orbit/saa_map.py (public/globe/proton-flux-map.json).
+ * The AP8MIN >10 MeV trapped-proton map built by scripts/orbit/saa_map.py (data/orbit/proton_flux_map.json).
  * Bilinear in latitude and longitude, linear in log flux between altitude layers.
  */
 
@@ -45,6 +47,14 @@ export function decodeProtonMap(file: ProtonMapFile): ProtonMap {
   return { file, logs };
 }
 
+let shared: ProtonMap | null = null;
+
+/** The committed map, decoded on first use. The globe and the orbit engine share it. */
+export function trappedProtonMap(): ProtonMap {
+  shared ??= decodeProtonMap(mapFile as ProtonMapFile);
+  return shared;
+}
+
 /** Below-floor cells count as the floor for interpolation, so the edge fades instead of jumping. */
 function cell(map: ProtonMap, alt: number, lat: number, lon: number): number {
   const { latCount, lonCount, encoding } = map.file;
@@ -68,7 +78,7 @@ function altitudeBracket(altitudesKm: number[], altKm: number): [number, number,
   return [last, last, 0];
 }
 
-/** log10 of the >10 MeV flux (1/cm2/s) at a point. Altitude is clamped to the grid (300–1500 km). */
+/** log10 of the >10 MeV flux (1/cm2/s) at a point. Altitude is clamped to the grid (300–2000 km). */
 export function protonLogAt(map: ProtonMap, latDeg: number, lonDeg: number, altKm: number): number {
   const { latStartDeg, latStepDeg, latCount, lonStartDeg, lonStepDeg, lonCount } = map.file;
   const y = Math.min(latCount - 1, Math.max(0, (latDeg - latStartDeg) / latStepDeg));
@@ -89,6 +99,17 @@ export function protonLogAt(map: ProtonMap, latDeg: number, lonDeg: number, altK
 
 export function inSaaFlux(map: ProtonMap, latDeg: number, lonDeg: number, altKm: number): boolean {
   return protonLogAt(map, latDeg, lonDeg, altKm) >= SAA_EDGE_LOG;
+}
+
+/** The SAA test used everywhere: inside the SAA_EDGE_FLUX contour of the committed map. */
+export function inSaaAp8(latDeg: number, lonDeg: number, altKm: number): boolean {
+  return inSaaFlux(trappedProtonMap(), latDeg, lonDeg, altKm);
+}
+
+/** The altitude the map is read at: the grid clamps outside its first and last layer. */
+export function protonMapAltitudeKm(altKm: number): number {
+  const { altitudesKm } = trappedProtonMap().file;
+  return Math.min(altitudesKm[altitudesKm.length - 1], Math.max(altitudesKm[0], altKm));
 }
 
 /**

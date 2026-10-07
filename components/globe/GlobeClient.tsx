@@ -22,9 +22,9 @@ import {
 } from "@/components/globe/scene/zones";
 import { LayerToggles, DEFAULT_LAYERS, type Layers } from "@/components/globe/LayerToggles";
 import { createCraft, scaleLabel, type CraftScale } from "@/components/globe/StarmindModel";
-import { exposureClass, type SaaTest, type StormContext } from "@/lib/engine/globe/exposure";
+import { exposureClass, type StormContext } from "@/lib/engine/globe/exposure";
 import { gmstRad, kmToScene, sunAt } from "@/lib/engine/globe/frames";
-import { decodeProtonMap, inSaaFlux, type ProtonMap, type ProtonMapFile } from "@/lib/engine/globe/protonMap";
+import { trappedProtonMap } from "@/lib/engine/globe/protonMap";
 import { groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
 import { SHADOW_AU_KM } from "@/lib/engine/orbit/constants";
@@ -78,7 +78,6 @@ export default function GlobeClient() {
   const auroraLayerRef = useRef<AuroraLayer | null>(null);
   const sepLayerRef = useRef<SepLayer | null>(null);
   const saaLayerRef = useRef<SaaLayer | null>(null);
-  const saaTestRef = useRef<SaaTest | undefined>(undefined);
   /** The Kp band needs a Kp; OVATION needs the latest observed block. Otherwise there is no oval to draw. */
   const auroraAvailableRef = useRef(false);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
@@ -104,7 +103,6 @@ export default function GlobeClient() {
     cursor.mode === "now" && cursor.point?.kind === "observed" && Math.abs(cursor.offsetS) < 3 * 3600;
   const [sceneReady, setSceneReady] = useState(false);
   const [ovationRaw, setOvationRaw] = useState<[number, number, number][]>([]);
-  const [protonMap, setProtonMap] = useState<ProtonMap | null>(null);
   const [layers, setLayers] = useState<Layers>(DEFAULT_LAYERS);
   const layersRef = useRef<Layers>(DEFAULT_LAYERS);
   const aurora: TrackPoint[] = useMemo(
@@ -139,22 +137,6 @@ export default function GlobeClient() {
           setOvationRaw([]);
         }
       });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // AP8 trapped-proton map for the SAA (scripts/orbit/saa_map.py). Until it loads, the GBM polygon classifies.
-  useEffect(() => {
-    let cancelled = false;
-    void fetch("/globe/proton-flux-map.json")
-      .then((response) => response.json() as Promise<ProtonMapFile>)
-      .then((file) => {
-        if (!cancelled) {
-          setProtonMap(decodeProtonMap(file));
-        }
-      })
-      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -227,25 +209,24 @@ export default function GlobeClient() {
 
   useEffect(() => {
     const earthGroup = earthGroupRef.current;
-    if (!earthGroup || !sceneReady || !protonMap) {
+    if (!earthGroup || !sceneReady) {
       return;
     }
-    const layer = createSaaLayer(protonMap);
+    // AP8 trapped-proton map (scripts/orbit/saa_map.py), shared with the orbit engine's SAA fraction.
+    const layer = createSaaLayer(trappedProtonMap());
     layer.setAltitude(orbitRef.current.altitudeKm);
     earthGroup.add(layer.mesh);
     saaLayerRef.current = layer;
-    saaTestRef.current = (latDeg, lonDeg, altKm) => inSaaFlux(protonMap, latDeg, lonDeg, altKm);
     return () => {
       earthGroup.remove(layer.mesh);
       layer.dispose();
       saaLayerRef.current = null;
-      saaTestRef.current = undefined;
     };
-  }, [protonMap, sceneReady]);
+  }, [sceneReady]);
 
   useEffect(() => {
     saaLayerRef.current?.setAltitude(altitudeKm);
-  }, [altitudeKm, protonMap]);
+  }, [altitudeKm, sceneReady]);
 
   useEffect(() => {
     if (!canvasRef.current || !wrapRef.current) {
@@ -395,7 +376,7 @@ export default function GlobeClient() {
       velocity.subVectors(nextAt, craftAt);
       updateOrbitRing(ring, orbit, simTimeMs);
       if (groundTrack.visible) {
-        updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current, saaTestRef.current));
+        updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current));
       }
 
       sunKm.x = sun.unit.x * SHADOW_AU_KM;
@@ -410,7 +391,7 @@ export default function GlobeClient() {
         latDeg: fix.latDeg,
         lonDeg: fix.lonDeg,
         altKm: fix.altKm,
-        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current, saaTestRef.current),
+        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current),
         shadow,
         kp: sample.kp,
         protonPfu: sample.protonPfu,

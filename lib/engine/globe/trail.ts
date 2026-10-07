@@ -1,4 +1,4 @@
-import { exposureClass, exposureCode, type SaaTest, type StormContext } from "@/lib/engine/globe/exposure";
+import { exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
 import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { meanMotionRadS } from "@/lib/engine/orbit/sso";
 
@@ -27,7 +27,6 @@ export function groundTrackAtUtc(
   orbit: StarmindOrbit,
   utcMs: number,
   storm?: StormContext,
-  inSaa?: SaaTest,
 ): StarmindSample[] {
   const spanMs = orbitPeriodSeconds(orbit.altitudeKm) * 1000 * GROUND_TRACK_ORBITS;
   const samples: StarmindSample[] = [];
@@ -39,7 +38,7 @@ export function groundTrackAtUtc(
       lonDeg: fix.lonDeg,
       altKm: fix.altKm,
       radiusKm: fix.radiusKm,
-      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, storm, inSaa)),
+      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, storm)),
     });
   }
   return samples;

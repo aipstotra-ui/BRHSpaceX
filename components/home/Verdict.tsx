@@ -7,6 +7,7 @@ import { formatNumber, Num } from "@/components/panels/OrbitImpact";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
+import { SAA_EDGE_FLUX } from "@/lib/engine/globe/protonMap";
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import { auroralBoundaryMlatDeg, sepActive, zoneFractions } from "@/lib/engine/orbit/stormZones";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
@@ -56,7 +57,7 @@ function Share({ kind, title, share, note }: { kind: ExposureClass; title: strin
   );
 }
 
-function Exposure({ kind, title, value }: { kind: ExposureClass; title: string; value: RangeValue }) {
+function Exposure({ kind, title, value, what }: { kind: ExposureClass; title: string; value: RangeValue; what?: string }) {
   const percent = Math.max(0, Math.min(100, value.mid * 100));
   return (
     <div className="exposure">
@@ -81,7 +82,8 @@ function Exposure({ kind, title, value }: { kind: ExposureClass; title: string; 
         <div className="rok-progress__fill" style={{ width: `${percent}%`, background: EXPOSURE_COLORS[kind] }} />
       </div>
       <p className="note">
-        Varies {formatNumber(value.low * 100, 1)}–{formatNumber(value.high * 100, 1)} % with Earth rotation phase
+        {what ? `${what} ` : ""}Varies {formatNumber(value.low * 100, 1)}–{formatNumber(value.high * 100, 1)} % with
+        Earth rotation phase.
       </p>
     </div>
   );
@@ -223,7 +225,12 @@ export function Verdict() {
             <h3 className="eyebrow rok-subtle">
               Where the danger is · {timeLabel(cursor.point?.timeMs, cursor.point?.kind)}
             </h3>
-            <Exposure kind="SAA" title="South Atlantic Anomaly" value={result.saaFraction} />
+            <Exposure
+              kind="SAA"
+              title="South Atlantic Anomaly"
+              value={result.saaFraction}
+              what={`Time where trapped protons above 10 MeV reach ${SAA_EDGE_FLUX} /cm²/s (AP8), the red zone on the globe.`}
+            />
             <Share
               kind="SEP"
               title="Solar-proton polar cap"

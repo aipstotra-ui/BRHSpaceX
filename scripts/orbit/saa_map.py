@@ -14,7 +14,7 @@ Model chain, per grid point (geographic latitude, longitude, altitude):
 2. B/B0 with B0 the dipole equatorial field 0.311653 / L^3 gauss (same as dose_table.py).
 3. AP8MIN omnidirectional integral flux above ENERGY_MEV (IRBEM get_ae8_ap8_flux, whatf 3).
 
-Output: public/globe/proton-flux-map.json. log10 flux per point, quantized to one byte (0 = at or below
+Output: data/orbit/proton_flux_map.json. log10 flux per point, quantized to one byte (0 = at or below
 LOG_FLOOR), base64, ordered [altitude][latitude][longitude]. Grid steps are display choices.
 """
 
@@ -27,11 +27,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "public" / "globe" / "proton-flux-map.json"
+OUT = ROOT / "data" / "orbit" / "proton_flux_map.json"
 
 ENERGY_MEV = 10.0
 FIELD_DATE = "2025-01-01T00:00:00"
-ALTITUDES_KM = list(range(300, 1501, 100))
+ALTITUDES_KM = list(range(300, 2001, 100))
 LAT_STEP_DEG = 1.0
 LON_STEP_DEG = 1.0
 EARTH_RADIUS_KM = 6371.2

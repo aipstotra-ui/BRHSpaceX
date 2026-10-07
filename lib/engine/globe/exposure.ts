@@ -1,6 +1,6 @@
 import { geographicDipoleL, inAuroralZone, inOuterBelt } from "@/lib/engine/orbit/lshell";
-import { inSaaGeographic } from "@/lib/engine/orbit/saa";
 import { RE_M } from "@/lib/engine/orbit/constants";
+import { inSaaAp8 } from "@/lib/engine/globe/protonMap";
 import { inAuroralOval, inSepCap, magneticDipoleL } from "@/lib/engine/orbit/stormZones";
 
 export type ExposureClass = "SAA" | "SEP" | "auroral" | "outer belt" | "nominal";
@@ -32,21 +32,16 @@ export interface StormContext {
 
 /**
  * SAA wins, then the solar-proton polar cap (only during an S1+ event), then the auroral zone, then the outer belt.
- * Without a storm context the zones are the fixed NASA SP-8116 latitude bands used since M5.
+ * The SAA is the AP8 flux contour at this altitude (lib/engine/globe/protonMap.ts), the same edge the globe draws.
+ * Without a storm context the other zones are the fixed NASA SP-8116 latitude bands used since M5.
  */
-/** Point test for the SAA. The globe passes the AP8 flux contour; the default is the Fermi GBM polygon. */
-export type SaaTest = (latDeg: number, lonDeg: number, altitudeKm: number) => boolean;
-
-const gbmSaa: SaaTest = (latDeg, lonDeg) => inSaaGeographic(latDeg, lonDeg);
-
 export function exposureClass(
   latDeg: number,
   lonDeg: number,
   altitudeKm: number,
   storm?: StormContext,
-  inSaa: SaaTest = gbmSaa,
 ): ExposureClass {
-  if (inSaa(latDeg, lonDeg, altitudeKm)) {
+  if (inSaaAp8(latDeg, lonDeg, altitudeKm)) {
     return "SAA";
   }
   const radiusM = RE_M + altitudeKm * 1000;

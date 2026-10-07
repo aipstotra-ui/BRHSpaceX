@@ -55,9 +55,9 @@ EVENTS: dict[str, dict] = {
         "aiNote": "Browser forecaster (public/models) run on validation-period inputs. 2022 was not used for fitting, "
         "early stopping or calibration, but its scores were read during development, so this is not an independent test.",
         "markers": {
-            # Starlink Group 4-7 launch, 3 Feb 2022 18:13 UT. UNVERIFIED: from a search-index summary of Copernicus
-            # NPG preprint npg-2024-9; the page itself could not be opened (egress blocked). The date is CONFIRMED in
-            # docs/research/reference-values.md.
+            # Starlink Group 4-7 launch, 3 Feb 2022 18:13 UT. Agrees across SpaceX's launch page
+            # (https://www.spacex.com/launches/sl4-7), NextSpaceflight and Copernicus NPG preprint npg-2024-9, as
+            # search results; the pages could not be opened here (egress blocked). Date CONFIRMED in reference-values.
             "launch": ["2022-02-03T18:13:00Z"],
             # Payload decay dates in data/snapshots/satcat_2022-010.json inside the window (day only, placed at 00:00).
             "reentry": ["2022-02-06T00:00:00Z", "2022-02-07T00:00:00Z", "2022-02-08T00:00:00Z", "2022-02-09T00:00:00Z"],

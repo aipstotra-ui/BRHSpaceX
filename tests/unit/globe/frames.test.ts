@@ -2,7 +2,7 @@ import * as satellite from "satellite.js";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { gmstRad, geodeticToScene, kmToScene, sunAt } from "@/lib/engine/globe/frames";
+import { gmstRad, geodeticToScene, kmToScene, meanSunRightAscensionDeg, sunAt } from "@/lib/engine/globe/frames";
 import { GROUND_TRACK_SAMPLES, groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { argumentRateRadPerSec, ORBIT_EPOCH_MS, raanAtUtc, starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { ssoInclinationDeg } from "@/lib/engine/orbit/sso";
@@ -124,12 +124,19 @@ describe("Starmind at an absolute time", () => {
     });
   }
 
-  it("sets the SSO node from LTAN against the true Sun, so LTAN moves the orbit", () => {
+  it("sets the SSO node from LTAN against the mean Sun, so LTAN moves the orbit", () => {
     const at = Date.UTC(2024, 4, 10, 17);
-    const sunRa = sunAt(at).rightAscensionDeg;
-    expect(wrap180(raanAtUtc(dawnDusk, at) - sunRa)).toBeCloseTo(90, 9);
+    const meanRa = meanSunRightAscensionDeg(at);
+    expect(wrap180(raanAtUtc(dawnDusk, at) - meanRa)).toBeCloseTo(90, 9);
     const dawn = { ...dawnDusk, ltanHours: 6 };
     expect(Math.abs(wrap180(raanAtUtc(dawn, at) - raanAtUtc(dawnDusk, at)))).toBeCloseTo(180, 9);
+  });
+
+  it("puts the mean Sun one equation of time away from the true Sun", () => {
+    // Equation of time = mean Sun RA − true Sun RA: about +16.4 min (+4.1°) on 3 Nov, −14.2 min (−3.6°) on 11 Feb.
+    const eot = (at: number) => wrap180(meanSunRightAscensionDeg(at) - sunAt(at).rightAscensionDeg) * 4;
+    expect(eot(Date.UTC(2024, 10, 3, 12))).toBeCloseTo(16.4, 0);
+    expect(eot(Date.UTC(2024, 1, 11, 12))).toBeCloseTo(-14.2, 0);
   });
 
   it("puts the inertial craft exactly over its ground point once the Earth group turns by GMST", () => {

@@ -3,7 +3,7 @@ import { J2_GEO, RE_M } from "@/lib/engine/orbit/constants";
 import { circularPositionKm } from "@/lib/engine/orbit/eclipse";
 import { groundPoint } from "@/lib/engine/orbit/saa";
 import { meanMotionRadS, nodalRateRadPerSec, raanFromLtan } from "@/lib/engine/orbit/sso";
-import { gmstRad, sunAt } from "@/lib/engine/globe/frames";
+import { gmstRad, meanSunRightAscensionDeg } from "@/lib/engine/globe/frames";
 
 export interface StarmindFix {
   xKm: number;
@@ -34,12 +34,12 @@ export interface StarmindOrbit {
 export const ORBIT_EPOCH_MS = Date.UTC(2000, 0, 1, 12);
 
 /**
- * RAAN at a UTC time. SSO: the node sits at the requested local time against the true Sun at that moment.
+ * RAAN at a UTC time. SSO: the node sits at the requested local mean time, against the mean Sun at that moment.
  * Otherwise: the epoch RAAN drifted by the secular J2 rate.
  */
 export function raanAtUtc(orbit: StarmindOrbit, utcMs: number): number {
   if (orbit.sunSynchronous) {
-    return raanFromLtan(orbit.ltanHours ?? 6, sunAt(utcMs).rightAscensionDeg);
+    return raanFromLtan(orbit.ltanHours ?? 6, meanSunRightAscensionDeg(utcMs));
   }
   return raanAfterSeconds(orbit.raanDeg, orbit.altitudeKm, orbit.inclinationDeg, (utcMs - ORBIT_EPOCH_MS) / 1000);
 }

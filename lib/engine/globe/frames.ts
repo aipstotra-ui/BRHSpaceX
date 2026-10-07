@@ -45,6 +45,17 @@ export function sunAt(utcMs: number): SunState {
 }
 
 /**
+ * Right ascension of the mean Sun, degrees: the Sun's mean longitude from the same Astronomical Almanac
+ * low-precision series, L = 280.460° + 0.9856474° per day from J2000. Local mean solar time, and so LTAN, is
+ * measured against the mean Sun; the true Sun differs by the equation of time (up to about ±4°, ±16 min).
+ */
+export function meanSunRightAscensionDeg(utcMs: number): number {
+  const days = julianDate(utcMs) - 2_451_545.0;
+  const value = 280.46 + 0.9856474 * days;
+  return ((value % 360) + 360) % 360;
+}
+
+/**
  * Scene convention, in Earth radii. Matches three.js SphereGeometry UVs with an equirectangular map
  * (longitude −180 at u = 0, 0 at u = 0.5):
  *   scene x =  cos(lat) cos(lon)   (towards lat 0, lon 0)

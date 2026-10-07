@@ -2,10 +2,65 @@ import type { ChipSpec } from "@/lib/types";
 
 import { marked, type Marked } from "@/lib/engine/marked";
 
-/** Estimate: per-bit proton cross-section anchor. Not taken from the Orin device cross-section. */
+/**
+ * Estimate: per-bit raw proton upset cross-section for SRAM-class memory. Published 65 nm SRAM values span about
+ * 0.4e-14 to 2.7e-14 cm2/bit. Not used for DRAM (see DRAM_UNCORRECTABLE_CM2_PER_BIT) and not taken from the Orin
+ * device cross-section.
+ */
 export const PER_BIT_CM2_AT_28NM = 1e-14;
 
 export const REFERENCE_NODE_NM = 28;
+
+/**
+ * What the upset rate counts. "raw": every bit flip, before ECC (SRAM-class anchor or a measured device
+ * cross-section). "uncorrectable": DRAM errors that ECC detected but could not correct, the only DRAM quantity
+ * with a measurement here.
+ */
+export type UpsetKind = "raw" | "uncorrectable";
+
+export function isDram(memoryType: string): boolean {
+  return /HBM|LPDDR|GDDR|DDR|DRAM/i.test(memoryType);
+}
+
+export const SUNCATCHER_PAPER_URL = "https://arxiv.org/abs/2511.19468";
+
+/**
+ * Google Suncatcher (arXiv 2511.19468): TPU v6e HBM under 67 MeV protons showed about one uncorrectable ECC error
+ * per 50 rad(Si) (secondary reports give 44 to 50 rad), on 32 GB of HBM.
+ */
+export const HBM_RAD_PER_UNCORRECTABLE = 50;
+export const HBM_TEST_BITS = 32e9 * 8;
+
+/** Stopping power of 67 MeV protons in silicon, MeV cm2/g. Bethe formula (I = 173 eV); NIST PSTAR agrees within ~1%. */
+export const PROTON_67MEV_SI_MEV_CM2_G = 7.89;
+
+/** 1 MeV/g = 1.602176634e-8 rad. */
+const RAD_PER_MEV_PER_G = 1.602176634e-8;
+
+/**
+ * Uncorrectable-error cross-section per DRAM bit: fluence per rad at 67 MeV, times 50 rad per event, inverted and
+ * divided by the tested bits. About 9.9e-21 cm2/bit (2.5e-9 cm2 per 32 GB chip).
+ */
+export const DRAM_UNCORRECTABLE_CM2_PER_BIT =
+  (RAD_PER_MEV_PER_G * PROTON_67MEV_SI_MEV_CM2_G) / HBM_RAD_PER_UNCORRECTABLE / HBM_TEST_BITS;
+
+export function dramUncorrectableSigma(): Marked {
+  const value = DRAM_UNCORRECTABLE_CM2_PER_BIT;
+  return marked({
+    value,
+    sigma: value,
+    unit: "cm2/bit",
+    isEstimate: true,
+    label: "estimate",
+    sourceUrl: SUNCATCHER_PAPER_URL,
+    assumptions: [
+      "Google measured about one uncorrectable ECC error per 50 rad(Si) on TPU v6e HBM (32 GB) with 67 MeV protons (Suncatcher, arXiv 2511.19468).",
+      "Converted with 7.89 MeV cm2/g (67 MeV protons in Si) to 2.5e-9 cm2 per chip, 9.9e-21 cm2/bit. The conversion and the per-bit scaling are estimates.",
+      "Applies to ECC-protected DRAM like the tested HBM. Other HBM generations, LPDDR, and ECC schemes are not measured; without ECC every raw upset would be an error.",
+      "Raw upsets that ECC corrects are not estimated for DRAM: no public per-bit proton cross-section for HBM or LPDDR was available.",
+    ],
+  });
+}
 
 /** Estimate used only when the spec has no TID limit. */
 export const MISSING_TID_KRAD = 10;
@@ -49,8 +104,8 @@ export function estimatedPerBitSigma(nodeNm: number, nodeKnown: boolean): Marked
     label: "estimate",
     assumptions: [
       known
-        ? "Per-bit cross-section is estimated as 1e-14 cm2/bit at 28 nm, linear in the stated node."
-        : "Process node is unverified. The per-bit cross-section uses a 28 nm reference with widened uncertainty. A node of 0 nm is not a measurement.",
+        ? "Per-bit raw upset cross-section is estimated as 1e-14 cm2/bit at 28 nm (SRAM-class), linear in the stated node."
+        : "Process node is unverified. The per-bit raw upset cross-section uses a 28 nm SRAM-class reference with widened uncertainty. A node of 0 nm is not a measurement.",
     ],
   });
 }

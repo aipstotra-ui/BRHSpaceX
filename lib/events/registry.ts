@@ -92,7 +92,7 @@ export const EVENTS: readonly StormEvent[] = [
     dates: "5–16 May 2024",
     stresses: ["radiation", "drag"],
     story:
-      "Kp reached 9 (G5) on 10–11 May and Dst fell to −406 nT. Protons above 10 MeV peaked near 100 pfu (S2) in this replay's GOES-16 estimate.",
+      "Kp reached 9− late on 10 May and 9 on 11 May, the first G5 storm since 2003; Dst fell to −406 nT (Kyoto provisional). NOAA's >10 MeV proton peak was 208 pfu (S2) at 17:45 UT on 10 May; this replay's hourly GOES-16 estimate peaks near 100 pfu.",
     split: "test",
     replay: may2024Replay,
     markers: [
@@ -117,7 +117,7 @@ export const EVENTS: readonly StormEvent[] = [
       ...markerList(feb2022Replay.markers.reentry, "loss", "Reentry"),
     ],
     protonNote:
-      "Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end. Reentry markers are SATCAT decay dates (day only); the launch time is from a secondary source and unverified.",
+      "Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end. Reentry markers are SATCAT decay dates (day only); launch time 18:13 UT per SpaceX's launch page (https://www.spacex.com/launches/sl4-7).",
   },
 ];
 

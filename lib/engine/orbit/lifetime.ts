@@ -105,6 +105,7 @@ export function dragDecayYears(altitudeKm: number, vehicle: Vehicle, densityScal
       "da/dt = −ρ (Cd A / m) sqrt(μ a), integrated downward in 1 km steps. The step is an estimate.",
       "Low lifetime uses F10.7 = 250 and Ap = 80. Mid uses F10.7 = 150 and Ap = 15. High lifetime uses F10.7 = 70 and Ap = 4.",
       "Mass, drag area, Cd, and end-of-life altitude are vehicle estimates. They are not Starlink values and not the solar-array area.",
+      "No propulsion: this is the decay time without reboosts. A satellite that station-keeps is limited by its propellant instead.",
       densityScale === 1
         ? "Quiet drag uses the density table with no storm multiplier."
         : "Storm drag multiplies density by the Kp upset multiplier. That application is an estimate.",

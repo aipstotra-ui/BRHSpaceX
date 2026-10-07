@@ -1,6 +1,6 @@
 import type { ChipSpec, PayloadConfig } from "@/lib/types";
 
-import { resolveTid } from "@/lib/engine/chipModel";
+import { resolveTid, type UpsetKind } from "@/lib/engine/chipModel";
 import { simulateImpact, type DeviceSeu } from "@/lib/engine/impact";
 import { NOAA_SCALES_URL } from "@/lib/engine/orbit/constants";
 import { orbitEnvironment } from "@/lib/engine/orbit/environment";
@@ -10,6 +10,7 @@ import { rangeValue } from "@/lib/engine/orbit/range";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
 import { omnidirectionalQuietFlux } from "@/lib/engine/radiation";
 import { zoneFractions } from "@/lib/engine/orbit/stormZones";
+import { dragAging, kpToAp } from "@/lib/engine/stormLife";
 import { radiatorTemperatureK } from "@/lib/engine/thermal";
 
 export interface OrbitImpactInput {
@@ -34,10 +35,13 @@ export interface StormDelta {
   /** Share of the orbit poleward of the solar-proton cutoff, used only during an S1+ proton event. */
   sepShare: number;
   deltaUpsetPerS: RangeValue;
-  deltaDragYears: RangeValue;
+  /** Days of drag life one day at this storm level uses beyond a quiet day (NRLMSIS density at the storm's Ap). */
+  dragDaysPerStormDay: RangeValue;
 }
 
 export interface OrbitImpactResult {
+  /** What upsetRate counts: raw bit flips, or (DRAM) ECC-uncorrectable errors. */
+  upsetKind: UpsetKind;
   environmentMs: number;
   saaFraction: RangeValue;
   auroralFraction: RangeValue;
@@ -50,6 +54,8 @@ export interface OrbitImpactResult {
   lifetimeYears: RangeValue;
   binding: string;
   thermalMarginC: RangeValue;
+  /** False when average power, radiator area, or the temperature limit is not given, so there is no margin. */
+  thermalKnown: boolean;
   shieldingMmAl: RangeValue;
   storms: StormDelta[];
   /** Upsets per second per unit omnidirectional flux (1/cm2/s), so callers can add solar-proton flux. */
@@ -99,7 +105,9 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
   const upsetPerUnitFlux = inSaaFlux > 0 ? quiet.upsetRate.value / inSaaFlux : 0;
   const upsetRate = environment.upsetFlux
     ? scaleRange(environment.upsetFlux, upsetPerUnitFlux, "1/s", [
-        "Orbit upset rate is the M4 cross-section and bit count times the orbit-averaged AP8 flux above the upset threshold (R1 grid).",
+        quiet.upsetKind === "uncorrectable"
+          ? "Orbit uncorrectable-error rate is the per-bit uncorrectable cross-section and bit count times the orbit-averaged AP8 flux above the upset threshold (R1 grid)."
+          : "Orbit upset rate is the M4 cross-section and bit count times the orbit-averaged AP8 flux above the upset threshold (R1 grid).",
         ...environment.upsetFlux.assumptions,
         ...quiet.upsetRate.assumptions,
       ])
@@ -119,25 +127,27 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
     input.payload.emissivity,
     input.payload.radiatorSides,
   );
-  const margin = input.spec.opTempMaxC - (radiatorK - 273.15);
+  const thermalKnown = input.spec.avgPowerKw > 0 && input.payload.radiatorAreaM2 > 0 && input.spec.opTempMaxC > 0;
+  const margin = thermalKnown ? input.spec.opTempMaxC - (radiatorK - 273.15) : 0;
   const thermalMarginC = rangeValue({
     low: margin,
     mid: margin,
     high: margin,
     unit: "°C",
-    label: "estimate",
-    assumptions: [
-      "Margin is the chip maximum operating temperature minus the M4 radiator temperature.",
-      "273.15 converts kelvin to celsius. That offset is an estimate.",
-      "The M4 radiator formula ignores sunlight, so the eclipse fraction does not change this temperature.",
-    ],
+    label: thermalKnown ? "estimate" : "UNVERIFIED",
+    assumptions: thermalKnown
+      ? [
+          "Margin is the spec's maximum temperature minus the isothermal radiator temperature (M4). For the AI1 sheets the limit is the NVL72 45 °C liquid inlet, not a die limit.",
+          "A pumped loop runs its radiator between the inlet and outlet temperatures, so against an inlet limit this margin is conservative by about half the loop's temperature rise, which is not published.",
+          "The M4 radiator formula ignores sunlight, so the eclipse fraction does not change this temperature.",
+        ]
+      : ["Average power, radiator area, or the maximum temperature is not given, so no thermal margin is computed. 0 is not a measurement."],
   });
   const quietZones = zoneFractions(request, 2);
   const storms: StormDelta[] = G_LEVELS.map((level) => {
     const multiplier = estimatedStormMultiplier(level.kp).value;
     const delta = upsetRate.mid * (multiplier - 1);
-    const stormDrag = dragDecayYears(input.altitudeKm, input.vehicle, multiplier);
-    const deltaDrag = dragYears.mid - stormDrag.mid;
+    const dragDays = Math.max(0, dragAging(input.altitudeKm, level.kp) - 1);
     const zones = zoneFractions(request, level.kp);
     return {
       level: level.level,
@@ -153,23 +163,25 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
         sourceUrl: NOAA_SCALES_URL,
         assumptions: [
           `${level.level} uses Kp ${level.kp}. Source: NOAA scales. The Kp multiplier is the M4 estimate 1 + 0.05 * max(0, Kp−2).`,
-          "Delta upset is the orbit rate at that Kp minus the Kp 2 rate.",
+          "Delta upset is the orbit rate at that Kp minus the Kp 2 rate. The multiplier stands for wider solar-proton and cosmic-ray access in storms; trapped inner-belt protons do not rise (Zou et al. 2015 saw the SAA >70 MeV flux fall about 16%).",
         ],
       }),
-      deltaDragYears: rangeValue({
-        low: deltaDrag,
-        mid: deltaDrag,
-        high: deltaDrag,
-        unit: "yr",
+      dragDaysPerStormDay: rangeValue({
+        low: dragDays,
+        mid: dragDays,
+        high: dragDays,
+        unit: "days",
         label: "estimate",
         sourceUrl: NOAA_SCALES_URL,
         assumptions: [
-          "Delta drag is the quiet decay time minus the decay time with density multiplied by the same Kp factor. Applying that factor to drag is an estimate.",
+          `NRLMSIS 2.0 density at Ap ${Math.round(kpToAp(level.kp))} (Kp ${level.kp}) over density at Ap 15, both at F10.7 150, minus 1: the extra drag-life days one storm day uses.`,
+          "Density at the equator point of the density table; real storm heating is uneven and lags Kp by hours.",
         ],
       }),
     };
   });
   return {
+    upsetKind: quiet.upsetKind,
     environmentMs: environment.milliseconds,
     saaFraction: environment.saaFraction,
     auroralFraction: environment.auroralFraction,
@@ -182,6 +194,7 @@ export function orbitImpact(input: OrbitImpactInput): OrbitImpactResult {
     lifetimeYears: life.years,
     binding: life.binding,
     thermalMarginC,
+    thermalKnown,
     shieldingMmAl: rangeValue({
       low: input.spec.shieldingMmAl,
       mid: input.spec.shieldingMmAl,

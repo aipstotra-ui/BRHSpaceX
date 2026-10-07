@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { useImpactStore } from "@/components/home/impactStore";
-import { formatNumber, Num } from "@/components/panels/OrbitImpact";
+import { formatNumber, Num, upsetTitle } from "@/components/panels/OrbitImpact";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
@@ -198,14 +198,24 @@ export function Verdict() {
               <Num value={result.annualDose.mid} digits={3} label={result.annualDose.label} unit="krad(Si)/yr" />
             </div>
             <div className="rok-stat">
-              <p className="rok-stat__label eyebrow">Upset rate at Kp {kp.toFixed(1)}</p>
-              <Num value={upsetNow} digits={1} label="estimate" unit="1/s" />
+              <p className="rok-stat__label eyebrow">
+                {upsetTitle(result.upsetKind)} at Kp {kp.toFixed(1)}
+              </p>
+              {result.upsetKind === "uncorrectable" ? (
+                <Num value={upsetNow * 86400} digits={2} label="estimate" unit="/day" />
+              ) : (
+                <Num value={upsetNow} digits={1} label="estimate" unit="1/s" />
+              )}
               {protonsOn ? <StatusBadge status="critical">Proton event</StatusBadge> : null}
             </div>
             <div className="rok-stat">
               <p className="rok-stat__label eyebrow">Thermal margin</p>
-              <Num value={result.thermalMarginC.mid} digits={1} label={result.thermalMarginC.label} unit="°C" />
-              {result.thermalMarginC.mid < 0 ? (
+              {!result.thermalKnown ? (
+                <p className="note">Not computed: power, radiator area, or the temperature limit is not given.</p>
+              ) : (
+                <Num value={result.thermalMarginC.mid} digits={1} label={result.thermalMarginC.label} unit="°C" />
+              )}
+              {!result.thermalKnown ? null : result.thermalMarginC.mid < 0 ? (
                 <StatusBadge status="critical">Over limit</StatusBadge>
               ) : (
                 <StatusBadge status="nominal">Within limit</StatusBadge>
@@ -264,22 +274,32 @@ export function Verdict() {
                   label="estimate"
                   unit="% of the orbit"
                 />{" "}
-                (quiet: <Num value={result.quietAuroralShare * 100} digits={1} label="estimate" unit="%" />). Trapped
-                upsets rise by{" "}
+                (quiet: <Num value={result.quietAuroralShare * 100} digits={1} label="estimate" unit="%" />).{" "}
+                {result.upsetKind === "uncorrectable" ? "Uncorrectable memory errors" : "Upsets"} rise by{" "}
+                {result.upsetKind === "uncorrectable" ? (
+                  <Num
+                    value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid * 86400}
+                    digits={2}
+                    label="estimate"
+                    unit="/day"
+                  />
+                ) : (
+                  <Num
+                    value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid}
+                    digits={1}
+                    label="estimate"
+                    unit="1/s"
+                  />
+                )}{" "}
+                (a storm multiplier for wider solar-proton and cosmic-ray access; trapped protons do not rise), and
+                each storm day uses{" "}
                 <Num
-                  value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid}
+                  value={result.storms[result.storms.length - 1].dragDaysPerStormDay.mid}
                   digits={1}
                   label="estimate"
-                  unit="1/s"
+                  unit="extra days"
                 />{" "}
-                and drag life drops by{" "}
-                <Num
-                  value={result.storms[result.storms.length - 1].deltaDragYears.mid}
-                  digits={2}
-                  label="estimate"
-                  unit="yr"
-                />
-                .
+                of drag life.
               </p>
             </div>
           ) : null}

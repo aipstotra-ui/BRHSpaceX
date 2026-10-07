@@ -54,3 +54,35 @@ export function splitEcc(scheme: string, rate: number): {
     sdc: marked({ ...base, value: sdc }),
   };
 }
+
+/**
+ * ECC split when the rate already counts only uncorrectable DRAM errors. The measurement counted ECC-detected
+ * errors, so they are all detected uncorrectable; corrected upsets and silent corruption are not estimated.
+ */
+export function uncorrectableOnly(rate: number): {
+  correctable: Marked;
+  due: Marked;
+  sdc: Marked;
+} {
+  const unknown = (what: string) =>
+    marked({
+      value: 0,
+      sigma: 0,
+      unit: "1/s",
+      isEstimate: true,
+      label: "UNVERIFIED",
+      assumptions: [`${what} is not estimated for DRAM. 0 is not a measurement.`],
+    });
+  return {
+    correctable: unknown("The corrected upset rate"),
+    due: marked({
+      value: rate,
+      sigma: 0,
+      unit: "1/s",
+      isEstimate: true,
+      label: "estimate",
+      assumptions: ["The uncorrectable-error measurement counted ECC-detected errors, so all of them are detected uncorrectable."],
+    }),
+    sdc: unknown("Silent data corruption"),
+  };
+}

@@ -327,7 +327,11 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
       </form>
       {phase === "ready" ? (
         <div className="body space-above">
-          {impact.thermal.peakFlag ? (
+          {!impact.thermal.inputsKnown ? (
+            <p data-testid="peak-flag" data-peak-flag="false" className="rok-muted">
+              Average power and radiator area are not both given, so the radiator is not checked.
+            </p>
+          ) : impact.thermal.peakFlag ? (
             <p data-testid="peak-flag" data-peak-flag="true">
               {PEAK_FLAG_TEXT}
             </p>
@@ -349,7 +353,11 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
             Sheet pair{" "}
             <Num value={impact.thermal.kwPerM2.value} digits={2} label={impact.thermal.kwPerM2.label} unit="kW/m²" />.
             Radiator{" "}
-            <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+            {impact.thermal.inputsKnown ? (
+              <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+            ) : (
+              "temperature not computed"
+            )}
             {preset.inletC ? (
               <>
                 {" "}

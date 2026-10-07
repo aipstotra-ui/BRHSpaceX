@@ -176,7 +176,12 @@ export function PayloadHealth() {
         Installed <Num value={payload.radiatorAreaM2} digits={1} label={preset.payload.radiatorAreaM2 === payload.radiatorAreaM2 ? preset.payloadLabels.radiatorAreaM2 : "estimate"} unit="m²" />.
       </p>
       <p className="body">
-        Radiator <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+        Radiator{" "}
+        {impact.thermal.inputsKnown ? (
+          <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+        ) : (
+          "temperature not computed (average power or radiator area not given)"
+        )}
         {preset.inletC ? (
           <>
             {" "}
@@ -220,8 +225,18 @@ export function PayloadHealth() {
         <Num value={impact.omnidirectionalFlux.value} digits={1} label="estimate" unit="protons/cm2/s" />.
       </p>
       <p className="body">
-        Upset rate <Num value={impact.upsetRate.value} digits={3} label="estimate" unit="1/s" />. ECC correctable{" "}
-        <Num value={impact.correctable.value} digits={3} label="estimate" unit="1/s" />. Five-year dose anchor{" "}
+        {impact.upsetKind === "uncorrectable" ? (
+          <>
+            Uncorrectable memory errors <Num value={impact.upsetRate.value} digits={3} label="estimate" unit="1/s" /> (ECC-corrected
+            upsets are not estimated for DRAM).{" "}
+          </>
+        ) : (
+          <>
+            Upset rate <Num value={impact.upsetRate.value} digits={3} label="estimate" unit="1/s" />. ECC correctable{" "}
+            <Num value={impact.correctable.value} digits={3} label="estimate" unit="1/s" />.{" "}
+          </>
+        )}
+        Five-year dose anchor{" "}
         <Num value={impact.fiveYearDose.value} digits={0} label="source" unit="rad(Si)" />. Annual{" "}
         <Num value={impact.annualDose.value} digits={2} label="estimate" unit="krad(Si)/yr" />.
       </p>
@@ -267,7 +282,7 @@ export function PayloadHealth() {
           <PlacementMap chips={memMap.chips} cols={memMap.cols} rows={memMap.rows} cell={memMap.cell} label="Memory dose" />
         </div>
       ) : null}
-      {spec.acceleratorCount > 0 ? (
+      {spec.acceleratorCount > 0 && impact.upsetKind === "raw" ? (
         <div>
           <p className="eyebrow">
             ECC load <SourceBadge label="estimate" />

@@ -1,6 +1,16 @@
 import type { ChipSpec, PayloadConfig, SourceLabel } from "@/lib/types";
 
-import { memoryBits, memoryGigabytes, estimatedPerBitSigma, resolveDieArea, resolveLatchup, resolveTid } from "@/lib/engine/chipModel";
+import {
+  dramUncorrectableSigma,
+  estimatedPerBitSigma,
+  isDram,
+  memoryBits,
+  memoryGigabytes,
+  resolveDieArea,
+  resolveLatchup,
+  resolveTid,
+  type UpsetKind,
+} from "@/lib/engine/chipModel";
 import { annualDose, fiveYearDose, lifetimeYears } from "@/lib/engine/dose";
 import { dragFlag } from "@/lib/engine/drag";
 import type { Marked } from "@/lib/engine/marked";
@@ -8,7 +18,7 @@ import { marked } from "@/lib/engine/marked";
 import { sweepUnknown, type SweepBand } from "@/lib/engine/montecarlo";
 import { directionalQuietFlux, omnidirectionalQuietFlux } from "@/lib/engine/radiation";
 import { assessThermal, type ThermalReport } from "@/lib/engine/thermal";
-import { estimatedStormMultiplier, rateFromBits, rateFromDevice, splitEcc } from "@/lib/engine/upsets";
+import { estimatedStormMultiplier, rateFromBits, rateFromDevice, splitEcc, uncorrectableOnly } from "@/lib/engine/upsets";
 
 export const SNAPSHOT_KP = 2;
 
@@ -29,6 +39,8 @@ export interface ImpactRequest {
 }
 
 export interface ImpactResult {
+  /** What upsetRate counts: raw bit flips, or (DRAM) ECC-uncorrectable errors. */
+  upsetKind: UpsetKind;
   directionalFlux: Marked;
   omnidirectionalFlux: Marked;
   storm: Marked;
@@ -63,6 +75,7 @@ export function simulateImpact(request: ImpactRequest): ImpactResult {
 
   let crossSection: Marked;
   let upset: number;
+  let upsetKind: UpsetKind = "raw";
   if (request.deviceSeu) {
     crossSection = marked({
       value: request.deviceSeu.cm2,
@@ -84,12 +97,16 @@ export function simulateImpact(request: ImpactRequest): ImpactResult {
       assumptions: ["Per-bit cross-section was present on the chip spec."],
     });
     upset = rateFromBits(flux.value, request.spec.seuCrossSection, bits.value, storm.value);
+  } else if (isDram(request.spec.memoryType)) {
+    crossSection = dramUncorrectableSigma();
+    upset = rateFromBits(flux.value, crossSection.value, bits.value, storm.value);
+    upsetKind = "uncorrectable";
   } else {
     crossSection = estimatedPerBitSigma(request.spec.nodeNm, nodeKnown);
     upset = rateFromBits(flux.value, crossSection.value, bits.value, storm.value);
   }
 
-  const ecc = splitEcc(request.spec.eccScheme, upset);
+  const ecc = upsetKind === "uncorrectable" ? uncorrectableOnly(upset) : splitEcc(request.spec.eccScheme, upset);
   const upsetRate = marked({
     value: upset,
     sigma: crossSection.isEstimate ? Math.abs(upset) * (crossSection.value === 0 ? 0 : crossSection.sigma / Math.abs(crossSection.value)) : 0,
@@ -97,7 +114,9 @@ export function simulateImpact(request: ImpactRequest): ImpactResult {
     isEstimate: true,
     label: "estimate",
     assumptions: [
-      "Upset rate multiplies the omnidirectional flux estimate, the cross-section, the bit count or device area, and the Kp multiplier estimate.",
+      upsetKind === "uncorrectable"
+        ? "Uncorrectable memory error rate multiplies the omnidirectional flux estimate, the per-bit uncorrectable cross-section, the bit count, and the Kp multiplier estimate."
+        : "Upset rate multiplies the omnidirectional flux estimate, the cross-section, the bit count or device area, and the Kp multiplier estimate.",
       ...crossSection.assumptions,
     ],
   });
@@ -116,6 +135,7 @@ export function simulateImpact(request: ImpactRequest): ImpactResult {
   });
 
   return {
+    upsetKind,
     directionalFlux: directionalQuietFlux(),
     omnidirectionalFlux: flux,
     storm,

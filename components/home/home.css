@@ -1,11 +1,5 @@
 /* 3rok page layout. 3rok tokens only: no hard-coded colors, fonts, spacing or radii. */
 
-body {
-  background: var(--surface-100);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -13,11 +7,6 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-}
-
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
 }
 
 /* ---------- top bar ---------- */
@@ -61,8 +50,8 @@ body {
   padding: 0;
   color: var(--ink);
   text-transform: none;
-  letter-spacing: 0.01em;
-  font-size: 13px;
+  letter-spacing: 0;
+  font-size: var(--text-sm);
   font-weight: 500;
   text-decoration: underline;
   text-decoration-color: var(--line-strong);
@@ -95,7 +84,7 @@ body {
 
 .cockpit__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
 }
@@ -109,8 +98,8 @@ body {
 
 .cockpit__controls {
   position: sticky;
-  top: 88px;
-  max-height: calc(100vh - 104px);
+  top: calc(var(--topbar-h) + var(--space-4));
+  max-height: calc(100vh - var(--topbar-h) - var(--space-6));
   overflow-y: auto;
 }
 
@@ -169,7 +158,7 @@ body {
 }
 
 .note {
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 18px;
   color: var(--ink-subtle);
   margin: var(--space-2) 0 0;
@@ -198,6 +187,19 @@ body {
   border: 1px solid var(--line);
 }
 
+/* ScrollFades marks boxes with more table off-screen; fade that edge so it is clear the table scrolls. */
+.table-scroll[data-more-right] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+
+.table-scroll[data-more-left] {
+  mask-image: linear-gradient(to right, transparent, #000 40px);
+}
+
+.table-scroll[data-more-left][data-more-right] {
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+
 .table-scroll .rok-table th[scope="row"] {
   background: transparent;
   color: var(--ink-muted);
@@ -209,9 +211,9 @@ body {
 /* Source badges stay visible on every number, but quieter than the number itself. */
 .rok-badge[data-source-label] {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 14px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0 var(--space-1);
   color: var(--ink-subtle);
@@ -261,7 +263,7 @@ body {
 }
 
 .stat-grid .num {
-  font-size: 18px;
+  font-size: var(--text-lg);
   line-height: 26px;
   white-space: normal;
 }
@@ -278,7 +280,7 @@ body {
   align-items: baseline;
   gap: var(--space-3);
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .exposure__name {
@@ -304,19 +306,98 @@ body {
   border: 1px solid var(--line);
 }
 
-.globe__overlay {
+.globe__stage canvas {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+/* On-globe readout. Text sits on a scrim so it stays legible over the bright day side. */
+.globe-hud {
   position: absolute;
-  left: var(--space-3);
-  bottom: var(--space-2);
-  margin: 0;
-  color: var(--ink-subtle);
+  inset: 0;
   pointer-events: none;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.globe-hud p,
+.globe-hud dl,
+.globe-hud dd {
+  margin: 0;
+}
+
+.globe-hud__top,
+.globe-hud__badges,
+.globe-hud__readout {
+  background: color-mix(in srgb, var(--surface-100) 72%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  backdrop-filter: blur(4px);
+}
+
+.globe-hud__top {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.globe-hud__note {
+  max-width: 26ch;
+}
+
+.globe-hud__time {
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
+.globe-hud__badges {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.globe-hud__readout {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.globe-hud__readout div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .globe-hud__badges {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: start;
+    justify-self: start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }
 
 .globe__status {
   position: absolute;
-  top: var(--space-3);
-  left: var(--space-3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   margin: 0;
 }
 
@@ -387,8 +468,8 @@ body {
 
 .preset-grid .rok-btn {
   padding: var(--space-2) var(--space-3);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
   text-align: center;
   line-height: 14px;
 }
@@ -423,12 +504,12 @@ body {
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(var(--topbar-h) + var(--space-5));
 }
 
 .workspace__tabs {
   position: sticky;
-  top: 72px;
+  top: var(--topbar-h);
   z-index: 10;
   background: var(--surface-100);
   overflow-x: auto;
@@ -464,21 +545,21 @@ body {
 .rok-panel button:not([class]) {
   min-height: 36px;
   padding: 0 var(--space-4);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-none);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
 .rok-panel button:not([class]):hover {
-  background: var(--ink);
-  color: var(--surface-100);
+  background: var(--surface-300);
+  border-color: var(--ink);
 }
 
 .rok-panel input:not([type]),
@@ -492,13 +573,13 @@ body {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .rok-panel table:not([class]) {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .rok-panel table:not([class]) th,
@@ -517,7 +598,7 @@ body {
 
 .drawer {
   position: fixed;
-  top: 72px;
+  top: var(--topbar-h);
   right: 0;
   bottom: 0;
   width: min(440px, 100vw);
@@ -626,6 +707,29 @@ body {
   min-width: 88px;
 }
 
+.timeline__controls input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.timeline__speed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+.timeline__speed select {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  background: var(--surface-300);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
 .timeline__readout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -708,7 +812,7 @@ body {
 }
 
 .ai__action .rok-badge {
-  font-size: 14px;
+  font-size: var(--text-sm);
   padding: var(--space-1) var(--space-3);
 }
 
@@ -769,4 +873,252 @@ body {
   height: 16px;
   display: block;
   border: 1px solid var(--line);
+}
+
+.orbit-heatmap {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* Globe layer switches */
+.layer-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: var(--space-2) 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.layer-toggles legend {
+  float: left;
+  padding: 0;
+  margin-right: var(--space-2);
+}
+
+.layer-toggles__row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+
+.layer-toggles__row input {
+  accent-color: var(--accent);
+  margin: 0 var(--space-1) 0 0;
+}
+
+.layer-toggles__row .swatch {
+  margin-right: 0;
+}
+
+.layer-toggles__sources {
+  flex-basis: 100%;
+}
+
+.layer-toggles__sources summary {
+  cursor: pointer;
+}
+
+.layer-toggles__sources dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+}
+
+.layer-toggles__sources dt {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.layer-toggles__sources dd {
+  margin: 0;
+}
+
+/* Storm replay picker */
+.event-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-300);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.event-card:hover {
+  border-color: var(--line-strong);
+}
+
+.event-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-300));
+}
+
+.event-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--ink-muted);
+}
+
+.event-card__tags {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.event-card__tag {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-full);
+  color: var(--ink-subtle);
+}
+
+.event-story {
+  margin: 0;
+}
+
+/* Event markers: chart ticks by kind, and chips that jump the clock to them */
+.timeline__marker--peak {
+  stroke: var(--status-caution);
+}
+
+.timeline__marker--launch {
+  stroke: var(--accent);
+}
+
+.timeline__marker--loss {
+  stroke: var(--ink-muted);
+}
+
+.timeline__markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.marker-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--status-critical);
+}
+
+.marker-dot--peak {
+  background: var(--status-caution);
+}
+
+.marker-dot--launch {
+  background: var(--accent);
+}
+
+.marker-dot--loss {
+  background: var(--ink-muted);
+}
+
+/* Touch targets: sliders, disclosure summaries and the layer checkboxes reach at least 24 px. */
+.rok-panel input[type="range"],
+.timeline__controls input[type="range"] {
+  min-height: 24px;
+}
+
+summary {
+  min-height: 24px;
+  padding-block: var(--space-1);
+}
+
+.layer-toggles__row {
+  min-height: 24px;
+}
+
+.layer-toggles__row input {
+  width: 16px;
+  height: 16px;
+}
+
+.topbar__link {
+  min-height: 24px;
+}
+
+@media (max-width: 640px) {
+  /* Play and speed on one line, the slider full width under them. */
+  .timeline__controls {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .timeline__controls input[type="range"] {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .timeline__speed {
+    margin-left: auto;
+  }
+
+  /* Marker chips in one row that scrolls sideways instead of one chip per line. */
+  .timeline__markers {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+    scrollbar-width: thin;
+  }
+
+  .marker-chip {
+    white-space: nowrap;
+  }
+
+  /* The globe readout stays compact so the Earth stays visible. */
+  .globe-hud {
+    padding: var(--space-2);
+  }
+
+  .globe-hud__note {
+    display: none;
+  }
+
+  .globe-hud__top,
+  .globe-hud__badges,
+  .globe-hud__readout {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .globe-hud__readout {
+    margin-bottom: var(--space-2);
+  }
 }

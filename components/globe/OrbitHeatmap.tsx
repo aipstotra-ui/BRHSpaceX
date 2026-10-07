@@ -10,7 +10,7 @@ export function OrbitHeatmap({ rows }: { rows: OrbitCandidate[] }) {
   const maxScore = Math.max(...rows.map((row) => row.score));
   const minScore = Math.min(...rows.map((row) => row.score));
   return (
-    <svg viewBox="0 0 320 180" role="img" aria-label="Orbit score rings" style={{ width: "100%", maxWidth: 480 }}>
+    <svg viewBox="0 0 320 180" role="img" aria-label="Orbit score rings" className="orbit-heatmap">
       <rect width="320" height="180" fill="#000" />
       <circle cx="160" cy="90" r="28" fill="#1d4e89" />
       {rows.map((row) => {

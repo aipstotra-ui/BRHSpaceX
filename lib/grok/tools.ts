@@ -76,11 +76,14 @@ export const chipImpactOutput = z.object({
   label: z.literal("estimate"),
   altitudeKm: z.number(),
   upsetPerS: z.number(),
+  /** "raw" bit flips, or "uncorrectable" DRAM errors (the only DRAM quantity with a measurement). */
+  upsetKind: z.enum(["raw", "uncorrectable"]),
   annualDose: z.number(),
   lifetimeYears: z.number(),
   binding: z.string(),
   eclipseFraction: z.number(),
-  thermalMarginC: z.number(),
+  /** Null when power, radiator area, or the temperature limit is not given. */
+  thermalMarginC: z.number().nullable(),
 });
 
 export const bestMoveOutput = z.object({
@@ -406,11 +409,12 @@ function getChipImpact(state: CopilotState): ToolExecution {
       label: "estimate",
       altitudeKm: state.altitudeKm,
       upsetPerS: mid(impact.upsetRate),
+      upsetKind: impact.upsetKind,
       annualDose: mid(impact.annualDose),
       lifetimeYears: mid(impact.lifetimeYears),
       binding: impact.binding,
       eclipseFraction: mid(impact.eclipseFraction),
-      thermalMarginC: mid(impact.thermalMarginC),
+      thermalMarginC: impact.thermalKnown ? mid(impact.thermalMarginC) : null,
     }),
   );
 }

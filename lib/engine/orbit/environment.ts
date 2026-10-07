@@ -7,6 +7,7 @@ import {
 } from "@/lib/engine/orbit/constants";
 import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
 import { circularElements, type OrbitRequest } from "@/lib/engine/orbit/elements";
+import { inSaaAp8, protonMapAltitudeKm, SAA_EDGE_FLUX, saaBeltNote } from "@/lib/engine/globe/protonMap";
 import { circularPositionKm, ECLIPSE_SOURCE, shadowKind } from "@/lib/engine/orbit/eclipse";
 import { raanAfterSeconds } from "@/lib/engine/orbit/j2";
 import {
@@ -53,18 +54,21 @@ function fractionRange(
 
 function exposure(request: OrbitRequest): {
   saa: number[];
+  saaPolygon: number[];
   auroral: number[];
   outer: number[];
 } {
   const elements = circularElements(request, 0);
   const radiusKm = elements.semiMajorM / 1000;
   const saa: number[] = [];
+  const saaPolygon: number[] = [];
   const auroral: number[] = [];
   const outer: number[] = [];
   const phaseSeconds = 86400 / EARTH_ROTATION_PHASES;
   for (let phase = 0; phase < EARTH_ROTATION_PHASES; phase += 1) {
     const t0 = phase * phaseSeconds;
     let saaHits = 0;
+    let polygonHits = 0;
     let auroralHits = 0;
     let outerHits = 0;
     for (let sample = 0; sample < SAMPLES_PER_ORBIT; sample += 1) {
@@ -74,8 +78,11 @@ function exposure(request: OrbitRequest): {
       const position = circularPositionKm(radiusKm, elements.inclinationDeg, raan, argument);
       const earth = EARTH_ROTATION_RAD_S * (t0 + dt);
       const ground = groundPoint(position, earth);
-      if (inSaaGeographic(ground.latDeg, ground.lonDeg)) {
+      if (inSaaAp8(ground.latDeg, ground.lonDeg, elements.altitudeKm)) {
         saaHits += 1;
+      }
+      if (inSaaGeographic(ground.latDeg, ground.lonDeg)) {
+        polygonHits += 1;
       }
       if (inAuroralZone(ground.latDeg)) {
         auroralHits += 1;
@@ -87,10 +94,11 @@ function exposure(request: OrbitRequest): {
     }
     const denom = SAMPLES_PER_ORBIT;
     saa.push(saaHits / denom);
+    saaPolygon.push(polygonHits / denom);
     auroral.push(auroralHits / denom);
     outer.push(outerHits / denom);
   }
-  return { saa, auroral, outer };
+  return { saa, saaPolygon, auroral, outer };
 }
 
 function eclipseSamples(request: OrbitRequest): number[] {
@@ -114,6 +122,11 @@ function eclipseSamples(request: OrbitRequest): number[] {
 
 let referenceSaa: number | null = null;
 
+/**
+ * The M8 cost model's exposure scale: the demo orbit's share of samples inside the Fermi GBM SAA polygon.
+ * It stays on the polygon, not the AP8 contour, because the AI policy's "saa" input and the replay costs were
+ * calibrated on it. The SAA fraction shown to users is the AP8 contour (orbitEnvironment).
+ */
 export function demoReferenceSaa(): number {
   if (referenceSaa === null) {
     const samples = exposure({
@@ -122,7 +135,7 @@ export function demoReferenceSaa(): number {
       sunSynchronous: false,
       ltanHours: null,
       raanDeg: 0,
-    }).saa;
+    }).saaPolygon;
     referenceSaa = meanMinMax(samples).mid;
   }
   return referenceSaa;
@@ -181,10 +194,25 @@ export function orbitEnvironment(request: OrbitRequest, shieldingMmAl = 0): Orbi
   const started = performance.now();
   const exposed = exposure(request);
   const eclipse = eclipseSamples(request);
-  const saa = fractionRange(exposed.saa, "1", [
-    "Fraction of samples inside the Fermi GBM SAA polygon. The polygon is geographic and is not altitude-dependent.",
+  const mapAltitudeKm = protonMapAltitudeKm(request.altitudeKm);
+  const beltNote = saaBeltNote(mapAltitudeKm);
+  const sampling = [
     "72 samples per orbit and 24 Earth-rotation phases are estimates. Earth rotation 7.2921150e-5 rad/s is an estimate.",
     "Low and high are the minimum and maximum across those phases. Mid is the mean.",
+  ];
+  const saa = fractionRange(exposed.saa, "1", [
+    `Fraction of samples where the AP8MIN trapped-proton flux above 10 MeV is at least ${SAA_EDGE_FLUX} /cm²/s at this altitude, the SAA edge the globe draws (IRBEM, IGRF 2025 field).`,
+    ...(mapAltitudeKm !== request.altitudeKm
+      ? [`${request.altitudeKm.toFixed(0)} km is outside the map, so the SAA is read at ${mapAltitudeKm} km.`]
+      : []),
+    ...(beltNote ? [beltNote] : []),
+    "The edge is a display choice. AP8's SAA edge is steep: moving it to 1 or 100 /cm²/s changed this fraction by under 3 percentage points for the 400–700 km orbits checked.",
+    "AP8 is a 1960s–70s model paired with a modern field; flux magnitudes are approximate.",
+    ...sampling,
+  ], DOSE_GRID_SOURCE);
+  const saaPolygon = fractionRange(exposed.saaPolygon, "1", [
+    "Fraction of samples inside the Fermi GBM SAA polygon. The polygon is geographic and is not altitude-dependent.",
+    ...sampling,
   ], GBM_SAA_SOURCE);
   const auroral = fractionRange(exposed.auroral, "1", [
     "Auroral zone is geographic latitude from 60° to 80°, the SP-8116 sentence. The sentence does not say geomagnetic, so geographic latitude is an estimate.",
@@ -201,7 +229,7 @@ export function orbitEnvironment(request: OrbitRequest, shieldingMmAl = 0): Orbi
     "SSO RAAN is the sun right ascension plus (LTAN − 12) × 15°. Non-SSO RAAN stays at the requested value.",
   ], ECLIPSE_SOURCE);
   const grid = doseGridAvailable();
-  const annualDose = grid ? gridAnnualDose(request, shieldingMmAl) : annualDoseKrad(saa, demoReferenceSaa());
+  const annualDose = grid ? gridAnnualDose(request, shieldingMmAl) : annualDoseKrad(saaPolygon, demoReferenceSaa());
   return {
     upsetFlux: grid ? gridFlux(request) : null,
     saaFraction: saa,

@@ -76,6 +76,8 @@ export interface ThermalReport {
   areaPeak340: Marked;
   radiatorTemperatureK: Marked;
   kwPerM2: Marked;
+  /** Average power and radiator area are both given, so the radiator temperature and peak check mean something. */
+  inputsKnown: boolean;
   peakFlag: boolean;
   assumptions: string[];
 }
@@ -107,7 +109,7 @@ export function assessThermal(
   const areaPeak340 = radiatorAreaM2(peakPowerKw * 1000, 340, tSinkK, emissivity, radiatorSides);
   const temperature = radiatorTemperatureK(avgPowerKw * 1000, area, tSinkK, emissivity, radiatorSides);
   const ratio = area > 0 ? avgPowerKw / area : 0;
-  const temperatureKnown = area > 0 && emissivity > 0;
+  const temperatureKnown = avgPowerKw > 0 && area > 0 && emissivity > 0;
   return {
     areaAvg320: areaMarked(areaAvg320),
     areaAvg340: areaMarked(areaAvg340),
@@ -121,7 +123,7 @@ export function assessThermal(
       label: temperatureKnown ? "estimate" : "UNVERIFIED",
       assumptions: temperatureKnown
         ? ["Back-solved from average power, radiator area, side count, ε, and Tsink. ε and Tsink are estimates unless the user replaced them."]
-        : ["Radiator area or emissivity is not a positive measurement, so temperature is not back-solved."],
+        : ["Average power, radiator area, or emissivity is not a positive measurement, so temperature is not back-solved."],
     }),
     kwPerM2: marked({
       value: ratio,
@@ -131,7 +133,8 @@ export function assessThermal(
       label: ratioLabel,
       assumptions: ["Kilowatts per square metre is average power divided by radiator area."],
     }),
-    peakFlag: peakExceedsRadiator(peakPowerKw, area, radiatorSides, tSinkK, emissivity),
+    inputsKnown: temperatureKnown,
+    peakFlag: temperatureKnown && peakExceedsRadiator(peakPowerKw, area, radiatorSides, tSinkK, emissivity),
     assumptions: [THERMAL_LOWER_BOUND],
   };
 }

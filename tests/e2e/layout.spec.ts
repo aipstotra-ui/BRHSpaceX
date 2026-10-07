@@ -5,7 +5,7 @@ const SECTIONS: Record<string, string[]> = {
   Chip: ["Payload Health"],
   "Best orbit": ["Orbit Optimizer"],
   "Space weather": ["AI Forecast", "Best Move", "Storm Scenario"],
-  "May 2024 replay": ["Time Machine"],
+  "Storm replay": ["Time Machine"],
 };
 
 for (const width of [1280, 1920]) {

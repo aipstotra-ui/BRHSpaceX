@@ -92,7 +92,7 @@ export function OrbitLocation() {
       {phase === "loading" ? <p className="rok-muted">Loading</p> : null}
       {phase === "empty" ? <p className="rok-muted">Empty</p> : null}
       {error ? (
-        <p role="alert" style={{ color: "var(--status-critical)" }}>
+        <p role="alert" className="error">
           {error}
         </p>
       ) : null}

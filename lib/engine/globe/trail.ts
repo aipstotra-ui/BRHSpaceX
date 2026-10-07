@@ -1,9 +1,10 @@
-import { exposureClass, exposureCode } from "@/lib/engine/globe/exposure";
-import { starmindPositionKm } from "@/lib/engine/orbit/j2";
+import { exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
+import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { meanMotionRadS } from "@/lib/engine/orbit/sso";
 
-/** Samples across one orbital period. The one-period length is an estimate. */
-export const TRAIL_SAMPLES = 180;
+/** Ground track length in orbital periods, and the segments it is drawn with. Display choices, not data. */
+export const GROUND_TRACK_ORBITS = 1.5;
+export const GROUND_TRACK_SAMPLES = 270;
 
 export interface StarmindSample {
   latDeg: number;
@@ -17,23 +18,27 @@ export function orbitPeriodSeconds(altitudeKm: number): number {
   return (2 * Math.PI) / meanMotionRadS(altitudeKm);
 }
 
-export function starmindTrail(
-  altitudeKm: number,
-  inclinationDeg: number,
-  raanDeg: number,
-  epochSeconds: number,
+/**
+ * Ground track over the last GROUND_TRACK_ORBITS periods, oldest first, ending exactly at the craft
+ * (GROUND_TRACK_SAMPLES + 1 points). It is Earth-fixed, so it never closes on itself: Earth turns about 24° under
+ * one orbit. The closed loop is the orbit ring, drawn in the inertial frame.
+ */
+export function groundTrackAtUtc(
+  orbit: StarmindOrbit,
+  utcMs: number,
+  storm?: StormContext,
 ): StarmindSample[] {
-  const period = orbitPeriodSeconds(altitudeKm);
+  const spanMs = orbitPeriodSeconds(orbit.altitudeKm) * 1000 * GROUND_TRACK_ORBITS;
   const samples: StarmindSample[] = [];
-  for (let index = 0; index < TRAIL_SAMPLES; index += 1) {
-    const seconds = epochSeconds - period + (index * period) / TRAIL_SAMPLES;
-    const fix = starmindPositionKm(altitudeKm, inclinationDeg, raanDeg, seconds);
+  for (let index = 0; index <= GROUND_TRACK_SAMPLES; index += 1) {
+    const at = utcMs - spanMs + (index * spanMs) / GROUND_TRACK_SAMPLES;
+    const fix = starmindAtUtc(orbit, at);
     samples.push({
       latDeg: fix.latDeg,
       lonDeg: fix.lonDeg,
       altKm: fix.altKm,
       radiusKm: fix.radiusKm,
-      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm)),
+      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, storm)),
     });
   }
   return samples;

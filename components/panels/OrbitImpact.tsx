@@ -2,9 +2,15 @@
 
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { useImpactStore } from "@/components/home/impactStore";
+import type { UpsetKind } from "@/lib/engine/chipModel";
 import type { OrbitImpactResult } from "@/lib/engine/orbitImpact";
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import type { SourceLabel } from "@/lib/types";
+
+/** Row title for the upset rate: raw bit flips, or ECC-uncorrectable errors for DRAM. */
+export function upsetTitle(kind: UpsetKind): string {
+  return kind === "uncorrectable" ? "Uncorrectable memory errors" : "Upset rate";
+}
 
 export function formatNumber(value: number, digits: number): string {
   return Math.abs(value) >= 1e6 || (value !== 0 && Math.abs(value) < 1e-3) ? value.toExponential(2) : value.toFixed(digits);
@@ -84,7 +90,7 @@ export function OrbitImpact() {
   }
   if (phase === "error") {
     return (
-      <p className="body" style={{ color: "var(--status-critical)" }}>
+      <p className="body error">
         Error
       </p>
     );
@@ -119,18 +125,28 @@ export function OrbitImpact() {
           </thead>
           <tbody>
             {ROWS.map((row) => (
-              <BandRow key={row.key} title={row.title} value={result[row.key]} digits={row.digits} testId={row.testId} />
+              <BandRow
+                key={row.key}
+                title={row.key === "upsetRate" ? upsetTitle(result.upsetKind) : row.title}
+                value={result[row.key]}
+                digits={row.digits}
+                testId={row.testId}
+              />
             ))}
           </tbody>
         </table>
       </div>
+      {result.thermalKnown ? (
+        <p>
+          Thermal margin <Num value={result.thermalMarginC.mid} digits={2} label={result.thermalMarginC.label} unit="°C" />.
+          Eclipse fraction is shown beside it and does not change the M4 temperature.
+        </p>
+      ) : (
+        <p className="rok-muted">Thermal margin: not computed. Average power, radiator area, or the temperature limit is not given.</p>
+      )}
       <p>
-        Thermal margin <Num value={result.thermalMarginC.mid} digits={2} label={result.thermalMarginC.label} unit="°C" />.
-        Eclipse fraction is shown beside it and does not change the M4 temperature.
-      </p>
-      <p>
-        Shielding <Num value={result.shieldingMmAl.mid} digits={2} label={result.shieldingMmAl.label} unit="mm Al" /> is
-        not applied.
+        Shielding <Num value={result.shieldingMmAl.mid} digits={2} label={result.shieldingMmAl.label} unit="mm Al" />.{" "}
+        {result.shieldingMmAl.assumptions[0]}
       </p>
       <h3 className="heading-sm">Storm sensitivity</h3>
       <div className="table-scroll">
@@ -143,10 +159,10 @@ export function OrbitImpact() {
                 Kp
               </th>
               <th scope="col" className="rok-num">
-                Extra upsets
+                {result.upsetKind === "uncorrectable" ? "Extra uncorrectable errors" : "Extra upsets"}
               </th>
               <th scope="col" className="rok-num">
-                Drag life lost
+                Drag life used per storm day
               </th>
               <th scope="col" className="rok-num">
                 In auroral oval
@@ -167,7 +183,7 @@ export function OrbitImpact() {
                   <Num value={storm.deltaUpsetPerS.mid} digits={3} label="estimate" unit="1/s" />
                 </td>
                 <td className="rok-num">
-                  <Num value={storm.deltaDragYears.mid} digits={2} label="estimate" unit="yr" />
+                  <Num value={storm.dragDaysPerStormDay.mid} digits={1} label="estimate" unit="days" />
                 </td>
                 <td className="rok-num">
                   <Num value={storm.auroralShare * 100} digits={1} label="estimate" unit="%" />

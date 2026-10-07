@@ -63,3 +63,11 @@ TARGET: docs/research/engine-constants.md
 
 BLOCKING: no
 
+
+**Memory upset anchors** (audit, 2026-10-07)
+- SRAM-class raw upsets: 1e-14 cm²/bit at 28 nm, linear in node (`estimate`). Published 65 nm SRAM proton values span about 0.4e-14 to 2.7e-14 cm²/bit.
+- DRAM (HBM, LPDDR, DDR, GDDR): the engine counts **uncorrectable** errors only, at 9.9e-21 cm²/bit (`estimate` derived from a `source`).
+  - Source: Google Suncatcher (https://arxiv.org/abs/2511.19468), TPU v6e, 32 GB HBM, 67 MeV protons. About one uncorrectable ECC error per 50 rad(Si); secondary reports give 44–50 rad. The paper itself could not be opened here (egress blocked), so the figure is from search results.
+  - Conversion: 67 MeV protons in Si lose 7.89 MeV cm²/g (Bethe, I = 173 eV; NIST PSTAR agrees within about 1%), so 1 rad = 7.9e6 p/cm². 50 rad per event gives 2.5e-9 cm² per chip, or 9.9e-21 cm²/bit.
+  - Why not the SRAM anchor: applied to 20.7 TB of HBM4 it gave about 1.3 million upsets a day per NVL72, and about 2,000 a day per TPU v6e, against Google's measurement of a few uncorrectable errors a year. It also put the AGX Orin about 6 orders above the measured Orin NX SoC device cross-section (3.9e-9 cm²).
+  - Not estimated: DRAM raw (ECC-corrected) upsets, because no public per-bit proton cross-section for HBM or LPDDR was reachable. Silent data corruption is not estimated either.

@@ -62,7 +62,7 @@ export function StormScenario() {
         Arrival time
         <input aria-label="Arrival time" value={arrival} onChange={(event) => setArrival(event.target.value)} />
       </label>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
+      <div className="row row--tight">
         <button type="button" onClick={submit}>
           Run scenario
         </button>
@@ -91,7 +91,7 @@ export function StormScenario() {
           Import DONKI
         </button>
       </div>
-      {error ? <p style={{ color: "var(--status-critical)" }}>{error}</p> : null}
+      {error ? <p className="error">{error}</p> : null}
       {kpNote ? <p>{kpNote}</p> : null}
       {result ? (
         <p>

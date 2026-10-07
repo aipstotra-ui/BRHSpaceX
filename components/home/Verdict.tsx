@@ -3,10 +3,11 @@
 import { useMemo } from "react";
 
 import { useImpactStore } from "@/components/home/impactStore";
-import { formatNumber, Num } from "@/components/panels/OrbitImpact";
+import { formatNumber, Num, upsetTitle } from "@/components/panels/OrbitImpact";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EXPOSURE_COLORS, type ExposureClass } from "@/lib/engine/globe/exposure";
+import { SAA_EDGE_FLUX, saaBeltNote } from "@/lib/engine/globe/protonMap";
 import type { RangeValue } from "@/lib/engine/orbit/range";
 import { auroralBoundaryMlatDeg, sepActive, zoneFractions } from "@/lib/engine/orbit/stormZones";
 import { estimatedStormMultiplier } from "@/lib/engine/upsets";
@@ -56,7 +57,7 @@ function Share({ kind, title, share, note }: { kind: ExposureClass; title: strin
   );
 }
 
-function Exposure({ kind, title, value }: { kind: ExposureClass; title: string; value: RangeValue }) {
+function Exposure({ kind, title, value, what }: { kind: ExposureClass; title: string; value: RangeValue; what?: string }) {
   const percent = Math.max(0, Math.min(100, value.mid * 100));
   return (
     <div className="exposure">
@@ -81,7 +82,8 @@ function Exposure({ kind, title, value }: { kind: ExposureClass; title: string; 
         <div className="rok-progress__fill" style={{ width: `${percent}%`, background: EXPOSURE_COLORS[kind] }} />
       </div>
       <p className="note">
-        Varies {formatNumber(value.low * 100, 1)}–{formatNumber(value.high * 100, 1)} % with Earth rotation phase
+        {what ? `${what} ` : ""}Varies {formatNumber(value.low * 100, 1)}–{formatNumber(value.high * 100, 1)} % with
+        Earth rotation phase.
       </p>
     </div>
   );
@@ -111,6 +113,7 @@ export function Verdict() {
   const kp = cursor.point?.kp ?? 2;
   const pfu = cursor.point?.protonPfu ?? null;
   const protonsOn = pfu !== null && sepActive(pfu);
+  const beltNote = useMemo(() => saaBeltNote(altitudeKm), [altitudeKm]);
   const zones = useMemo(
     () => zoneFractions({ altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg }, kp),
     [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, kp],
@@ -140,7 +143,7 @@ export function Verdict() {
         Chip outlook
       </h2>
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }}>
+        <p className="body error">
           Error
         </p>
       ) : phase === "empty" ? (
@@ -195,14 +198,24 @@ export function Verdict() {
               <Num value={result.annualDose.mid} digits={3} label={result.annualDose.label} unit="krad(Si)/yr" />
             </div>
             <div className="rok-stat">
-              <p className="rok-stat__label eyebrow">Upset rate at Kp {kp.toFixed(1)}</p>
-              <Num value={upsetNow} digits={1} label="estimate" unit="1/s" />
+              <p className="rok-stat__label eyebrow">
+                {upsetTitle(result.upsetKind)} at Kp {kp.toFixed(1)}
+              </p>
+              {result.upsetKind === "uncorrectable" ? (
+                <Num value={upsetNow * 86400} digits={2} label="estimate" unit="/day" />
+              ) : (
+                <Num value={upsetNow} digits={1} label="estimate" unit="1/s" />
+              )}
               {protonsOn ? <StatusBadge status="critical">Proton event</StatusBadge> : null}
             </div>
             <div className="rok-stat">
               <p className="rok-stat__label eyebrow">Thermal margin</p>
-              <Num value={result.thermalMarginC.mid} digits={1} label={result.thermalMarginC.label} unit="°C" />
-              {result.thermalMarginC.mid < 0 ? (
+              {!result.thermalKnown ? (
+                <p className="note">Not computed: power, radiator area, or the temperature limit is not given.</p>
+              ) : (
+                <Num value={result.thermalMarginC.mid} digits={1} label={result.thermalMarginC.label} unit="°C" />
+              )}
+              {!result.thermalKnown ? null : result.thermalMarginC.mid < 0 ? (
                 <StatusBadge status="critical">Over limit</StatusBadge>
               ) : (
                 <StatusBadge status="nominal">Within limit</StatusBadge>
@@ -223,7 +236,14 @@ export function Verdict() {
             <h3 className="eyebrow rok-subtle">
               Where the danger is · {timeLabel(cursor.point?.timeMs, cursor.point?.kind)}
             </h3>
-            <Exposure kind="SAA" title="South Atlantic Anomaly" value={result.saaFraction} />
+            <Exposure
+              kind="SAA"
+              title="South Atlantic Anomaly"
+              value={result.saaFraction}
+              what={`Time where trapped protons above 10 MeV reach ${SAA_EDGE_FLUX} /cm²/s (AP8), the red zone on the globe.${
+                beltNote ? ` ${beltNote}` : ""
+              }`}
+            />
             <Share
               kind="SEP"
               title="Solar-proton polar cap"
@@ -254,22 +274,32 @@ export function Verdict() {
                   label="estimate"
                   unit="% of the orbit"
                 />{" "}
-                (quiet: <Num value={result.quietAuroralShare * 100} digits={1} label="estimate" unit="%" />). Trapped
-                upsets rise by{" "}
+                (quiet: <Num value={result.quietAuroralShare * 100} digits={1} label="estimate" unit="%" />).{" "}
+                {result.upsetKind === "uncorrectable" ? "Uncorrectable memory errors" : "Upsets"} rise by{" "}
+                {result.upsetKind === "uncorrectable" ? (
+                  <Num
+                    value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid * 86400}
+                    digits={2}
+                    label="estimate"
+                    unit="/day"
+                  />
+                ) : (
+                  <Num
+                    value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid}
+                    digits={1}
+                    label="estimate"
+                    unit="1/s"
+                  />
+                )}{" "}
+                (a storm multiplier for wider solar-proton and cosmic-ray access; trapped protons do not rise), and
+                each storm day uses{" "}
                 <Num
-                  value={result.storms[result.storms.length - 1].deltaUpsetPerS.mid}
+                  value={result.storms[result.storms.length - 1].dragDaysPerStormDay.mid}
                   digits={1}
                   label="estimate"
-                  unit="1/s"
+                  unit="extra days"
                 />{" "}
-                and drag life drops by{" "}
-                <Num
-                  value={result.storms[result.storms.length - 1].deltaDragYears.mid}
-                  digits={2}
-                  label="estimate"
-                  unit="yr"
-                />
-                .
+                of drag life.
               </p>
             </div>
           ) : null}

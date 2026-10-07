@@ -1,11 +1,12 @@
 "use client";
 
 import forecastReport from "@/data/validation/forecast.json";
-import { AI_REPLAY, replayForecastFor, useAiAnalysis } from "@/components/home/useAiAnalysis";
+import { replayForecastFor, useAiAnalysis } from "@/components/home/useAiAnalysis";
 import { formatNumber } from "@/components/panels/OrbitImpact";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
 import { ACTIONS } from "@/lib/engine/costCheck";
 import { gscale } from "@/lib/engine/gscale";
+import { eventForMode, SPLIT_TEXT, stormCallStats } from "@/lib/events/registry";
 import { useTimelineCursor } from "@/lib/store/timeline";
 
 function gStatus(level: string): Status {
@@ -24,12 +25,15 @@ function hhmm(iso: string): string {
 export function AiAnalysis() {
   const cursor = useTimelineCursor();
   const { outlook, decision, phase, chipExact, outsideTraining } = useAiAnalysis();
-  const replay = cursor.mode === "may2024";
+  const event = eventForMode(cursor.mode);
   const kp3 = forecastReport.rows.find((row) => row.target === "kp" && row.horizon_h === 3);
   const kp24 = forecastReport.rows.find((row) => row.target === "kp" && row.horizon_h === 24);
   const pastCall =
-    replay && cursor.point ? replayForecastFor(new Date(cursor.point.timeMs).toISOString().replace(".000Z", "Z")) : null;
-  const warning = AI_REPLAY.firstWarning;
+    event && cursor.point
+      ? replayForecastFor(event, new Date(cursor.point.timeMs).toISOString().replace(".000Z", "Z"))
+      : null;
+  const warning = event?.replay.aiForecast.firstWarning ?? null;
+  const calls = event ? stormCallStats(event.replay) : null;
 
   return (
     <section className="rok-panel ai" aria-labelledby="ai-title">
@@ -60,8 +64,8 @@ export function AiAnalysis() {
               ) : null}
               <p className="note">
                 24 gradient-boosted models (Kp and Dst, +3 to +24 h, P10/P50/P90) trained on OMNI 1963–2019.{" "}
-                {replay
-                  ? "For May 2024 the same models were run offline on archived OMNI inputs"
+                {event
+                  ? `For ${event.shortName} the same models were run offline on archived OMNI inputs`
                   : "Running in your browser on live NOAA solar wind"}
                 {outlook.issuedIso ? `, issued ${hhmm(outlook.issuedIso)}` : ""}.
               </p>
@@ -113,8 +117,8 @@ export function AiAnalysis() {
         </div>
 
         <div className="ai__cell">
-          <h3 className="eyebrow rok-subtle">{replay ? "How it did in May 2024" : "Track record (2023–2026 test)"}</h3>
-          {replay && warning ? (
+          <h3 className="eyebrow rok-subtle">{event ? `How it did in ${event.shortName}` : "Track record (2023–2026 test)"}</h3>
+          {event && warning ? (
             <>
               <p className="data-md">
                 {warning.leadHours >= 0
@@ -124,12 +128,23 @@ export function AiAnalysis() {
               <p className="body-sm">
                 First G3+ warning (P90 ≥ Kp {warning.kp}) issued {hhmm(warning.issued)}, usable from{" "}
                 {hhmm(warning.usableAt)}. The first Kp {warning.kp} block began at {hhmm(warning.firstObservedAt)}.
-                During the storm the +3 h median ran below the observed Kp in every G3+ block; the P90 edge reached it in 10 of 12 (it missed the onset).
+                {calls && calls.blocks > 0
+                  ? ` In the ${calls.blocks} G3+ blocks the +3 h median ran ${calls.medianBelowAll ? "below the observed Kp in every one" : "below the observed Kp in some"}; the P90 edge reached it in ${calls.p90Reached} of ${calls.blocks}${calls.missedFirst ? " (it missed the first)" : ""}.`
+                  : ""}
               </p>
               <p className="note">
                 The model reads solar wind measured about an hour upstream of Earth, so it reacts to a storm rather than
-                predicting the CME days ahead. Not tuned on this period.
+                predicting the CME days ahead. This event is {SPLIT_TEXT[event.split]}.
               </p>
+            </>
+          ) : event ? (
+            <>
+              <p className="data-md">No G3+ storm to score</p>
+              <p className="body-sm">
+                Kp never reached 7 in this replay, so there is no first warning or G3+ block record. The forecast
+                band above still shows the +3 h call for each block.
+              </p>
+              <p className="note">This event is {SPLIT_TEXT[event.split]}.</p>
             </>
           ) : kp3 && kp24 ? (
             <>

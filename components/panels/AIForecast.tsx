@@ -169,137 +169,143 @@ export function AIForecast() {
       </p>
       {phase === "loading" ? <p className="body rok-muted">Loading</p> : null}
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }}>
+        <p className="body error">
           Error
         </p>
       ) : null}
       {phase === "empty" ? <p className="body rok-muted">Empty</p> : null}
       {phase === "ready" ? (
+        <div className="table-scroll">
+          <table className="body">
+            <caption className="body">
+              Issue {issue}. Ordered P10, P50, P90 after calibration.
+            </caption>
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Horizon</th>
+                <th>P10</th>
+                <th>P50</th>
+                <th>P90</th>
+                <th>NOAA predicted Kp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {HORIZONS.flatMap((horizon) =>
+                (["kp", "dst"] as const).map((target) => {
+                  const band = bands.find((row) => row.target === target && row.horizon === horizon);
+                  if (!band) {
+                    return null;
+                  }
+                  return (
+                    <tr key={`${target}-${horizon}`}>
+                      <td>{target.toUpperCase()}</td>
+                      <td>+{horizon} h</td>
+                      <td>
+                        <NumberValue value={band.p10} digits={digits(target)} label="estimate" />
+                      </td>
+                      <td>
+                        <NumberValue value={band.p50} digits={digits(target)} label="estimate" />
+                      </td>
+                      <td>
+                        <NumberValue value={band.p90} digits={digits(target)} label="estimate" />
+                      </td>
+                      <td>
+                        {band.noaaKp === null ? (
+                          "—"
+                        ) : (
+                          <NumberValue value={band.noaaKp} digits={2} label="source" />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                }),
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      <h3 className="heading-md">Test skill</h3>
+      <div className="table-scroll">
         <table className="body">
-          <caption className="body">
-            Issue {issue}. Ordered P10, P50, P90 after calibration.
-          </caption>
           <thead>
             <tr>
               <th>Target</th>
               <th>Horizon</th>
-              <th>P10</th>
-              <th>P50</th>
-              <th>P90</th>
-              <th>NOAA predicted Kp</th>
+              <th>MAE</th>
+              <th>Persistence MAE</th>
+              <th>Skill</th>
+              <th>RMSE</th>
+              <th>Persistence RMSE</th>
+              <th>CC</th>
+              <th>Persistence CC</th>
+              <th>P10–P90 coverage</th>
             </tr>
           </thead>
           <tbody>
-            {HORIZONS.flatMap((horizon) =>
-              (["kp", "dst"] as const).map((target) => {
-                const band = bands.find((row) => row.target === target && row.horizon === horizon);
-                if (!band) {
-                  return null;
-                }
-                return (
-                  <tr key={`${target}-${horizon}`}>
-                    <td>{target.toUpperCase()}</td>
-                    <td>+{horizon} h</td>
-                    <td>
-                      <NumberValue value={band.p10} digits={digits(target)} label="estimate" />
-                    </td>
-                    <td>
-                      <NumberValue value={band.p50} digits={digits(target)} label="estimate" />
-                    </td>
-                    <td>
-                      <NumberValue value={band.p90} digits={digits(target)} label="estimate" />
-                    </td>
-                    <td>
-                      {band.noaaKp === null ? (
-                        "—"
-                      ) : (
-                        <NumberValue value={band.noaaKp} digits={2} label="source" />
-                      )}
-                    </td>
-                  </tr>
-                );
-              }),
-            )}
+            {forecastReport.rows.map((row) => (
+              <tr key={`${row.target}-${row.horizon_h}`}>
+                <td>{row.target.toUpperCase()}</td>
+                <td>+{row.horizon_h} h</td>
+                <td>
+                  <NumberValue value={row.mae_p50} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.mae_persist} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.skill} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.rmse_p50} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.rmse_persist} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.cc_p50} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.cc_persist} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.coverage_p10_p90} digits={3} label="source" />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      ) : null}
-      <h3 className="heading-md">Test skill</h3>
-      <table className="body">
-        <thead>
-          <tr>
-            <th>Target</th>
-            <th>Horizon</th>
-            <th>MAE</th>
-            <th>Persistence MAE</th>
-            <th>Skill</th>
-            <th>RMSE</th>
-            <th>Persistence RMSE</th>
-            <th>CC</th>
-            <th>Persistence CC</th>
-            <th>P10–P90 coverage</th>
-          </tr>
-        </thead>
-        <tbody>
-          {forecastReport.rows.map((row) => (
-            <tr key={`${row.target}-${row.horizon_h}`}>
-              <td>{row.target.toUpperCase()}</td>
-              <td>+{row.horizon_h} h</td>
-              <td>
-                <NumberValue value={row.mae_p50} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.mae_persist} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.skill} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.rmse_p50} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.rmse_persist} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.cc_p50} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.cc_persist} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.coverage_p10_p90} digits={3} label="source" />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </div>
       <h3 className="heading-md">Literature reference</h3>
       <p className="body">Different datasets and periods; not a head-to-head score.</p>
-      <table className="body">
-        <thead>
-          <tr>
-            <th>Target</th>
-            <th>Horizon</th>
-            <th>Line</th>
-            <th>RMSE</th>
-            <th>CC</th>
-          </tr>
-        </thead>
-        <tbody>
-          {forecastReport.literature_reference.map((row) => (
-            <tr key={`${row.label}-${row.horizon_h}`}>
-              <td>{row.target.toUpperCase()}</td>
-              <td>+{row.horizon_h} h</td>
-              <td>{row.label}</td>
-              <td>
-                <NumberValue value={row.rmse} digits={3} label="source" />
-              </td>
-              <td>
-                <NumberValue value={row.cc} digits={3} label="source" />
-              </td>
+      <div className="table-scroll">
+        <table className="body">
+          <thead>
+            <tr>
+              <th>Target</th>
+              <th>Horizon</th>
+              <th>Line</th>
+              <th>RMSE</th>
+              <th>CC</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {forecastReport.literature_reference.map((row) => (
+              <tr key={`${row.label}-${row.horizon_h}`}>
+                <td>{row.target.toUpperCase()}</td>
+                <td>+{row.horizon_h} h</td>
+                <td>{row.label}</td>
+                <td>
+                  <NumberValue value={row.rmse} digits={3} label="source" />
+                </td>
+                <td>
+                  <NumberValue value={row.cc} digits={3} label="source" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

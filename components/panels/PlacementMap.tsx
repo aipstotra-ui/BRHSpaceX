@@ -48,7 +48,7 @@ export function PlacementMap({
   }
 
   return (
-    <figure className="rok-map" style={{ margin: 0 }}>
+    <figure className="rok-map">
       <svg
         width={width}
         height={height}

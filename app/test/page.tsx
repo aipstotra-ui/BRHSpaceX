@@ -82,10 +82,10 @@ const TABS: WorkspaceTab[] = [
   },
   {
     id: "replay",
-    label: "May 2024 replay",
-    hint: "Replay the May 2024 superstorm hour by hour on the chosen orbit.",
+    label: "Storm replay",
+    hint: "Replay a historical storm hour by hour on the chosen orbit. Pick the storm on the timeline.",
     content: (
-      <Section title="Time Machine" eyebrow="Test period">
+      <Section title="Time Machine" eyebrow="Replay">
         <TimeMachine />
       </Section>
     ),

@@ -20,7 +20,7 @@
 | Item | Value | Status | Source |
 |---|---|---|---|
 | NVL72 composition | 72 Rubin GPUs + 36 Vera CPUs | CONFIRMED | https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/ [N1] |
-| NVL72 memory/bw | 20.7 TB HBM4; 1,400 TB/s HBM bw; 288 GB HBM4 at 19.2 TB/s per GPU; up to 54 TB LPDDR5X | CONFIRMED | same [N2, N3, N6, N8] |
+| NVL72 memory/bw | 20.7 TB HBM4; 288 GB HBM4 per GPU; up to 54 TB LPDDR5X. HBM bandwidth: NVIDIA's CES 2026 figures are 22 TB/s per GPU, about 1.6 PB/s per rack (earlier pages: 19.2 TB/s, 1,400 TB/s). Bandwidth is not used by the engine | CONFIRMED; bandwidth UPDATED 2026-10-07 from search results | same [N2, N3, N6, N8]; https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/ |
 | NVL72 NVLink | 216 TB/s | CONFIRMED | same [N4] |
 | NVL72 compute | 3,600 PFLOPS NVFP4 inference = **sparse**. Dense: 2,520 PF NVFP4 training, 1,260 PF FP8 | CONFIRMED (caveat) | same [N5] |
 | NVL72 inlet | 45 °C liquid inlet | CONFIRMED | same [N7] |

@@ -31,17 +31,20 @@ export interface GeodeticFix {
   altKm: number;
 }
 
-/** One SGP4 fix from a CelesTrak GP JSON object already in the repo snapshot. */
-export function propagateGp(record: GpRecord, date: Date): GeodeticFix | null {
-  const satrec = json2satrec(record as unknown as OMMJsonObjectV3);
-  if (satrec.error) {
-    return null;
-  }
+type SatRec = ReturnType<typeof json2satrec>;
+
+/** Parse GP records once. Records SGP4 cannot initialise are dropped. */
+export function satrecsFor(records: GpRecord[]): SatRec[] {
+  return records
+    .map((record) => json2satrec(record as unknown as OMMJsonObjectV3))
+    .filter((satrec) => !satrec.error);
+}
+
+function fixFromSatrec(satrec: SatRec, date: Date, gmst: number): GeodeticFix | null {
   const pv = propagate(satrec, date);
   if (!pv || !pv.position || typeof pv.position === "boolean") {
     return null;
   }
-  const gmst = gstime(date);
   const geo = eciToGeodetic(pv.position, gmst);
   if (!Number.isFinite(geo.height)) {
     return null;
@@ -53,11 +56,22 @@ export function propagateGp(record: GpRecord, date: Date): GeodeticFix | null {
   };
 }
 
-export function starlinkFloats(records: GpRecord[], date: Date): Float32Array {
-  const out = new Float32Array(records.length * 3);
+/** One SGP4 fix from a CelesTrak GP JSON object already in the repo snapshot. */
+export function propagateGp(record: GpRecord, date: Date): GeodeticFix | null {
+  const satrec = json2satrec(record as unknown as OMMJsonObjectV3);
+  if (satrec.error) {
+    return null;
+  }
+  return fixFromSatrec(satrec, date, gstime(date));
+}
+
+/** Packed lat, lon, alt triples for every satrec that propagates at this date. */
+export function satrecFloats(satrecs: SatRec[], date: Date): Float32Array {
+  const out = new Float32Array(satrecs.length * 3);
+  const gmst = gstime(date);
   let count = 0;
-  for (const record of records) {
-    const fix = propagateGp(record, date);
+  for (const satrec of satrecs) {
+    const fix = fixFromSatrec(satrec, date, gmst);
     if (!fix) {
       continue;
     }
@@ -67,4 +81,8 @@ export function starlinkFloats(records: GpRecord[], date: Date): Float32Array {
     count += 1;
   }
   return out.slice(0, count * 3);
+}
+
+export function starlinkFloats(records: GpRecord[], date: Date): Float32Array {
+  return satrecFloats(satrecsFor(records), date);
 }

@@ -14,3 +14,7 @@ Citations only. No table was copied out of a paywalled or figure-only source.
 - NOAA G-scale: https://www.spaceweather.gov/noaa-scales-explanation
 - Starlink GP snapshot already in the repo: `data/snapshots/celestrak_gp.json`
 - Dose grid: no numeric SPENVIS table was available. `data/orbit/dose_table.json` is the estimate fallback.
+- Globe SAA map: AP8MIN >10 MeV integral proton flux from IRBEM (SpacePy 0.7.0), B and L from IGRF at 2025.0, built by
+  `scripts/orbit/saa_map.py` into `data/orbit/proton_flux_map.json` (300–2000 km). The globe and the chip outlook's SAA
+  fraction both use it. The 10 /cm²/s edge is a display choice checked
+  against the Fermi GBM SAA polygon: https://raw.githubusercontent.com/USRA-STI/gdt-fermi/main/src/gdt/missions/fermi/gbm/saa.py

@@ -17,7 +17,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Lets a machine with a different preinstalled Chromium run the suite, e.g. PW_CHROMIUM_PATH=/opt/pw-browsers/chromium.
+        launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : undefined,
+      },
     },
   ],
 });

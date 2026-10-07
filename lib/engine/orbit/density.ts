@@ -40,6 +40,13 @@ function axisHit(axis: number[], value: number): AxisHit {
   return { i0: lo, i1: hi, t };
 }
 
+function logLerp(a: number, b: number, t: number): number {
+  if (t === 0 || !(a > 0) || !(b > 0)) {
+    return lerp(a, b, t);
+  }
+  return a * (b / a) ** t;
+}
+
 function lerp(a: number, b: number, t: number): number {
   if (t === 0) {
     return a;
@@ -47,7 +54,11 @@ function lerp(a: number, b: number, t: number): number {
   return a * (1 - t) + b * t;
 }
 
-/** Trilinear sample of the precomputed NRLMSIS 2.0 table. Nodes are returned unchanged. */
+/**
+ * Sample of the precomputed NRLMSIS 2.0 table: log-linear in altitude (density falls about exponentially with
+ * height, so plain linear interpolation overstates it between 25 km nodes), linear in F10.7 and Ap.
+ * Nodes are returned unchanged.
+ */
 export function densityKgM3(altitudeKm: number, activity: Activity): number {
   const alt = axisHit(table.altitudesKm, altitudeKm);
   const f107 = axisHit(table.f107, activity.f107);
@@ -61,10 +72,10 @@ export function densityKgM3(altitudeKm: number, activity: Activity): number {
   const c101 = sample(alt.i1, f107.i0, ap.i1);
   const c011 = sample(alt.i0, f107.i1, ap.i1);
   const c111 = sample(alt.i1, f107.i1, ap.i1);
-  const c00 = lerp(c000, c100, alt.t);
-  const c10 = lerp(c010, c110, alt.t);
-  const c01 = lerp(c001, c101, alt.t);
-  const c11 = lerp(c011, c111, alt.t);
+  const c00 = logLerp(c000, c100, alt.t);
+  const c10 = logLerp(c010, c110, alt.t);
+  const c01 = logLerp(c001, c101, alt.t);
+  const c11 = logLerp(c011, c111, alt.t);
   return lerp(lerp(c00, c10, f107.t), lerp(c01, c11, f107.t), ap.t);
 }
 

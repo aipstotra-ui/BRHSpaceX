@@ -2,54 +2,43 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import may2024 from "@/data/replays/may2024.json";
 import { useImpactStore } from "@/components/home/impactStore";
 import { decide, policyVector, type PolicyContext, type PolicyDecision } from "@/lib/ml/policyInput";
 import { runPolicyProbabilities } from "@/lib/ml/policy";
 import { useShellStore } from "@/lib/store";
 import { exposureWeight } from "@/lib/engine/replayOnOrbit";
+import { eventForMode, type AiRow, type ReplayHourRow, type StormEvent } from "@/lib/events/registry";
 import { useOrbitStore } from "@/lib/store/orbit";
 import { useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
 
-export interface AiRow {
-  issued: string;
-  horizonH: number;
-  target: string;
-  p10: number;
-  p50: number;
-  p90: number;
-}
+export type { AiRow };
 
 /** Largest per-orbit exposure ("saa") in the policy's training table, ml/build_oracle.py ORBITS. */
 export const POLICY_SAA_MAX = 0.22;
 
-export const AI_REPLAY = may2024.aiForecast as {
-  note: string;
-  rows: AiRow[];
-  firstWarning: {
-    kp: number;
-    issued: string;
-    usableAt: string;
-    horizonH: number;
-    p90: number;
-    firstObservedAt: string;
-    leadHours: number;
-  } | null;
-};
-
 /** Latest replay forecast issue at or before a time, all horizons. */
-export function replayIssueAt(timeMs: number): AiRow[] {
+export function replayIssueAt(event: StormEvent, timeMs: number): AiRow[] {
+  const rows = event.replay.aiForecast.rows;
   let issued: string | null = null;
-  for (const row of AI_REPLAY.rows) {
+  for (const row of rows) {
     if (Date.parse(row.issued) <= timeMs && (issued === null || row.issued > issued)) {
       issued = row.issued;
     }
   }
-  return issued === null ? [] : AI_REPLAY.rows.filter((row) => row.issued === issued);
+  return issued === null ? [] : rows.filter((row) => row.issued === issued);
 }
 
 const HOUR_MS = 3_600_000;
-const HOURS_BY_TIME = new Map(may2024.hours.map((hour) => [Date.parse(hour.time), hour]));
+const hoursByTime = new WeakMap<StormEvent, Map<number, ReplayHourRow>>();
+
+function hourIndex(event: StormEvent): Map<number, ReplayHourRow> {
+  let index = hoursByTime.get(event);
+  if (!index) {
+    index = new Map(event.replay.hours.map((hour) => [Date.parse(hour.time), hour]));
+    hoursByTime.set(event, index);
+  }
+  return index;
+}
 
 /**
  * What was actually published by replay hour t, so the policy never sees the future:
@@ -57,25 +46,29 @@ const HOURS_BY_TIME = new Map(may2024.hours.map((hour) => [Date.parse(hour.time)
  * - Dst of hour t - 1 (an OMNI hour row covers t to t+59 min),
  * - the AI forecast issue whose inputs were complete by t (issue time + 1 h <= t).
  */
-export function replayInputsAt(timeMs: number): {
+export function replayInputsAt(
+  event: StormEvent,
+  timeMs: number,
+): {
   kp: number | null;
   dst: number | null;
   issue: AiRow[];
 } {
   const date = new Date(timeMs);
   const blockStart = timeMs - (date.getUTCHours() % 3) * HOUR_MS - date.getUTCMinutes() * 60_000;
-  const lastBlock = HOURS_BY_TIME.get(blockStart - HOUR_MS);
-  const previousHour = HOURS_BY_TIME.get(timeMs - HOUR_MS);
+  const hours = hourIndex(event);
+  const lastBlock = hours.get(blockStart - HOUR_MS);
+  const previousHour = hours.get(timeMs - HOUR_MS);
   return {
     kp: lastBlock?.kp ?? null,
     dst: previousHour?.dst ?? null,
-    issue: replayIssueAt(timeMs - HOUR_MS),
+    issue: replayIssueAt(event, timeMs - HOUR_MS),
   };
 }
 
 /** The +3 h forecast for the 3-hour block that ends at this hour + 1 h (issued at the block start). */
-export function replayForecastFor(timeIso: string): AiRow | null {
-  return AI_REPLAY.rows.find((row) => row.horizonH === 3 && row.target === timeIso) ?? null;
+export function replayForecastFor(event: StormEvent, timeIso: string): AiRow | null {
+  return event.replay.aiForecast.rows.find((row) => row.horizonH === 3 && row.target === timeIso) ?? null;
 }
 
 export interface AiOutlook {
@@ -144,23 +137,24 @@ export function useAiAnalysis(): AiAnalysis {
     };
   }, []);
 
-  const replay = cursor.mode === "may2024";
+  const event = eventForMode(cursor.mode);
+  const replay = event !== null;
   const timeMs = cursor.point?.timeMs ?? null;
   const outlook = useMemo(() => {
-    if (replay) {
+    if (event) {
       if (timeMs === null) {
         return null;
       }
-      const rows = replayInputsAt(timeMs).issue;
+      const rows = replayInputsAt(event, timeMs).issue;
       return summarize(rows, rows[0]?.issued ?? null);
     }
     return summarize(
       forecastKp.map((row) => ({ horizonH: row.horizonH, p10: row.p10, p50: row.p50, p90: row.p90 })),
       forecastIssueIso,
     );
-  }, [replay, timeMs, forecastKp, forecastIssueIso]);
+  }, [event, timeMs, forecastKp, forecastIssueIso]);
 
-  const replayKnown = useMemo(() => (replay && timeMs !== null ? replayInputsAt(timeMs) : null), [replay, timeMs]);
+  const replayKnown = useMemo(() => (event && timeMs !== null ? replayInputsAt(event, timeMs) : null), [event, timeMs]);
 
   const context: PolicyContext | null = useMemo(() => {
     // Live "observed" points are completed Kp blocks already; replay hours need the published values.

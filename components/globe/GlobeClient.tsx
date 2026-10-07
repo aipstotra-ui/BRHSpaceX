@@ -5,108 +5,51 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { CameraControls } from "@/components/globe/CameraControls";
-import { createTrailLine, OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
-import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
-import { classFromCode, exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
-import { lerpScene } from "@/lib/engine/globe/interpolate";
-import { ORBIT_DEBOUNCE_MS, STARLINK_TICK_MS } from "@/lib/engine/globe/timing";
+import { GlobeHud, type HudState } from "@/components/globe/GlobeHud";
+import { OrbitTrail, surfaceVector } from "@/components/globe/OrbitTrail";
+import { createEarth } from "@/components/globe/scene/earth";
+import { createGroundTrack, createOrbitRing, updateGroundTrack, updateOrbitRing } from "@/components/globe/scene/orbit";
+import { createStars } from "@/components/globe/scene/stars";
+import {
+  createAuroraLayer,
+  createSaaLayer,
+  createSepLayer,
+  ovationLookup,
+  type AuroraLayer,
+  type SaaLayer,
+  type SepLayer,
+  type TrackPoint,
+} from "@/components/globe/scene/zones";
+import { LayerToggles, DEFAULT_LAYERS, type Layers } from "@/components/globe/LayerToggles";
+import { createCraft, scaleLabel, type CraftScale } from "@/components/globe/StarmindModel";
+import { exposureClass, type StormContext } from "@/lib/engine/globe/exposure";
+import { gmstRad, kmToScene, sunAt } from "@/lib/engine/globe/frames";
+import { trappedProtonMap } from "@/lib/engine/globe/protonMap";
+import { groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
-import { starmindPositionKm } from "@/lib/engine/orbit/j2";
-import type { StarmindSample } from "@/lib/engine/globe/trail";
-import { GBM_SAA_LAT, GBM_SAA_LON, inSaa } from "@/lib/engine/radiation";
-import { inAuroralOval, inSepCap, sepActive } from "@/lib/engine/orbit/stormZones";
+import { SHADOW_AU_KM } from "@/lib/engine/orbit/constants";
+import { shadowKind } from "@/lib/engine/orbit/eclipse";
+import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
+import { auroralBoundaryMlatDeg, auroralPolewardMlatDeg, sepCutoffMlatDeg } from "@/lib/engine/orbit/stormZones";
+import { SPEED_LABELS, useClockStore } from "@/lib/store/clock";
+import { usePrefersReducedMotion } from "@/lib/ui/motion";
 import { useOrbitStore } from "@/lib/store/orbit";
-import { useTimelineCursor } from "@/lib/store/timeline";
+import { sampleAt, useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
 
 type Phase = "loading" | "error" | "empty" | "ready";
 
 const AURORA_CUTOFF = 5;
-
-type TrackPoint = { latDeg: number; lonDeg: number };
-
-type Rgba = [number, number, number, number];
-
-/** Equirectangular overlay: each pixel takes the color the test returns, or stays clear. */
-function zoneTexture(test: (latDeg: number, lonDeg: number) => Rgba | null): THREE.CanvasTexture {
-  const width = 512;
-  const height = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return new THREE.CanvasTexture(canvas);
-  }
-  const image = context.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    const lat = 90 - (y / (height - 1)) * 180;
-    for (let x = 0; x < width; x += 1) {
-      const lon = (x / (width - 1)) * 360 - 180;
-      const color = test(lat, lon);
-      if (!color) {
-        continue;
-      }
-      const offset = (y * width + x) * 4;
-      image.data.set(color, offset);
-    }
-  }
-  context.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-const AURORAL_RGBA: Rgba = [61, 220, 151, 90];
-const SEP_RGBA: Rgba = [255, 95, 210, 110];
-
-function saaOverlayTexture(): THREE.CanvasTexture {
-  const width = 512;
-  const height = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return new THREE.CanvasTexture(canvas);
-  }
-  const image = context.createImageData(width, height);
-  for (let y = 0; y < height; y += 1) {
-    const lat = 90 - (y / (height - 1)) * 180;
-    for (let x = 0; x < width; x += 1) {
-      const lon = (x / (width - 1)) * 360 - 180;
-      if (!inSaa(lat, lon)) {
-        continue;
-      }
-      const offset = (y * width + x) * 4;
-      image.data[offset] = 214;
-      image.data[offset + 1] = 48;
-      image.data[offset + 2] = 112;
-      image.data[offset + 3] = 120;
-    }
-  }
-  context.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-function auroraPoints(points: TrackPoint[]): THREE.Points {
-  const positions = new Float32Array(points.length * 3);
-  points.forEach((point, index) => {
-    const at = surfaceVector(point.latDeg, point.lonDeg, 80);
-    positions[index * 3] = at.x;
-    positions[index * 3 + 1] = at.y;
-    positions[index * 3 + 2] = at.z;
-  });
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return new THREE.Points(geometry, new THREE.PointsMaterial({ color: "#7d5cff", size: 0.012 }));
-}
-
-function ovationLookup(points: TrackPoint[]): (latDeg: number, lonDeg: number) => boolean {
-  const cells = new Set(points.map((point) => `${Math.round(point.latDeg)}|${(Math.round(point.lonDeg) + 360) % 360}`));
-  return (latDeg, lonDeg) => cells.has(`${Math.round(latDeg)}|${(Math.round(lonDeg) + 360) % 360}`);
-}
+/** Starlink is only drawn in "now" mode: today's snapshot elements say nothing about where satellites were in a past storm. */
+const STARLINK_MODES = new Set(["now"]);
+const STARLINK_CAPACITY = 2000;
+/** Camera distance from Earth's centre in free mode, Earth radii, per zoom step value. */
+const FREE_DISTANCE_PER_ZOOM = 1.2;
+/** How quickly the follow camera settles on its offset, per second. */
+const FOLLOW_RATE = 4;
+/** Follow camera offset in the craft's frame, in wingspans: behind (-X), above (+Y), to the side (+Z). */
+const FOLLOW_OFFSET = { back: 1.7, up: 0.6, side: 0.9 };
+/** Near plane of the world pass. The craft has its own pass, so this can stay comfortable for the Earth. */
+const WORLD_NEAR = 1e-4;
 
 export default function GlobeClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -114,41 +57,70 @@ export default function GlobeClient() {
   const workerRef = useRef<Worker | null>(null);
   const followRef = useRef(false);
   const zoomRef = useRef(2.6);
-  const orbitRef = useRef({ altitudeKm: 0, inclinationDeg: 0, raanDeg: 0, scrubS: 0 });
-  const starlinkFromRef = useRef<Float32Array | null>(null);
-  const starlinkToRef = useRef<Float32Array | null>(null);
-  const starlinkAtRef = useRef(0);
+  const zoomChangedRef = useRef(false);
+  const craftScaleRef = useRef<CraftScale>("enlarged");
+  const orbitRef = useRef<StarmindOrbit>({
+    altitudeKm: 0,
+    inclinationDeg: 0,
+    sunSynchronous: false,
+    ltanHours: null,
+    raanDeg: 0,
+  });
+  const stormRef = useRef<StormContext | undefined>(undefined);
+  const hudRef = useRef<HudState | null>(null);
+  const starlinkOnRef = useRef(true);
   const starlinkCountRef = useRef(0);
-  const auroraRef = useRef<TrackPoint[]>([]);
-  const pointsRef = useRef<THREE.Points | null>(null);
-  const trailRef = useRef<THREE.LineSegments | null>(null);
-  const craftRef = useRef<THREE.Group | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
+  const starlinkWantMsRef = useRef<number | null>(null);
+  const starlinkBusyRef = useRef(false);
+  const starlinkRef = useRef<THREE.Points | null>(null);
+  const groundTrackRef = useRef<THREE.Line | null>(null);
+  const earthGroupRef = useRef<THREE.Group | null>(null);
+  const auroraLayerRef = useRef<AuroraLayer | null>(null);
+  const sepLayerRef = useRef<SepLayer | null>(null);
+  const saaLayerRef = useRef<SaaLayer | null>(null);
+  /** The Kp band needs a Kp; OVATION needs the latest observed block. Otherwise there is no oval to draw. */
+  const auroraAvailableRef = useRef(false);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
   const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
+  const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
+  const ltanHours = useOrbitStore((state) => state.ltanHours);
   const raanDeg = useOrbitStore((state) => state.raanDeg);
+  const playing = useClockStore((state) => state.playing);
+  const speed = useClockStore((state) => state.speed);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
   const [follow, setFollow] = useState(false);
+  const [craftScale, setCraftScale] = useState<CraftScale>("enlarged");
+  const [earthReady, setEarthReady] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
   const cursor = useTimelineCursor();
-  const scrubS = cursor.offsetS;
   const kp = cursor.point?.kp ?? null;
   const protonPfu = cursor.point?.protonPfu ?? null;
-  const replaying = cursor.mode === "may2024";
+  const starlinkOn = STARLINK_MODES.has(cursor.mode);
   // OVATION is a nowcast, so it only replaces the Kp oval model at the latest observed point.
   const useOvation =
     cursor.mode === "now" && cursor.point?.kind === "observed" && Math.abs(cursor.offsetS) < 3 * 3600;
-  const [rawTrail, setRawTrail] = useState<StarmindSample[]>([]);
   const [sceneReady, setSceneReady] = useState(false);
-  const [aurora, setAurora] = useState<TrackPoint[]>([]);
+  const [ovationRaw, setOvationRaw] = useState<[number, number, number][]>([]);
+  const [layers, setLayers] = useState<Layers>(DEFAULT_LAYERS);
+  const layersRef = useRef<Layers>(DEFAULT_LAYERS);
+  const aurora: TrackPoint[] = useMemo(
+    () => ovationRaw.filter((row) => row[2] >= AURORA_CUTOFF).map((row) => ({ lonDeg: row[0], latDeg: row[1] })),
+    [ovationRaw],
+  );
   const [count, setCount] = useState(0);
   const [tickMs, setTickMs] = useState<number | null>(null);
 
   useEffect(() => {
-    orbitRef.current = { altitudeKm, inclinationDeg, raanDeg, scrubS };
+    orbitRef.current = { altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg };
     followRef.current = follow;
-    auroraRef.current = aurora;
-  }, [altitudeKm, inclinationDeg, raanDeg, scrubS, follow, aurora]);
+    craftScaleRef.current = craftScale;
+    reducedMotionRef.current = reducedMotion;
+    starlinkOnRef.current = starlinkOn && layers.starlink;
+    layersRef.current = layers;
+    auroraAvailableRef.current = kp !== null || useOvation;
+  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, craftScale, reducedMotion, starlinkOn, layers, kp, useOvation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,16 +130,11 @@ export default function GlobeClient() {
         if (cancelled) {
           return;
         }
-        const coordinates = body.data?.coordinates ?? [];
-        setAurora(
-          coordinates
-            .filter((row) => row[2] >= AURORA_CUTOFF)
-            .map((row) => ({ lonDeg: row[0], latDeg: row[1] })),
-        );
+        setOvationRaw(body.data?.coordinates ?? []);
       })
       .catch(() => {
         if (!cancelled) {
-          setAurora([]);
+          setOvationRaw([]);
         }
       });
     return () => {
@@ -177,60 +144,44 @@ export default function GlobeClient() {
 
   useEffect(() => {
     const worker = createPropagateWorker();
-    worker.onmessage = (event: MessageEvent<{ kind: string; positions?: Float32Array; count?: number; ms?: number; trail?: StarmindSample[]; message?: string }>) => {
+    const at = new THREE.Vector3();
+    worker.onmessage = (event: MessageEvent<{ kind: string; positions?: Float32Array; count?: number; ms?: number; message?: string }>) => {
       if (event.data.kind === "error") {
         setError(event.data.message ?? "Error");
         setPhase("error");
         return;
       }
       if (event.data.kind === "starlink" && event.data.positions) {
+        starlinkBusyRef.current = false;
         const nextCount = event.data.count ?? event.data.positions.length / 3;
-        const scenePositions = new Float32Array(nextCount * 3);
-        for (let index = 0; index < nextCount; index += 1) {
-          const at = surfaceVector(
-            event.data.positions[index * 3],
-            event.data.positions[index * 3 + 1],
-            event.data.positions[index * 3 + 2],
-          );
-          scenePositions[index * 3] = at.x;
-          scenePositions[index * 3 + 1] = at.y;
-          scenePositions[index * 3 + 2] = at.z;
+        const attribute = starlinkRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
+        if (attribute) {
+          const drawn = Math.min(nextCount, attribute.count);
+          for (let index = 0; index < drawn; index += 1) {
+            surfaceVector(
+              event.data.positions[index * 3],
+              event.data.positions[index * 3 + 1],
+              event.data.positions[index * 3 + 2],
+              at,
+            );
+            attribute.setXYZ(index, at.x, at.y, at.z);
+          }
+          attribute.needsUpdate = true;
+          starlinkCountRef.current = drawn;
         }
-        starlinkFromRef.current = starlinkToRef.current ?? scenePositions;
-        starlinkToRef.current = scenePositions;
-        starlinkAtRef.current = performance.now();
-        starlinkCountRef.current = nextCount;
         setCount(nextCount);
         setTickMs(event.data.ms ?? null);
         setPhase(nextCount === 0 ? "empty" : "ready");
       }
-      if (event.data.kind === "starmind" && event.data.trail) {
-        setRawTrail(event.data.trail);
-      }
     };
     workerRef.current = worker;
-    worker.postMessage({ kind: "init", epochMs: Date.now() });
+    starlinkBusyRef.current = true;
+    worker.postMessage({ kind: "init", epochMs: useTimelineStore.getState().simTimeMs || Date.now() });
     return () => {
       worker.terminate();
       workerRef.current = null;
     };
   }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!replaying) {
-        workerRef.current?.postMessage({ kind: "scrub", epochMs: Date.now() + scrubS * 1000 });
-      }
-      workerRef.current?.postMessage({
-        kind: "starmind",
-        altitudeKm,
-        inclinationDeg,
-        raanDeg,
-        epochMs: scrubS * 1000,
-      });
-    }, ORBIT_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [altitudeKm, inclinationDeg, raanDeg, scrubS, replaying]);
 
   const storm: StormContext | undefined = useMemo(() => {
     if (kp === null) {
@@ -239,63 +190,43 @@ export default function GlobeClient() {
     return { kp, protonPfu, inOvation: useOvation && aurora.length > 0 ? ovationLookup(aurora) : undefined };
   }, [kp, protonPfu, useOvation, aurora]);
 
-  const trail = useMemo(
-    () =>
-      rawTrail.map((sample) => ({
-        ...sample,
-        code: exposureCode(exposureClass(sample.latDeg, sample.lonDeg, sample.altKm, storm)),
-      })),
-    [rawTrail, storm],
-  );
+  useEffect(() => {
+    stormRef.current = storm;
+  }, [storm]);
+
+  // The zone layers follow the timeline block: Kp moves the oval and the proton cutoff; protons switch the cap.
+  useEffect(() => {
+    if (!sceneReady) {
+      return;
+    }
+    if (kp !== null) {
+      auroraLayerRef.current?.setBand(auroralBoundaryMlatDeg(kp), auroralPolewardMlatDeg(kp), kp);
+    }
+    sepLayerRef.current?.setEvent(sepCutoffMlatDeg(kp ?? 0), kp === null ? null : protonPfu);
+    // OVATION is a nowcast, so it replaces the Kp band only at the latest observed block.
+    auroraLayerRef.current?.setOvation(useOvation && ovationRaw.length > 0 ? ovationRaw : null);
+  }, [kp, protonPfu, useOvation, ovationRaw, sceneReady]);
 
   useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || trail.length === 0) {
+    const earthGroup = earthGroupRef.current;
+    if (!earthGroup || !sceneReady) {
       return;
     }
-    const line = createTrailLine(trail);
-    trailRef.current = line;
-    scene.add(line);
+    // AP8 trapped-proton map (scripts/orbit/saa_map.py), shared with the orbit engine's SAA fraction.
+    const layer = createSaaLayer(trappedProtonMap());
+    layer.setAltitude(orbitRef.current.altitudeKm);
+    earthGroup.add(layer.mesh);
+    saaLayerRef.current = layer;
     return () => {
-      scene.remove(line);
-      line.geometry.dispose();
-      if (trailRef.current === line) {
-        trailRef.current = null;
-      }
+      earthGroup.remove(layer.mesh);
+      layer.dispose();
+      saaLayerRef.current = null;
     };
-  }, [trail, sceneReady]);
+  }, [sceneReady]);
 
   useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || kp === null) {
-      return;
-    }
-    const protonsOn = protonPfu !== null && sepActive(protonPfu);
-    if (useOvation && !protonsOn) {
-      return;
-    }
-    // Live OVATION points already show the oval "now", so the Kp model only draws it for other times.
-    const texture = zoneTexture((lat, lon) => {
-      if (protonsOn && inSepCap(lat, lon, kp, protonPfu)) {
-        return SEP_RGBA;
-      }
-      if (!useOvation && inAuroralOval(lat, lon, kp)) {
-        return AURORAL_RGBA;
-      }
-      return null;
-    });
-    const overlay = new THREE.Mesh(
-      new THREE.SphereGeometry(1.006, 64, 48),
-      new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }),
-    );
-    scene.add(overlay);
-    return () => {
-      scene.remove(overlay);
-      overlay.geometry.dispose();
-      texture.dispose();
-      (overlay.material as THREE.Material).dispose();
-    };
-  }, [kp, protonPfu, useOvation, sceneReady]);
+    saaLayerRef.current?.setAltitude(altitudeKm);
+  }, [altitudeKm, sceneReady]);
 
   useEffect(() => {
     if (!canvasRef.current || !wrapRef.current) {
@@ -305,7 +236,6 @@ export default function GlobeClient() {
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
-      renderer.setClearColor(0x000000, 1);
     } catch {
       window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
@@ -315,59 +245,58 @@ export default function GlobeClient() {
       window.setTimeout(() => setError("This browser cannot draw the 3D Earth. WebGL is unavailable."), 0);
       return;
     }
-    renderer.setPixelRatio(1);
+    renderer.setClearColor(0x000000, 1);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    // Scene axes are inertial (see lib/engine/globe/frames.ts); the Earth group turns by GMST.
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#000000");
-    sceneRef.current = scene;
-    window.setTimeout(() => setSceneReady(true), 0);
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 20);
-    camera.position.set(0.2, 0.45, 3.15);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 200);
+    camera.position.set(0.25, 0.9, 2.95);
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
-    scene.add(new THREE.AmbientLight("#ffffff", 0.7));
-    const sun = new THREE.DirectionalLight("#ffffff", 1.2);
-    sun.position.set(3, 2, 1);
-    scene.add(sun);
-    const earthMaterial = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 1 });
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), earthMaterial);
-    scene.add(earth);
-    // NASA Blue Marble image shipped with three-globe's examples. Public-domain Earth photograph.
-    new THREE.TextureLoader().load("/globe/earth-day.jpg", (earthTexture) => {
-      earthTexture.colorSpace = THREE.SRGBColorSpace;
-      earthTexture.anisotropy = 8;
-      earthMaterial.map = earthTexture;
-      earthMaterial.needsUpdate = true;
-    });
-    scene.add(
-      new THREE.Mesh(
-        new THREE.SphereGeometry(1.004, 64, 48),
-        new THREE.MeshBasicMaterial({
-          map: saaOverlayTexture(),
-          transparent: true,
-          depthWrite: false,
-        }),
-      ),
+    controls.enableDamping = !reducedMotionRef.current;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 1.25;
+    controls.maxDistance = 8;
+
+    const stars = createStars();
+    scene.add(stars);
+    const earth = createEarth(() => setEarthReady(true));
+    scene.add(earth.root);
+    const earthGroup = earth.group;
+    earthGroupRef.current = earthGroup;
+
+    const auroraLayer = createAuroraLayer();
+    earthGroup.add(auroraLayer.mesh);
+    auroraLayerRef.current = auroraLayer;
+    const sepLayer = createSepLayer();
+    earthGroup.add(sepLayer.mesh);
+    sepLayerRef.current = sepLayer;
+
+    const starlinkGeometry = new THREE.BufferGeometry();
+    starlinkGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(STARLINK_CAPACITY * 3), 3));
+    starlinkGeometry.setDrawRange(0, 0);
+    const starlink = new THREE.Points(
+      starlinkGeometry,
+      new THREE.PointsMaterial({ color: "#6fd3ff", size: 2.2, sizeAttenuation: false, toneMapped: false, transparent: true, opacity: 0.8 }),
     );
-    const saaPoints: number[] = [];
-    for (let index = 0; index < GBM_SAA_LAT.length; index += 1) {
-      const at = surfaceVector(GBM_SAA_LAT[index], GBM_SAA_LON[index], 40);
-      saaPoints.push(at.x, at.y, at.z);
-    }
-    const saaGeometry = new THREE.BufferGeometry();
-    saaGeometry.setAttribute("position", new THREE.Float32BufferAttribute(saaPoints, 3));
-    scene.add(new THREE.Line(saaGeometry, new THREE.LineBasicMaterial({ color: "#e23b3b" })));
-    const starGeometry = new THREE.BufferGeometry();
-    starGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(2000 * 3), 3));
-    starGeometry.setDrawRange(0, 0);
-    const points = new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({ color: "#f5f7fb", size: 0.012, sizeAttenuation: true }),
-    );
-    pointsRef.current = points;
-    scene.add(points);
-    const craft = createStarmindGroup();
-    craftRef.current = craft;
-    scene.add(craft);
+    starlink.name = "starlink";
+    starlinkRef.current = starlink;
+    earthGroup.add(starlink);
+
+    const groundTrack = createGroundTrack();
+    groundTrack.renderOrder = 5;
+    earthGroup.add(groundTrack);
+    groundTrackRef.current = groundTrack;
+    const ring = createOrbitRing();
+    scene.add(ring);
+    // The craft has its own scene and lights; it is drawn after the world (see the render passes below).
+    const craft = createCraft();
+    renderer.autoClear = false;
+
+    window.setTimeout(() => setSceneReady(true), 0);
+
     let stats: { begin: () => void; end: () => void; dom: HTMLElement } | null = null;
     if (process.env.NODE_ENV === "development") {
       void import("stats.js").then((mod) => {
@@ -378,105 +307,212 @@ export default function GlobeClient() {
         stats = panel;
       });
     }
-    let frame = 0;
+
     const resize = () => {
-      // Square canvas that fits its column, capped at the old fixed 640 px.
-      const size = Math.max(240, Math.min(640, Math.floor(wrapRef.current?.clientWidth ?? 640)));
+      const width = Math.max(260, Math.floor(wrapRef.current?.clientWidth ?? 640));
+      // Phones get a near-square canvas, so the readout does not cover the Earth.
+      const height = Math.round(Math.min(760, Math.max(300, width * (width < 640 ? 1.05 : 0.82))));
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(size, size, true);
-      canvas.style.maxWidth = "100%";
-      canvas.style.display = "block";
-      canvas.style.margin = "0 auto";
-      canvas.style.background = "var(--surface-100)";
-      camera.aspect = 1;
+      renderer.setSize(width, height, false);
+      canvas.style.width = "100%";
+      canvas.style.height = `${height}px`;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
     resize();
     const observer = new ResizeObserver(resize);
-    if (wrapRef.current) {
-      observer.observe(wrapRef.current);
-    }
+    observer.observe(wrapRef.current);
+
+    // Scratch vectors reused every frame. The orbit maths still returns a few small objects per frame.
+    const craftAt = new THREE.Vector3();
+    const sunScene = new THREE.Vector3();
+    const nextAt = new THREE.Vector3();
+    const velocity = new THREE.Vector3();
+    const zenith = new THREE.Vector3();
+    const along = new THREE.Vector3();
+    const side = new THREE.Vector3();
+    const offsetGoal = new THREE.Vector3();
+    const offset = new THREE.Vector3();
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    let wasFollowing = false;
+    const sunKm = { x: 0, y: 0, z: 0 };
+    let last = performance.now();
+    let frame = 0;
+
     const animate = (now: number) => {
       stats?.begin();
-      const attribute = points.geometry.getAttribute("position") as THREE.BufferAttribute | undefined;
-      const from = starlinkFromRef.current;
-      const to = starlinkToRef.current;
-      if (attribute && from && to) {
-        const elapsed = (now - starlinkAtRef.current) / STARLINK_TICK_MS;
-        const drawn = lerpScene(from, to, elapsed, attribute.array as Float32Array);
-        attribute.needsUpdate = true;
-        points.geometry.setDrawRange(0, Math.min(drawn, starlinkCountRef.current));
+      const dt = Math.min(0.25, (now - last) / 1000);
+      last = now;
+      const timeline = useTimelineStore.getState();
+      const simTimeMs = timeline.simTimeMs;
+
+      earthGroup.rotation.y = gmstRad(simTimeMs);
+      const visible = layersRef.current;
+      auroraLayer.mesh.visible = visible.aurora && auroraAvailableRef.current;
+      sepLayer.mesh.visible = visible.protons;
+      groundTrack.visible = visible.track;
+      const saaMesh = saaLayerRef.current?.mesh;
+      if (saaMesh) {
+        saaMesh.visible = visible.saa;
       }
+      const sun = sunAt(simTimeMs);
+      kmToScene(sun.unit, sunScene);
+      earth.setSunDirection(sunScene);
+
+      // Starlink: ask the worker for the current simulation time whenever it is free and the time has moved.
+      starlink.visible = starlinkOnRef.current;
+      starlink.geometry.setDrawRange(0, starlinkOnRef.current ? starlinkCountRef.current : 0);
+      if (starlinkOnRef.current && !starlinkBusyRef.current && starlinkWantMsRef.current !== simTimeMs) {
+        starlinkBusyRef.current = true;
+        starlinkWantMsRef.current = simTimeMs;
+        workerRef.current?.postMessage({ kind: "scrub", epochMs: simTimeMs });
+      }
+
       const orbit = orbitRef.current;
-      const fix = starmindPositionKm(orbit.altitudeKm, orbit.inclinationDeg, orbit.raanDeg, orbit.scrubS);
-      const at = surfaceVector(fix.latDeg, fix.lonDeg, fix.altKm);
-      craft.position.copy(at);
-      craft.userData.radiusKm = fix.radiusKm;
-      const distance = zoomRef.current;
-      if (followRef.current) {
+      const fix = starmindAtUtc(orbit, simTimeMs);
+      kmToScene({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, craftAt);
+      const ahead = starmindAtUtc(orbit, simTimeMs + 1000);
+      kmToScene({ x: ahead.xKm, y: ahead.yKm, z: ahead.zKm }, nextAt);
+      velocity.subVectors(nextAt, craftAt);
+      updateOrbitRing(ring, orbit, simTimeMs);
+      if (groundTrack.visible) {
+        updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current));
+      }
+
+      sunKm.x = sun.unit.x * SHADOW_AU_KM;
+      sunKm.y = sun.unit.y * SHADOW_AU_KM;
+      sunKm.z = sun.unit.z * SHADOW_AU_KM;
+      const sample = sampleAt(timeline.points, simTimeMs);
+      const shadow = shadowKind({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, sunKm);
+      craft.setScale(craftScaleRef.current);
+      craft.update(craftAt, velocity, sunScene, shadow);
+      hudRef.current = {
+        utcMs: simTimeMs,
+        latDeg: fix.latDeg,
+        lonDeg: fix.lonDeg,
+        altKm: fix.altKm,
+        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current),
+        shadow,
+        kp: sample.kp,
+        protonPfu: sample.protonPfu,
+      };
+
+      const following = followRef.current;
+      const size = craft.sizeScene();
+      if (following) {
+        // Chase view in the craft's own frame, horizon level. The offset (not the position) is eased, so the camera
+        // keeps up at any playback speed.
         controls.enabled = false;
-        camera.position.set(at.x * distance, at.y * distance + 0.4, at.z * distance);
-        camera.lookAt(at);
+        zenith.copy(craftAt).normalize();
+        along.copy(velocity).addScaledVector(zenith, -velocity.dot(zenith)).normalize();
+        side.crossVectors(along, zenith);
+        const distance = size * (zoomRef.current / 2.6);
+        offsetGoal
+          .copy(along)
+          .multiplyScalar(-FOLLOW_OFFSET.back * distance)
+          .addScaledVector(zenith, FOLLOW_OFFSET.up * distance)
+          .addScaledVector(side, FOLLOW_OFFSET.side * distance);
+        if (!wasFollowing) {
+          offset.subVectors(camera.position, craftAt);
+        }
+        // Reduced motion: no easing, the camera sits on its offset at once.
+        offset.lerp(offsetGoal, reducedMotionRef.current ? 1 : 1 - Math.exp(-FOLLOW_RATE * dt));
+        camera.position.copy(craftAt).add(offset);
+        camera.up.copy(zenith);
+        camera.lookAt(craftAt);
       } else {
+        if (wasFollowing) {
+          camera.up.copy(worldUp);
+          camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
+        }
         controls.enabled = true;
+        controls.enableDamping = !reducedMotionRef.current;
+        if (zoomChangedRef.current) {
+          camera.position.setLength(zoomRef.current * FREE_DISTANCE_PER_ZOOM);
+          zoomChangedRef.current = false;
+        }
         controls.update();
       }
+      wasFollowing = following;
+
+      // Pass 1: the world. Pass 2: the craft. When following, the craft pass gets a fresh depth buffer and a near
+      // plane scaled to the craft, so even the true-scale 75 m model stays sharp. Otherwise it shares the world's
+      // depth, so the Earth hides it when it is behind.
+      renderer.clear();
+      camera.near = following ? WORLD_NEAR : 0.01;
+      camera.far = 200;
+      camera.updateProjectionMatrix();
       renderer.render(scene, camera);
+      if (following) {
+        renderer.clearDepth();
+        camera.near = size * 0.01;
+        camera.far = size * 400 + 1;
+        camera.updateProjectionMatrix();
+      }
+      renderer.render(craft.scene, camera);
       stats?.end();
       frame = window.requestAnimationFrame(animate);
     };
     frame = window.requestAnimationFrame(animate);
-    window.addEventListener("resize", resize);
+
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("resize", resize);
       controls.dispose();
+      const disposeObject = (object: THREE.Object3D) => {
+        const mesh = object as THREE.Mesh;
+        mesh.geometry?.dispose();
+        const material = mesh.material as THREE.Material | THREE.Material[] | undefined;
+        const materials = Array.isArray(material) ? material : material ? [material] : [];
+        for (const item of materials) {
+          (item as THREE.MeshBasicMaterial).map?.dispose();
+          item.dispose();
+        }
+      };
+      for (const object of [stars, starlink, groundTrack, ring]) {
+        disposeObject(object);
+      }
+      auroraLayer.dispose();
+      sepLayer.dispose();
+      auroraLayerRef.current = null;
+      sepLayerRef.current = null;
+      groundTrackRef.current = null;
+      craft.dispose();
+      earth.dispose();
       renderer.dispose();
       stats?.dom.remove();
-      sceneRef.current = null;
+      earthGroupRef.current = null;
+      starlinkRef.current = null;
       setSceneReady(false);
     };
   }, []);
-
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene || !sceneReady || aurora.length === 0 || !useOvation) {
-      return;
-    }
-    const points = auroraPoints(aurora);
-    scene.add(points);
-    return () => {
-      scene.remove(points);
-      points.geometry.dispose();
-    };
-  }, [aurora, useOvation, sceneReady]);
 
   return (
     <div ref={wrapRef} className="globe">
       <div className="globe__stage">
         <canvas ref={canvasRef} aria-label="Round Earth" />
-        <p className="globe__overlay eyebrow">{ILLUSTRATIVE_LABEL}</p>
-        {phase === "loading" ? <p className="globe__status rok-muted">Loading</p> : null}
-        {phase === "error" ? (
-          <p className="globe__status" style={{ color: "var(--status-critical)" }}>
-            {error ?? "Error"}
-          </p>
-        ) : null}
-        {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
+        <GlobeHud stateRef={hudRef} playing={playing} speedLabel={SPEED_LABELS[speed]} note={scaleLabel(craftScale)} />
+        {!earthReady && phase !== "error" ? <p className="globe__status rok-muted">Loading</p> : null}
+        {phase === "error" ? <p className="globe__status error">{error ?? "Error"}</p> : null}
+        {phase === "empty" && starlinkOn ? <p className="globe__status rok-muted">No Starlink elements in the snapshot</p> : null}
       </div>
-      <OrbitTrail samples={trail} />
+      <LayerToggles layers={layers} onChange={setLayers} />
+      <OrbitTrail />
       <CameraControls
         follow={follow}
         onFollow={setFollow}
+        scale={craftScale}
+        onScale={setCraftScale}
         onZoom={(direction) => {
           zoomRef.current = Math.min(6, Math.max(1.3, zoomRef.current + direction * -0.3));
+          zoomChangedRef.current = true;
         }}
       />
       <p className="note">
-        Starlink points are subsampled ({count} shown). OVATION cutoff {AURORA_CUTOFF} is an estimate. Trail length
-        is one orbit, an estimate. SAA polygon ({classFromCode(1)}) is the Fermi GBM ring. Auroral zone and outer belt
-        are NASA SP-8116. Aurora points (violet) are OVATION.
+        Day side, night side and terminator follow the Sun at the timeline time; the Earth turns by sidereal time.
+        Starlink points are subsampled ({count} shown)
+        {starlinkOn ? "" : " and hidden during historical replays, since today's elements cannot place them then"}.
+        OVATION display cutoff {AURORA_CUTOFF}% is an estimate. Hover a layer for its source. Stars are decorative.
         {tickMs !== null ? ` Worker tick ${tickMs.toFixed(1)} ms.` : ""}
       </p>
     </div>

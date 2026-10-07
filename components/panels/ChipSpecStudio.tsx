@@ -141,7 +141,7 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
     <div data-testid="chip-spec-studio">
       {phase === "loading" ? <p className="body rok-muted">Loading</p> : null}
       {phase === "error" ? (
-        <p className="body" style={{ color: "var(--status-critical)" }}>
+        <p className="body error">
           Error
         </p>
       ) : null}
@@ -163,7 +163,7 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
       </label>
       <form
         onSubmit={(event) => event.preventDefault()}
-        style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", marginTop: "var(--space-4)" }}
+        className="stack stack--tight space-above"
       >
         <label className="rok-field">
           <span className="rok-field__label eyebrow">
@@ -277,7 +277,7 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
             <span className="eyebrow">
               Radiator sides <SourceBadge label={badgeForPayload(preset, "radiatorSides", payload.radiatorSides)} />
             </span>
-            <div style={{ display: "flex", gap: "var(--space-3)" }}>
+            <div className="row">
               <button
                 type="button"
                 className="rok-btn"
@@ -326,8 +326,12 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
         </Disclosure>
       </form>
       {phase === "ready" ? (
-        <div className="body" style={{ marginTop: "var(--space-4)" }}>
-          {impact.thermal.peakFlag ? (
+        <div className="body space-above">
+          {!impact.thermal.inputsKnown ? (
+            <p data-testid="peak-flag" data-peak-flag="false" className="rok-muted">
+              Average power and radiator area are not both given, so the radiator is not checked.
+            </p>
+          ) : impact.thermal.peakFlag ? (
             <p data-testid="peak-flag" data-peak-flag="true">
               {PEAK_FLAG_TEXT}
             </p>
@@ -349,7 +353,11 @@ export function ChipSpecStudio({ initial }: { initial?: ChipStudioInitial } = {}
             Sheet pair{" "}
             <Num value={impact.thermal.kwPerM2.value} digits={2} label={impact.thermal.kwPerM2.label} unit="kW/m²" />.
             Radiator{" "}
-            <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+            {impact.thermal.inputsKnown ? (
+              <Num value={impact.thermal.radiatorTemperatureK.value} digits={1} label={impact.thermal.radiatorTemperatureK.label} unit="K" />
+            ) : (
+              "temperature not computed"
+            )}
             {preset.inletC ? (
               <>
                 {" "}

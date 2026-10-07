@@ -7,6 +7,7 @@ import { replayInputsAt } from "@/components/home/useAiAnalysis";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { type ActionName } from "@/lib/engine/costCheck";
 import { exposureWeight, scorePlan, type ReplayHour } from "@/lib/engine/replayOnOrbit";
+import type { StormEvent } from "@/lib/events/registry";
 import { useOrbitStore } from "@/lib/store/orbit";
 import { decide, policyVector } from "@/lib/ml/policyInput";
 import { runPolicyProbabilities } from "@/lib/ml/policy";
@@ -34,6 +35,7 @@ function Lane({ title, plan, cursor }: { title: string; plan: ActionName[]; curs
 }
 
 export function AiPolicyReplay({
+  event,
   hours,
   amounts,
   hindsight,
@@ -41,6 +43,7 @@ export function AiPolicyReplay({
   hindsightDowntime,
   cursor,
 }: {
+  event: StormEvent;
   hours: ReplayHour[];
   amounts: number[];
   hindsight: ActionName[];
@@ -68,7 +71,7 @@ export function AiPolicyReplay({
         const next: ActionName[] = [];
         let previous: ActionName = "continue";
         for (const hour of hours) {
-          const known = replayInputsAt(Date.parse(hour.time));
+          const known = replayInputsAt(event, Date.parse(hour.time));
           const band = known.issue.find((row) => row.horizonH === 3);
           if (known.kp === null || known.dst === null || !band) {
             next.push(previous);
@@ -100,7 +103,7 @@ export function AiPolicyReplay({
     return () => {
       cancelled = true;
     };
-  }, [hours, auroral, eclipse, presetId, altitudeKm, inclinationDeg]);
+  }, [event, hours, auroral, eclipse, presetId, altitudeKm, inclinationDeg]);
 
   const always = useMemo(() => hours.map(() => "continue" as ActionName), [hours]);
   const summary = useMemo(() => {
@@ -115,10 +118,10 @@ export function AiPolicyReplay({
   }, [plan, amounts, always, hindsight, hours]);
 
   if (failed) {
-    return <p className="body" style={{ color: "var(--status-critical)" }}>Error</p>;
+    return <p className="body error">Error</p>;
   }
   if (!plan || !summary) {
-    return <p className="body rok-muted">Running the AI policy on 288 hours</p>;
+    return <p className="body rok-muted">Running the AI policy on {hours.length} hours</p>;
   }
 
   const saved = summary.naive.cost > 0 ? 1 - summary.ai.cost / summary.naive.cost : 0;

@@ -34,8 +34,19 @@ export interface StormContext {
  * SAA wins, then the solar-proton polar cap (only during an S1+ event), then the auroral zone, then the outer belt.
  * Without a storm context the zones are the fixed NASA SP-8116 latitude bands used since M5.
  */
-export function exposureClass(latDeg: number, lonDeg: number, altitudeKm: number, storm?: StormContext): ExposureClass {
-  if (inSaaGeographic(latDeg, lonDeg)) {
+/** Point test for the SAA. The globe passes the AP8 flux contour; the default is the Fermi GBM polygon. */
+export type SaaTest = (latDeg: number, lonDeg: number, altitudeKm: number) => boolean;
+
+const gbmSaa: SaaTest = (latDeg, lonDeg) => inSaaGeographic(latDeg, lonDeg);
+
+export function exposureClass(
+  latDeg: number,
+  lonDeg: number,
+  altitudeKm: number,
+  storm?: StormContext,
+  inSaa: SaaTest = gbmSaa,
+): ExposureClass {
+  if (inSaa(latDeg, lonDeg, altitudeKm)) {
     return "SAA";
   }
   const radiusM = RE_M + altitudeKm * 1000;

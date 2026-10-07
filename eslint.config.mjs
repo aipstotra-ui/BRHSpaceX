@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "node_modules/**",
     "3rok-design-system/**",
+    "scripts/orbit/.venv/**",
     "starmind-physics/**",
     "ml/**",
     "docs/**",

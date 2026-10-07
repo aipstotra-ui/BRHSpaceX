@@ -1,4 +1,4 @@
-import { exposureClass, exposureCode, type StormContext } from "@/lib/engine/globe/exposure";
+import { exposureClass, exposureCode, type SaaTest, type StormContext } from "@/lib/engine/globe/exposure";
 import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
 import { meanMotionRadS } from "@/lib/engine/orbit/sso";
 
@@ -23,7 +23,12 @@ export function orbitPeriodSeconds(altitudeKm: number): number {
  * (GROUND_TRACK_SAMPLES + 1 points). It is Earth-fixed, so it never closes on itself: Earth turns about 24° under
  * one orbit. The closed loop is the orbit ring, drawn in the inertial frame.
  */
-export function groundTrackAtUtc(orbit: StarmindOrbit, utcMs: number, storm?: StormContext): StarmindSample[] {
+export function groundTrackAtUtc(
+  orbit: StarmindOrbit,
+  utcMs: number,
+  storm?: StormContext,
+  inSaa?: SaaTest,
+): StarmindSample[] {
   const spanMs = orbitPeriodSeconds(orbit.altitudeKm) * 1000 * GROUND_TRACK_ORBITS;
   const samples: StarmindSample[] = [];
   for (let index = 0; index <= GROUND_TRACK_SAMPLES; index += 1) {
@@ -34,7 +39,7 @@ export function groundTrackAtUtc(orbit: StarmindOrbit, utcMs: number, storm?: St
       lonDeg: fix.lonDeg,
       altKm: fix.altKm,
       radiusKm: fix.radiusKm,
-      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, storm)),
+      code: exposureCode(exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, storm, inSaa)),
     });
   }
   return samples;

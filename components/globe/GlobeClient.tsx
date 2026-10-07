@@ -11,25 +11,26 @@ import { createEarth } from "@/components/globe/scene/earth";
 import { createGroundTrack, createOrbitRing, updateGroundTrack, updateOrbitRing } from "@/components/globe/scene/orbit";
 import { createStars } from "@/components/globe/scene/stars";
 import {
-  AURORAL_RGBA,
-  auroraPoints,
-  overlaySphere,
+  createAuroraLayer,
+  createSaaLayer,
+  createSepLayer,
   ovationLookup,
-  saaOutline,
-  saaOverlayTexture,
-  SEP_RGBA,
-  zoneTexture,
+  type AuroraLayer,
+  type SaaLayer,
+  type SepLayer,
   type TrackPoint,
 } from "@/components/globe/scene/zones";
+import { LayerToggles, DEFAULT_LAYERS, type Layers } from "@/components/globe/LayerToggles";
 import { createStarmindGroup, ILLUSTRATIVE_LABEL } from "@/components/globe/StarmindModel";
-import { exposureClass, type StormContext } from "@/lib/engine/globe/exposure";
+import { exposureClass, type SaaTest, type StormContext } from "@/lib/engine/globe/exposure";
 import { gmstRad, kmToScene, sunAt } from "@/lib/engine/globe/frames";
+import { decodeProtonMap, inSaaFlux, type ProtonMap, type ProtonMapFile } from "@/lib/engine/globe/protonMap";
 import { groundTrackAtUtc } from "@/lib/engine/globe/trail";
 import { createPropagateWorker } from "@/lib/engine/propagateClient";
 import { SHADOW_AU_KM } from "@/lib/engine/orbit/constants";
 import { shadowKind } from "@/lib/engine/orbit/eclipse";
 import { starmindAtUtc, type StarmindOrbit } from "@/lib/engine/orbit/j2";
-import { inAuroralOval, inSepCap, sepActive } from "@/lib/engine/orbit/stormZones";
+import { auroralBoundaryMlatDeg, auroralPolewardMlatDeg, sepCutoffMlatDeg } from "@/lib/engine/orbit/stormZones";
 import { SPEED_LABELS, useClockStore } from "@/lib/store/clock";
 import { useOrbitStore } from "@/lib/store/orbit";
 import { sampleAt, useTimelineCursor, useTimelineStore } from "@/lib/store/timeline";
@@ -66,7 +67,14 @@ export default function GlobeClient() {
   const starlinkWantMsRef = useRef<number | null>(null);
   const starlinkBusyRef = useRef(false);
   const starlinkRef = useRef<THREE.Points | null>(null);
+  const groundTrackRef = useRef<THREE.Line | null>(null);
   const earthGroupRef = useRef<THREE.Group | null>(null);
+  const auroraLayerRef = useRef<AuroraLayer | null>(null);
+  const sepLayerRef = useRef<SepLayer | null>(null);
+  const saaLayerRef = useRef<SaaLayer | null>(null);
+  const saaTestRef = useRef<SaaTest | undefined>(undefined);
+  /** The Kp band needs a Kp; OVATION needs the latest observed block. Otherwise there is no oval to draw. */
+  const auroraAvailableRef = useRef(false);
   const altitudeKm = useOrbitStore((state) => state.altitudeKm);
   const inclinationDeg = useOrbitStore((state) => state.inclinationDeg);
   const sunSynchronous = useOrbitStore((state) => state.sunSynchronous);
@@ -85,15 +93,24 @@ export default function GlobeClient() {
   const useOvation =
     cursor.mode === "now" && cursor.point?.kind === "observed" && Math.abs(cursor.offsetS) < 3 * 3600;
   const [sceneReady, setSceneReady] = useState(false);
-  const [aurora, setAurora] = useState<TrackPoint[]>([]);
+  const [ovationRaw, setOvationRaw] = useState<[number, number, number][]>([]);
+  const [protonMap, setProtonMap] = useState<ProtonMap | null>(null);
+  const [layers, setLayers] = useState<Layers>(DEFAULT_LAYERS);
+  const layersRef = useRef<Layers>(DEFAULT_LAYERS);
+  const aurora: TrackPoint[] = useMemo(
+    () => ovationRaw.filter((row) => row[2] >= AURORA_CUTOFF).map((row) => ({ lonDeg: row[0], latDeg: row[1] })),
+    [ovationRaw],
+  );
   const [count, setCount] = useState(0);
   const [tickMs, setTickMs] = useState<number | null>(null);
 
   useEffect(() => {
     orbitRef.current = { altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg };
     followRef.current = follow;
-    starlinkOnRef.current = starlinkOn;
-  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, starlinkOn]);
+    starlinkOnRef.current = starlinkOn && layers.starlink;
+    layersRef.current = layers;
+    auroraAvailableRef.current = kp !== null || useOvation;
+  }, [altitudeKm, inclinationDeg, sunSynchronous, ltanHours, raanDeg, follow, starlinkOn, layers, kp, useOvation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,18 +120,29 @@ export default function GlobeClient() {
         if (cancelled) {
           return;
         }
-        const coordinates = body.data?.coordinates ?? [];
-        setAurora(
-          coordinates
-            .filter((row) => row[2] >= AURORA_CUTOFF)
-            .map((row) => ({ lonDeg: row[0], latDeg: row[1] })),
-        );
+        setOvationRaw(body.data?.coordinates ?? []);
       })
       .catch(() => {
         if (!cancelled) {
-          setAurora([]);
+          setOvationRaw([]);
         }
       });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // AP8 trapped-proton map for the SAA (scripts/orbit/saa_map.py). Until it loads, the GBM polygon classifies.
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/globe/proton-flux-map.json")
+      .then((response) => response.json() as Promise<ProtonMapFile>)
+      .then((file) => {
+        if (!cancelled) {
+          setProtonMap(decodeProtonMap(file));
+        }
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -172,49 +200,40 @@ export default function GlobeClient() {
     stormRef.current = storm;
   }, [storm]);
 
-  // Kp oval and proton cap overlay, on the rotating Earth.
+  // The zone layers follow the timeline block: Kp moves the oval and the proton cutoff; protons switch the cap.
   useEffect(() => {
-    const earthGroup = earthGroupRef.current;
-    if (!earthGroup || !sceneReady || kp === null) {
+    if (!sceneReady) {
       return;
     }
-    const protonsOn = protonPfu !== null && sepActive(protonPfu);
-    if (useOvation && !protonsOn) {
-      return;
+    if (kp !== null) {
+      auroraLayerRef.current?.setBand(auroralBoundaryMlatDeg(kp), auroralPolewardMlatDeg(kp), kp);
     }
-    // Live OVATION points already show the oval "now", so the Kp model only draws it for other times.
-    const texture = zoneTexture((lat, lon) => {
-      if (protonsOn && inSepCap(lat, lon, kp, protonPfu)) {
-        return SEP_RGBA;
-      }
-      if (!useOvation && inAuroralOval(lat, lon, kp)) {
-        return AURORAL_RGBA;
-      }
-      return null;
-    });
-    const overlay = overlaySphere(texture, 1.006);
-    earthGroup.add(overlay);
-    return () => {
-      earthGroup.remove(overlay);
-      overlay.geometry.dispose();
-      texture.dispose();
-      (overlay.material as THREE.Material).dispose();
-    };
-  }, [kp, protonPfu, useOvation, sceneReady]);
+    sepLayerRef.current?.setEvent(sepCutoffMlatDeg(kp ?? 0), kp === null ? null : protonPfu);
+    // OVATION is a nowcast, so it replaces the Kp band only at the latest observed block.
+    auroraLayerRef.current?.setOvation(useOvation && ovationRaw.length > 0 ? ovationRaw : null);
+  }, [kp, protonPfu, useOvation, ovationRaw, sceneReady]);
 
   useEffect(() => {
     const earthGroup = earthGroupRef.current;
-    if (!earthGroup || !sceneReady || aurora.length === 0 || !useOvation) {
+    if (!earthGroup || !sceneReady || !protonMap) {
       return;
     }
-    const points = auroraPoints(aurora);
-    earthGroup.add(points);
+    const layer = createSaaLayer(protonMap);
+    layer.setAltitude(orbitRef.current.altitudeKm);
+    earthGroup.add(layer.mesh);
+    saaLayerRef.current = layer;
+    saaTestRef.current = (latDeg, lonDeg, altKm) => inSaaFlux(protonMap, latDeg, lonDeg, altKm);
     return () => {
-      earthGroup.remove(points);
-      points.geometry.dispose();
-      (points.material as THREE.Material).dispose();
+      earthGroup.remove(layer.mesh);
+      layer.dispose();
+      saaLayerRef.current = null;
+      saaTestRef.current = undefined;
     };
-  }, [aurora, useOvation, sceneReady]);
+  }, [protonMap, sceneReady]);
+
+  useEffect(() => {
+    saaLayerRef.current?.setAltitude(altitudeKm);
+  }, [altitudeKm, protonMap]);
 
   useEffect(() => {
     if (!canvasRef.current || !wrapRef.current) {
@@ -260,10 +279,12 @@ export default function GlobeClient() {
     scene.add(sunLight);
     scene.add(new THREE.AmbientLight("#9fb4d0", 0.08));
 
-    const saaOverlay = overlaySphere(saaOverlayTexture(), 1.004);
-    earthGroup.add(saaOverlay);
-    const saaLine = saaOutline();
-    earthGroup.add(saaLine);
+    const auroraLayer = createAuroraLayer();
+    earthGroup.add(auroraLayer.mesh);
+    auroraLayerRef.current = auroraLayer;
+    const sepLayer = createSepLayer();
+    earthGroup.add(sepLayer.mesh);
+    sepLayerRef.current = sepLayer;
 
     const starlinkGeometry = new THREE.BufferGeometry();
     starlinkGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(STARLINK_CAPACITY * 3), 3));
@@ -277,7 +298,9 @@ export default function GlobeClient() {
     earthGroup.add(starlink);
 
     const groundTrack = createGroundTrack();
+    groundTrack.renderOrder = 5;
     earthGroup.add(groundTrack);
+    groundTrackRef.current = groundTrack;
     const ring = createOrbitRing();
     scene.add(ring);
     const craft = createStarmindGroup();
@@ -329,6 +352,14 @@ export default function GlobeClient() {
       const simTimeMs = timeline.simTimeMs;
 
       earthGroup.rotation.y = gmstRad(simTimeMs);
+      const visible = layersRef.current;
+      auroraLayer.mesh.visible = visible.aurora && auroraAvailableRef.current;
+      sepLayer.mesh.visible = visible.protons;
+      groundTrack.visible = visible.track;
+      const saaMesh = saaLayerRef.current?.mesh;
+      if (saaMesh) {
+        saaMesh.visible = visible.saa;
+      }
       const sun = sunAt(simTimeMs);
       kmToScene(sun.unit, sunScene);
       earth.setSunDirection(sunScene);
@@ -349,7 +380,9 @@ export default function GlobeClient() {
       craft.position.copy(craftAt);
       craft.userData.radiusKm = fix.radiusKm;
       updateOrbitRing(ring, orbit, simTimeMs);
-      updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current));
+      if (groundTrack.visible) {
+        updateGroundTrack(groundTrack, groundTrackAtUtc(orbit, simTimeMs, stormRef.current, saaTestRef.current));
+      }
 
       sunKm.x = sun.unit.x * SHADOW_AU_KM;
       sunKm.y = sun.unit.y * SHADOW_AU_KM;
@@ -360,7 +393,7 @@ export default function GlobeClient() {
         latDeg: fix.latDeg,
         lonDeg: fix.lonDeg,
         altKm: fix.altKm,
-        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current),
+        exposure: exposureClass(fix.latDeg, fix.lonDeg, fix.altKm, stormRef.current, saaTestRef.current),
         shadow: shadowKind({ x: fix.xKm, y: fix.yKm, z: fix.zKm }, sunKm),
         kp: sample.kp,
         protonPfu: sample.protonPfu,
@@ -404,9 +437,14 @@ export default function GlobeClient() {
           item.dispose();
         }
       };
-      for (const object of [stars, saaOverlay, saaLine, starlink, groundTrack, ring]) {
+      for (const object of [stars, starlink, groundTrack, ring]) {
         disposeObject(object);
       }
+      auroraLayer.dispose();
+      sepLayer.dispose();
+      auroraLayerRef.current = null;
+      sepLayerRef.current = null;
+      groundTrackRef.current = null;
       craft.traverse(disposeObject);
       earth.dispose();
       renderer.dispose();
@@ -427,6 +465,7 @@ export default function GlobeClient() {
         {phase === "error" ? <p className="globe__status error">{error ?? "Error"}</p> : null}
         {phase === "empty" ? <p className="globe__status rok-muted">Empty</p> : null}
       </div>
+      <LayerToggles layers={layers} onChange={setLayers} />
       <OrbitTrail />
       <CameraControls
         follow={follow}
@@ -440,8 +479,7 @@ export default function GlobeClient() {
         Day side, night side and terminator follow the Sun at the timeline time; the Earth turns by sidereal time.
         Starlink points are subsampled ({count} shown)
         {starlinkOn ? "" : " and hidden during historical replays, since today's elements cannot place them then"}.
-        OVATION cutoff {AURORA_CUTOFF} is an estimate. The SAA polygon is the Fermi GBM ring. Auroral zone and outer belt
-        are NASA SP-8116. Aurora points (violet) are OVATION. Stars are decorative.
+        OVATION display cutoff {AURORA_CUTOFF}% is an estimate. Hover a layer for its source. Stars are decorative.
         {tickMs !== null ? ` Worker tick ${tickMs.toFixed(1)} ms.` : ""}
       </p>
     </div>

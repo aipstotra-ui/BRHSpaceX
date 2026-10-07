@@ -2,25 +2,25 @@
 
 import { memo, useEffect, useMemo, useState } from "react";
 
-import may2024 from "@/data/replays/may2024.json";
-import { AI_REPLAY } from "@/components/home/useAiAnalysis";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { StatusBadge, type Status } from "@/components/ui/StatusBadge";
 import { gscale } from "@/lib/engine/gscale";
 import { auroralBoundaryMlatDeg, sepActive, sepCutoffMlatDeg, sscale } from "@/lib/engine/orbit/stormZones";
+import { EVENTS, eventForMode, eventStats, type StormEvent } from "@/lib/events/registry";
 import { SPEED_LABELS, SPEEDS, useClockDriver, useClockStore, type Speed } from "@/lib/store/clock";
 import { liveReferenceMs, timelineRange, useTimelineStore, type TimelineMode, type TimelinePoint } from "@/lib/store/timeline";
 
 type KpRow = { time_tag: string; Kp: number };
 type ProtonRow = { time_tag: string; flux: number; energy: string };
-type ReplayHour = { time: string; kp: number | null; goesProtonFlux: number | null };
 
 const HOUR_MS = 3_600_000;
 const MINUTE_MS = 60_000;
 /** estimate: how far back "now" mode shows observed Kp. */
 const HISTORY_HOURS = 24;
-/** Default playback speed per mode: about 5 minutes for the 48-hour window, 1 hour per second for a replay. */
-const DEFAULT_SPEED: Record<TimelineMode, Speed> = { now: 600, may2024: 3600 };
+/** Default playback speed: about 5 minutes for the 48-hour window, 1 hour per second for a replay. */
+function defaultSpeed(mode: TimelineMode): Speed {
+  return mode === "now" ? 600 : 3600;
+}
 
 async function readFeed<T>(id: string): Promise<T | null> {
   try {
@@ -53,11 +53,11 @@ function protonAt(rows: ProtonRow[], timeMs: number): number | null {
   return timeMs - bestTime <= 3 * HOUR_MS ? best : null;
 }
 
-function replayPoints(): TimelinePoint[] {
-  return (may2024.hours as ReplayHour[]).map((hour) => ({
+function replayPoints(event: StormEvent): TimelinePoint[] {
+  return event.replay.hours.map((hour) => ({
     timeMs: utc(hour.time),
     kp: hour.kp,
-    protonPfu: hour.goesProtonFlux,
+    protonPfu: hour.goesProtonFlux ?? null,
     kind: "replay" as const,
   }));
 }
@@ -142,11 +142,18 @@ export function Timeline() {
   const [phase, setPhase] = useState<"loading" | "ready" | "error" | "empty">("loading");
   const [snapshotNow, setSnapshotNow] = useState<number | null>(null);
   useClockDriver();
+  const event = eventForMode(mode);
+  const choose = (next: TimelineMode) => {
+    setPlaying(false);
+    setSpeed(defaultSpeed(next));
+    setMode(next);
+  };
 
   useEffect(() => {
     let cancelled = false;
-    if (mode === "may2024") {
-      const next = replayPoints();
+    const replayEvent = eventForMode(mode);
+    if (replayEvent) {
+      const next = replayPoints(replayEvent);
       setPoints(next, 0, next[0]?.timeMs ?? 0);
       window.setTimeout(() => setPhase(next.length ? "ready" : "empty"), 0);
       return;
@@ -212,7 +219,7 @@ export function Timeline() {
       .map((pfu, i) => (pfu === null ? null : `${x(points[i].timeMs).toFixed(1)},${logY(pfu).toFixed(1)}`))
       .filter((value): value is string => value !== null);
     // AI +3 h forecast for each 3-hour block, issued at the block start (target hour = issue + 2 h).
-    const ai = AI_REPLAY.rows
+    const ai = (event?.replay.aiForecast.rows ?? [])
       .filter((row) => row.horizonH === 3)
       .map((row) => ({ t: Date.parse(row.target), p10: row.p10, p50: row.p50, p90: row.p90 }))
       .filter((row) => row.t >= start && row.t <= end)
@@ -223,12 +230,12 @@ export function Timeline() {
       ...ai.slice().reverse().map((row) => `${x(row.t).toFixed(1)},${y(row.p10).toFixed(1)}`),
     ].join(" ");
     return { scale: { x, y, barWidth }, x, y, protonPath, logY, aiLine, aiBand };
-  }, [points]);
+  }, [points, event]);
 
   const range = timelineRange(points);
 
   const point = points[index] ?? null;
-  const markers = mode === "may2024" ? may2024.markers.sepOnset.map((iso) => utc(iso)) : [];
+  const markers = (event?.markers ?? []).map((marker) => ({ ...marker, at: utc(marker.time) }));
   const g = point?.kp !== null && point?.kp !== undefined ? gscale(point.kp) : null;
   const s = point?.protonPfu !== null && point?.protonPfu !== undefined ? sscale(point.protonPfu) : null;
 
@@ -242,28 +249,51 @@ export function Timeline() {
           </h2>
         </div>
         <div className="segmented" role="group" aria-label="Timeline period">
-          {(
-            [
-              ["now", "Now and next 24 h"],
-              ["may2024", "May 2024 superstorm"],
-            ] as [TimelineMode, string][]
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className="rok-btn rok-btn--sm button"
-              aria-pressed={mode === value}
-              onClick={() => {
-                setPlaying(false);
-                setSpeed(DEFAULT_SPEED[value]);
-                setMode(value);
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          <button
+            type="button"
+            className="rok-btn rok-btn--sm button"
+            aria-pressed={mode === "now"}
+            onClick={() => choose("now")}
+          >
+            Now and next 24 h
+          </button>
         </div>
       </div>
+
+      <div className="event-cards" role="group" aria-label="Storm replays">
+        {EVENTS.map((item) => {
+          const stats = eventStats(item.replay);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className="event-card"
+              aria-pressed={mode === item.id}
+              onClick={() => choose(item.id)}
+            >
+              <span className="event-card__title heading-sm">{item.title}</span>
+              <span className="event-card__dates data-sm rok-subtle">{item.dates}</span>
+              <span className="event-card__stats data-sm">
+                {stats.peakKp !== null ? <span>Kp {stats.peakKp.toFixed(1)}</span> : null}
+                {stats.peakProtonPfu !== null ? (
+                  <span>
+                    {stats.peakProtonPfu >= 10 ? stats.peakProtonPfu.toFixed(0) : stats.peakProtonPfu.toFixed(1)} pfu
+                  </span>
+                ) : null}
+                {stats.minDst !== null ? <span>Dst {stats.minDst.toFixed(0)} nT</span> : null}
+              </span>
+              <span className="event-card__tags">
+                {item.stresses.map((stress) => (
+                  <span key={stress} className="eyebrow event-card__tag">
+                    {stress}
+                  </span>
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {event ? <p className="body-sm rok-muted event-story">{event.story}</p> : null}
 
       {phase === "loading" && points.length === 0 ? <p className="body rok-muted">Loading</p> : null}
       {phase === "error" ? (
@@ -280,7 +310,7 @@ export function Timeline() {
               <line key={kp} x1="0" x2="1000" y1={chart.y(kp)} y2={chart.y(kp)} className="timeline__grid" />
             ))}
             <KpBars points={points} index={index} chart={chart.scale} />
-            {mode === "may2024" && chart.aiLine ? (
+            {event && chart.aiLine ? (
               <>
                 <polygon points={chart.aiBand} className="timeline__ai-band" />
                 <polyline points={chart.aiLine} className="timeline__ai" />
@@ -290,11 +320,37 @@ export function Timeline() {
             {chart.protonPath.length > 1 ? (
               <polyline points={chart.protonPath.join(" ")} className="timeline__protons" />
             ) : null}
-            {markers.map((at) => (
-              <line key={at} x1={chart.x(at)} x2={chart.x(at)} y1="4" y2="112" className="timeline__marker" />
+            {markers.map((marker) => (
+              <line
+                key={`${marker.kind}-${marker.at}`}
+                x1={chart.x(marker.at)}
+                x2={chart.x(marker.at)}
+                y1="4"
+                y2="112"
+                className={`timeline__marker timeline__marker--${marker.kind}`}
+              />
             ))}
             <line x1={chart.x(simTimeMs)} x2={chart.x(simTimeMs)} y1="0" y2="124" className="timeline__cursor" />
           </svg>
+          {markers.length > 0 ? (
+            <ul className="timeline__markers" aria-label="Event markers">
+              {markers.map((marker) => (
+                <li key={`${marker.kind}-${marker.at}`}>
+                  <button
+                    type="button"
+                    className="marker-chip data-sm"
+                    onClick={() => {
+                      setPlaying(false);
+                      setSimTime(marker.at);
+                    }}
+                  >
+                    <span className={`marker-dot marker-dot--${marker.kind}`} aria-hidden="true" />
+                    {marker.label} · {formatUtc(marker.at).slice(5, 16)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <div className="timeline__controls">
             <button
               type="button"
@@ -343,7 +399,7 @@ export function Timeline() {
               <dd className="data-sm">
                 {formatUtc(simTimeMs)}{" "}
                 <span className="rok-subtle">
-                  {point.kind === "forecast" ? "AI forecast P50" : point.kind === "observed" ? "observed" : "test period"}
+                  {point.kind === "forecast" ? "AI forecast P50" : point.kind === "observed" ? "observed" : event?.replay.label}
                 </span>
               </dd>
             </div>
@@ -367,7 +423,7 @@ export function Timeline() {
                   "n/a"
                 ) : (
                   <>
-                    {point.protonPfu < 1 ? point.protonPfu.toFixed(2) : point.protonPfu.toFixed(0)} pfu{" "}
+                    {point.protonPfu < 1 ? point.protonPfu.toFixed(2) : point.protonPfu < 10 ? point.protonPfu.toFixed(1) : point.protonPfu.toFixed(0)} pfu{" "}
                     <SourceBadge label={point.kind === "observed" ? "source" : "estimate"} />{" "}
                     {s ? <StatusBadge status={s === "S0" ? "nominal" : sepActive(point.protonPfu) ? "critical" : "caution"}>{s}</StatusBadge> : null}
                   </>
@@ -397,8 +453,8 @@ export function Timeline() {
           <p className="note">
             Bars: Kp (filled observed, dashed AI forecast with P10–P90 whisker). Line: GOES protons above 10 MeV, log
             scale; dotted line is the S1 threshold.
-            {mode === "may2024"
-              ? " Blue line and band: the AI +3 h forecast for each 3-hour block, issued at the block start (P50, P10–P90). Vertical ticks: SEP onsets. Replay protons are integrated from GOES-16 differential channels (estimate), hourly means stamped at the hour's end."
+            {event
+              ? ` Blue line and band: the AI +3 h forecast for each 3-hour block, issued at the block start (P50, P10–P90). Vertical ticks: the event markers below. ${event.protonNote}`
               : " Forecast proton flux repeats the latest observation."}
             {mode === "now" && snapshotNow !== null
               ? ` The live feed is unavailable, so "now" is the newest saved observation, ${formatUtc(snapshotNow)}.`

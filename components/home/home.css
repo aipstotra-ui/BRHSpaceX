@@ -928,3 +928,105 @@
 .layer-toggles__sources dd {
   margin: 0;
 }
+
+/* Storm replay picker */
+.event-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-300);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.event-card:hover {
+  border-color: var(--line-strong);
+}
+
+.event-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-300));
+}
+
+.event-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--ink-muted);
+}
+
+.event-card__tags {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.event-card__tag {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-full);
+  color: var(--ink-subtle);
+}
+
+.event-story {
+  margin: 0;
+}
+
+/* Event markers: chart ticks by kind, and chips that jump the clock to them */
+.timeline__marker--peak {
+  stroke: var(--status-caution);
+}
+
+.timeline__markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marker-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.marker-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--status-critical);
+}
+
+.marker-dot--peak {
+  background: var(--status-caution);
+}
+
+.marker-dot--launch,
+.marker-dot--loss {
+  background: var(--accent);
+}

@@ -5,6 +5,7 @@ import { useImpactStore } from "@/components/home/impactStore";
 import { SourceBadge } from "@/components/ui/SourceBadge";
 import { ACTIONS, actionCost, uncorrectable } from "@/lib/engine/costCheck";
 import { exposureWeight } from "@/lib/engine/replayOnOrbit";
+import { eventForMode } from "@/lib/events/registry";
 import { chipProfile } from "@/lib/ml/policyInput";
 import { useOrbitStore } from "@/lib/store/orbit";
 import { useTimelineCursor } from "@/lib/store/timeline";
@@ -23,8 +24,8 @@ export function BestMove() {
   }
 
   const sigma = chipProfile(presetId).sigmaBits;
-  const knownKp =
-    cursor.mode === "may2024" && cursor.point ? replayInputsAt(cursor.point.timeMs).kp : (cursor.point?.kp ?? null);
+  const event = eventForMode(cursor.mode);
+  const knownKp = event && cursor.point ? replayInputsAt(event, cursor.point.timeMs).kp : (cursor.point?.kp ?? null);
   const saa = exposureWeight({ altitudeKm, inclinationDeg }, knownKp ?? 2, cursor.point?.protonPfu ?? null);
   const rows = (["p50", "p90"] as const).map((band) => {
     const kp = outlook.shortBand![band];
@@ -77,7 +78,7 @@ export function BestMove() {
         </table>
       </div>
       <p className="note">
-        Follows the timeline: pick a moment in the May 2024 replay to see what the policy would have done then. Costs use
+        Follows the timeline: pick a moment in a storm replay to see what the policy would have done then. Costs use
         the proposed action costs in ml/policy_costs.json.
       </p>
     </div>

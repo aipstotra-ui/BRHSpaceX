@@ -1,7 +1,15 @@
-"""May 2024 replay window. SEP onset is 2024-05-10 13:35 UT, not May 9."""
+"""Build a storm replay for the timeline: data/replays/<event>.json.
+
+    ml/.venv/bin/python ml/build_replay.py --event may2024 [--out PATH]
+
+Each event in EVENTS names its window, its proton source, its split label and its chart markers. Hourly Kp and Dst
+come from ml/data/omni_hourly.parquet, the out-of-fold Kp P50 from ml/data/oof_forecasts.parquet, and the AI
+forecast rows from the exported browser models. The app reads the files through lib/events/registry.ts.
+"""
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -12,7 +20,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "data" / "replays" / "may2024.json"
+REPLAY_DIR = ROOT / "data" / "replays"
 MODEL_DIR = ROOT / "public" / "models"
 ML_DIR = Path(__file__).resolve().parent
 if str(ML_DIR) not in sys.path:
@@ -20,6 +28,24 @@ if str(ML_DIR) not in sys.path:
 
 # A G3 storm starts at Kp 7 (NOAA scale). The warning looks for the first AI issue whose P90 reaches it.
 WARN_KP = 7.0
+
+AI_NOTE = "Browser forecaster (public/models) run on {label} inputs. Display only: nothing was fitted or tuned on it."
+
+# One entry per replay. "protons" says how to get the >10 MeV integral: "sgps" integrates GOES-R SGPS differential
+# channels (integral_above_10mev); new kinds are added with the events that need them.
+EVENTS: dict[str, dict] = {
+    "may2024": {
+        "window": ("2024-05-05T00:00:00Z", "2024-05-16T23:00:00Z"),
+        "protons": {"kind": "sgps", "file": "goes_protons_202405.parquet"},
+        # The model split puts 2023 onward in the test period.
+        "label": "test period",
+        # SEP onset is 2024-05-10 13:35 UT, not May 9.
+        "markers": {
+            "sepOnset": ["2024-05-10T13:35:00Z", "2024-05-11T02:10:00Z"],
+            "kp9": ["2024-05-11T00:00:00Z", "2024-05-11T09:00:00Z"],
+        },
+    },
+}
 
 
 INTEGRAL_FLOOR_KEV = 10_000.0
@@ -121,24 +147,32 @@ def g_level(kp: float) -> str:
     return "G0"
 
 
-def main() -> None:
-    omni = pq.read_table(ROOT / "ml" / "data" / "omni_hourly.parquet", columns=["time", "kp", "dst"]).to_pandas()
-    omni["time"] = pd.to_datetime(omni["time"], utc=True)
-    start = pd.Timestamp("2024-05-05T00:00:00Z")
-    end = pd.Timestamp("2024-05-16T23:00:00Z")
-    window = omni.loc[(omni["time"] >= start) & (omni["time"] <= end)].copy()
-    forecasts = pd.read_parquet(ROOT / "ml" / "data" / "oof_forecasts.parquet")
-    forecasts["time"] = pd.to_datetime(forecasts["time"], utc=True)
-    merged = window.merge(forecasts[["time", "kp_p50"]], on="time", how="left")
+def hourly_protons(source: dict, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
+    """>10 MeV integral flux per hour, pfu. The mean of [T-1h, T) is stamped T, so hour T sees no later minute."""
+    if source["kind"] != "sgps":
+        raise ValueError(f"unknown proton source kind {source['kind']!r}")
     protons = pq.read_table(
-        ROOT / "data" / "history" / "goes_protons_202405.parquet",
+        ROOT / "data" / "history" / source["file"],
         columns=["time", "sensor", "energy_low_kev", "flux", "flux_kind"],
     ).to_pandas()
     protons["time"] = pd.to_datetime(protons["time"], utc=True)
     protons = protons.loc[(protons["time"] >= start) & (protons["time"] <= end)]
     integral = integral_above_10mev(protons)
-    # SGPS avg1m stamps are the start of each minute. The mean of [T-1h, T) is stamped T, so hour T sees no later minute.
-    hourly_flux = integral.groupby(integral.index.floor("h") + pd.Timedelta(hours=1)).mean()
+    # SGPS avg1m stamps are the start of each minute.
+    return integral.groupby(integral.index.floor("h") + pd.Timedelta(hours=1)).mean()
+
+
+def build(event: str) -> dict:
+    spec = EVENTS[event]
+    omni = pq.read_table(ROOT / "ml" / "data" / "omni_hourly.parquet", columns=["time", "kp", "dst"]).to_pandas()
+    omni["time"] = pd.to_datetime(omni["time"], utc=True)
+    start = pd.Timestamp(spec["window"][0])
+    end = pd.Timestamp(spec["window"][1])
+    window = omni.loc[(omni["time"] >= start) & (omni["time"] <= end)].copy()
+    forecasts = pd.read_parquet(ROOT / "ml" / "data" / "oof_forecasts.parquet")
+    forecasts["time"] = pd.to_datetime(forecasts["time"], utc=True)
+    merged = window.merge(forecasts[["time", "kp_p50"]], on="time", how="left")
+    hourly_flux = hourly_protons(spec["protons"], start, end)
     hours = []
     for row in merged.itertuples(index=False):
         stamp = row.time.floor("h")
@@ -155,23 +189,29 @@ def main() -> None:
             }
         )
     forecasts = ai_forecasts(start, end)
-    payload = {
-        "label": "test period",
+    return {
+        "label": spec["label"],
         "aiForecast": {
-            "note": "Browser forecaster (public/models) run on test-period inputs. Display only: nothing was fitted or tuned on it.",
+            "note": AI_NOTE.format(label=spec["label"].replace(" ", "-")),
             "rows": forecasts,
             "firstWarning": first_warning(forecasts, hours),
         },
-        "window": ["2024-05-05T00:00:00Z", "2024-05-16T23:00:00Z"],
-        "markers": {
-            "sepOnset": ["2024-05-10T13:35:00Z", "2024-05-11T02:10:00Z"],
-            "kp9": ["2024-05-11T00:00:00Z", "2024-05-11T09:00:00Z"],
-        },
+        "window": list(spec["window"]),
+        "markers": spec["markers"],
         "hours": hours,
     }
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, separators=(",", ":")))
-    print(f"bytes {OUT.stat().st_size} hours {len(hours)}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--event", required=True, choices=sorted(EVENTS))
+    parser.add_argument("--out", type=Path, default=None, help="default data/replays/<event>.json")
+    args = parser.parse_args()
+    out = args.out or REPLAY_DIR / f"{args.event}.json"
+    payload = build(args.event)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, separators=(",", ":")))
+    print(f"{args.event}: bytes {out.stat().st_size} hours {len(payload['hours'])}")
 
 
 if __name__ == "__main__":

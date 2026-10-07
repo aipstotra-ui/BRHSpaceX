@@ -1,6 +1,9 @@
 import { create } from "zustand";
 
-export type TimelineMode = "now" | "may2024";
+import type { EventId } from "@/lib/events/registry";
+
+/** "now" is the live 48-hour window; anything else is a storm replay from lib/events/registry.ts. */
+export type TimelineMode = "now" | EventId;
 
 /** Where a timeline value came from. Forecast values are the AI forecast P50, never observations. */
 export type PointKind = "observed" | "forecast" | "replay";

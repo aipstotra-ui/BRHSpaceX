@@ -53,7 +53,7 @@ test("the May 2024 timeline moves the danger zones in the outlook", async ({ pag
   await setTimeline(page, "2024-05-10T17:00:00Z");
 
   // The Time Machine follows the same hour.
-  await page.getByRole("tab", { name: "May 2024 replay" }).click();
+  await page.getByRole("tab", { name: "Storm replay" }).click();
   await expect(page.getByRole("slider", { name: "Replay scrubber" })).toHaveValue("137");
   await expect(page.getByText(/The AI policy (cut|raised) the storm cost/)).toBeVisible({ timeout: 60_000 });
 });

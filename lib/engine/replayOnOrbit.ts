@@ -1,18 +1,16 @@
-import may2024 from "@/data/replays/may2024.json";
-
 import { type ActionName, actionCost, uncorrectable } from "@/lib/engine/costCheck";
 import { DERIVED_SHELL } from "@/lib/engine/orbit/derivedShell";
 import { doseGridAvailable, gridDoseRadPerYear, gridUpsetFlux, type SolarPhase } from "@/lib/engine/orbit/doseGrid";
 import { demoReferenceSaa, orbitEnvironment } from "@/lib/engine/orbit/environment";
 import { sepActive, sepCapFraction } from "@/lib/engine/orbit/stormZones";
 import { omnidirectionalQuietFlux } from "@/lib/engine/radiation";
+import { DEFAULT_EVENT_ID, eventById, type EventId } from "@/lib/events/registry";
 
 export const DEFAULT_ORBIT_KM = DERIVED_SHELL.meanAltitudeKm;
 export const DEFAULT_ORBIT_INC_DEG = DERIVED_SHELL.meanInclinationDeg;
-export const SEP_ONSET = "2024-05-10T13:35:00Z";
 
 /**
- * estimate: May 2024 sits in solar cycle 25's active phase, so the replay reads the AP8/AE8 solar-maximum grid.
+ * estimate: the replays sit in active phases of their solar cycles, so they read the AP8/AE8 solar-maximum grid.
  * The phase choice is a design choice.
  */
 export const REPLAY_PHASE: SolarPhase = "max";
@@ -188,11 +186,16 @@ function asOrbit(value: number | ReplayOrbit, inclinationDeg: number): ReplayOrb
 }
 
 /**
- * Replays May 2024 on the chosen orbit and on the default orbit.
+ * Replays a storm event (May 2024 by default) on the chosen orbit and on the default orbit.
  * A bare altitude keeps the default orbit's inclination.
  */
-export function replayOnOrbit(chosen: number | ReplayOrbit, fallback: number | ReplayOrbit = DEFAULT_ORBIT_KM) {
-  const hours = may2024.hours as ReplayHour[];
+export function replayOnOrbit(
+  chosen: number | ReplayOrbit,
+  fallback: number | ReplayOrbit = DEFAULT_ORBIT_KM,
+  eventId: EventId = DEFAULT_EVENT_ID,
+) {
+  const event = eventById(eventId);
+  const hours = event.replay.hours as ReplayHour[];
   const chosenOrbit = asOrbit(chosen, DEFAULT_ORBIT_INC_DEG);
   const defaultOrbit = asOrbit(fallback, DEFAULT_ORBIT_INC_DEG);
   const referenceFlux = trappedFlux({ altitudeKm: DEFAULT_ORBIT_KM, inclinationDeg: DEFAULT_ORBIT_INC_DEG });
@@ -207,8 +210,9 @@ export function replayOnOrbit(chosen: number | ReplayOrbit, fallback: number | R
   };
   const firstMove = hours.find((hour, index) => chosenRun.actions[index] !== "continue");
   return {
-    label: may2024.label,
-    markers: may2024.markers,
+    eventId,
+    label: event.replay.label,
+    markers: event.replay.markers,
     hours,
     chosen: chosenRun,
     baseline,

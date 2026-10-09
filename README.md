@@ -64,7 +64,3 @@ npx playwright test
 | `public/models/` | Exported ONNX models and model cards |
 | `data/` | Dose and density grids, replays, climatology and snapshots |
 | `docs/` | Build plan, research tables and findings |
-
-## Team
-
-Built with Cursor and Claude Code. MIT License.
